@@ -1,0 +1,17 @@
+{
+  "name": "@microwavedev/backpack-game-core",
+  "version": "0.1.0",
+  "description": "Reusable pure backpack game mechanics shared across Microwave games.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./bag-shape": "./src/bag-shape.js"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  }
+}
+
