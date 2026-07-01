@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.js",
     "./bag-shape": "./src/bag-shape.js",
-    "./grid-geometry": "./src/grid-geometry.js"
+    "./grid-geometry": "./src/grid-geometry.js",
+    "./fusion-matching": "./src/fusion-matching.js"
   },
   "files": [
     "src"

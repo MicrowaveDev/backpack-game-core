@@ -15,3 +15,8 @@ export {
   pieceCells,
   setsIntersect
 } from './grid-geometry.js';
+
+export {
+  findFusionMatches,
+  fusionIngredientRowIdSet
+} from './fusion-matching.js';
