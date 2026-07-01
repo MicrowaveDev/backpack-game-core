@@ -20,3 +20,7 @@ export {
   findFusionMatches,
   fusionIngredientRowIdSet
 } from './fusion-matching.js';
+
+export {
+  generateShopOffer
+} from './shop-offer.js';
