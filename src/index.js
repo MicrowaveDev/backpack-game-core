@@ -28,3 +28,7 @@ export {
 export {
   generateBackpackLoadout
 } from './backpack-loadout.js';
+
+export {
+  simulateBattle
+} from './battle-simulation.js';

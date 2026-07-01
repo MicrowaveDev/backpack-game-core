@@ -9,7 +9,8 @@
     "./grid-geometry": "./src/grid-geometry.js",
     "./fusion-matching": "./src/fusion-matching.js",
     "./shop-offer": "./src/shop-offer.js",
-    "./backpack-loadout": "./src/backpack-loadout.js"
+    "./backpack-loadout": "./src/backpack-loadout.js",
+    "./battle-simulation": "./src/battle-simulation.js"
   },
   "files": [
     "src"

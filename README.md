@@ -18,6 +18,8 @@ catalogs in their own repos.
 - `shop-offer`: deterministic offer generation over injected item pools.
 - `backpack-loadout`: provider-driven loadout generation over injected catalog,
   pricing, bag shape, weighting, and validation hooks.
+- `battle-simulation`: deterministic 1v1 battle loop with injected combatant,
+  ability, tiebreak, attribution, and narration hooks.
 
 ## Usage
 
