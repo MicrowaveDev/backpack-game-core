@@ -8,7 +8,8 @@
     "./bag-shape": "./src/bag-shape.js",
     "./grid-geometry": "./src/grid-geometry.js",
     "./fusion-matching": "./src/fusion-matching.js",
-    "./shop-offer": "./src/shop-offer.js"
+    "./shop-offer": "./src/shop-offer.js",
+    "./backpack-loadout": "./src/backpack-loadout.js"
   },
   "files": [
     "src"

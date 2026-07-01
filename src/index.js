@@ -24,3 +24,7 @@ export {
 export {
   generateShopOffer
 } from './shop-offer.js';
+
+export {
+  generateBackpackLoadout
+} from './backpack-loadout.js';

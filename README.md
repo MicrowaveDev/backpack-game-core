@@ -11,6 +11,13 @@ catalogs in their own repos.
 
 - `bag-shape`: shape masks, quarter-turn rotation, effective dimensions, and
   shape-cell checks for irregular bags.
+- `grid-geometry`: serialized grid cells, footprint expansion, and set
+  intersection helpers.
+- `fusion-matching`: pure adjacent-ingredient matching with product policy
+  hooks.
+- `shop-offer`: deterministic offer generation over injected item pools.
+- `backpack-loadout`: provider-driven loadout generation over injected catalog,
+  pricing, bag shape, weighting, and validation hooks.
 
 ## Usage
 
@@ -20,4 +27,3 @@ import { getEffectiveShape, isCellInShape } from '@microwavedev/backpack-game-co
 const shape = getEffectiveShape({ width: 3, height: 2, shape: [[1, 1, 1], [0, 1, 0]] }, 1);
 console.log(isCellInShape(shape, 0, 0));
 ```
-
