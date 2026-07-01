@@ -9,3 +9,9 @@ export {
   shapeArea
 } from './bag-shape.js';
 
+export {
+  cellKey,
+  cellSet,
+  pieceCells,
+  setsIntersect
+} from './grid-geometry.js';
