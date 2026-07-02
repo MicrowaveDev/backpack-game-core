@@ -40,3 +40,9 @@ The package ships `.d.ts` files for the root export and every subpath export.
 The declarations intentionally model product data as generic/plain objects:
 games own catalogs, persistence, payments, wallet state, and product policy,
 while this package types the reusable mechanics and provider hooks.
+
+## Version Notes
+
+Until registry publishing starts, the package commit SHA is the release
+identity. See [CHANGELOG.md](CHANGELOG.md) for the current integration baseline
+and module history.
