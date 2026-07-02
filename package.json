@@ -3,16 +3,44 @@
   "version": "0.1.0",
   "description": "Reusable pure backpack game mechanics shared across Microwave games.",
   "type": "module",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js",
-    "./bag-shape": "./src/bag-shape.js",
-    "./grid-geometry": "./src/grid-geometry.js",
-    "./rng": "./src/rng.js",
-    "./fusion-matching": "./src/fusion-matching.js",
-    "./shop-offer": "./src/shop-offer.js",
-    "./backpack-loadout": "./src/backpack-loadout.js",
-    "./loadout-validation": "./src/loadout-validation.js",
-    "./battle-simulation": "./src/battle-simulation.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./bag-shape": {
+      "types": "./src/bag-shape.d.ts",
+      "import": "./src/bag-shape.js"
+    },
+    "./grid-geometry": {
+      "types": "./src/grid-geometry.d.ts",
+      "import": "./src/grid-geometry.js"
+    },
+    "./rng": {
+      "types": "./src/rng.d.ts",
+      "import": "./src/rng.js"
+    },
+    "./fusion-matching": {
+      "types": "./src/fusion-matching.d.ts",
+      "import": "./src/fusion-matching.js"
+    },
+    "./shop-offer": {
+      "types": "./src/shop-offer.d.ts",
+      "import": "./src/shop-offer.js"
+    },
+    "./backpack-loadout": {
+      "types": "./src/backpack-loadout.d.ts",
+      "import": "./src/backpack-loadout.js"
+    },
+    "./loadout-validation": {
+      "types": "./src/loadout-validation.d.ts",
+      "import": "./src/loadout-validation.js"
+    },
+    "./battle-simulation": {
+      "types": "./src/battle-simulation.d.ts",
+      "import": "./src/battle-simulation.js"
+    }
   },
   "files": [
     "src"

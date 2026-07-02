@@ -33,3 +33,10 @@ import { getEffectiveShape, isCellInShape } from '@microwavedev/backpack-game-co
 const shape = getEffectiveShape({ width: 3, height: 2, shape: [[1, 1, 1], [0, 1, 0]] }, 1);
 console.log(isCellInShape(shape, 0, 0));
 ```
+
+## Type Declarations
+
+The package ships `.d.ts` files for the root export and every subpath export.
+The declarations intentionally model product data as generic/plain objects:
+games own catalogs, persistence, payments, wallet state, and product policy,
+while this package types the reusable mechanics and provider hooks.
