@@ -10,6 +10,7 @@
     "./fusion-matching": "./src/fusion-matching.js",
     "./shop-offer": "./src/shop-offer.js",
     "./backpack-loadout": "./src/backpack-loadout.js",
+    "./loadout-validation": "./src/loadout-validation.js",
     "./battle-simulation": "./src/battle-simulation.js"
   },
   "files": [

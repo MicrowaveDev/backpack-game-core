@@ -30,5 +30,9 @@ export {
 } from './backpack-loadout.js';
 
 export {
+  createLoadoutValidator
+} from './loadout-validation.js';
+
+export {
   simulateBattle
 } from './battle-simulation.js';
