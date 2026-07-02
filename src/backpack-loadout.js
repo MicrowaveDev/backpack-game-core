@@ -1,5 +1,6 @@
 import { getEffectiveShape } from './bag-shape.js';
 import { pieceCells } from './grid-geometry.js';
+import { shuffleWithRng } from './rng.js';
 
 function defaultGetItemId(item) {
   return item?.id ?? item?.artifactId;
@@ -23,19 +24,6 @@ function defaultIsBag(item) {
 
 function defaultWeightForItem() {
   return 1;
-}
-
-function randomInt(rng, max) {
-  return Math.floor(rng() * max);
-}
-
-function shuffleWithRng(items, rng) {
-  const next = [...items];
-  for (let index = next.length - 1; index > 0; index -= 1) {
-    const swapIndex = randomInt(rng, index + 1);
-    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
-  }
-  return next;
 }
 
 function shapeCells(x, y, shape) {

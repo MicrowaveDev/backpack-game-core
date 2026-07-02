@@ -13,6 +13,8 @@ catalogs in their own repos.
   shape-cell checks for irregular bags.
 - `grid-geometry`: serialized grid cells, footprint expansion, and set
   intersection helpers.
+- `rng`: browser-safe deterministic numeric-seed RNG, integer rolls, and
+  non-mutating seeded shuffle helpers.
 - `fusion-matching`: pure adjacent-ingredient matching with product policy
   hooks.
 - `shop-offer`: deterministic offer generation over injected item pools.

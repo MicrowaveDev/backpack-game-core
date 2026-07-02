@@ -1,9 +1,11 @@
+import { randomInt } from './rng.js';
+
 function defaultGetItemId(item) {
   return typeof item === 'string' ? item : item?.id;
 }
 
 function takeRandomItemId(pool, rng, getItemId) {
-  const idx = Math.floor(rng() * pool.length);
+  const idx = randomInt(rng, pool.length);
   const item = pool[idx];
   pool.splice(idx, 1);
   return getItemId(item);
@@ -56,4 +58,3 @@ export function generateShopOffer({
 
   return { offer, hasBag };
 }
-

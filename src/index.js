@@ -17,6 +17,12 @@ export {
 } from './grid-geometry.js';
 
 export {
+  createSeededRng,
+  randomInt,
+  shuffleWithRng
+} from './rng.js';
+
+export {
   findFusionMatches,
   fusionIngredientRowIdSet
 } from './fusion-matching.js';

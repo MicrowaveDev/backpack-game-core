@@ -7,6 +7,7 @@
     ".": "./src/index.js",
     "./bag-shape": "./src/bag-shape.js",
     "./grid-geometry": "./src/grid-geometry.js",
+    "./rng": "./src/rng.js",
     "./fusion-matching": "./src/fusion-matching.js",
     "./shop-offer": "./src/shop-offer.js",
     "./backpack-loadout": "./src/backpack-loadout.js",
