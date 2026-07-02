@@ -1,12 +1,16 @@
 # Changelog
 
-## 0.1.0 - Current Integration Baseline
+## 0.1.0 - Runtime/API Baseline
 
 `backpack-game-core` is still consumed from Git/submodule checkouts rather than
 from a published registry package. Treat the commit SHA as the release identity
 until package publishing starts.
 
-### Current baseline
+### Runtime/API baseline
+
+`d5fb481` is the first typed runtime/API baseline. Later documentation-only
+commits may be consumed by game submodule pointers without changing the exported
+runtime mechanics.
 
 - `d5fb481` - Add TypeScript declarations for the root export and every subpath
   export, plus package export metadata.
