@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added asset pack client view-model helpers to `client-view-model`: rarity
+  odds text, guarantee/pity/duplicate copy text, availability labels, active
+  checks, and roll-pack summaries over product-provided labels.
 - Added asset catalog acquisition-policy resolution to `asset-gacha` /
   `modules/gacha`, so games can share paid/free default mode and per-asset
   override handling while keeping env parsing and product catalog assembly

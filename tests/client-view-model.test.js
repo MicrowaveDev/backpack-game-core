@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  assetPackAvailabilityLabel,
+  assetPackIsActive,
+  formatAssetPackRarityOdds,
   prepareGridProps,
-  projectLoadoutItems
+  projectLoadoutItems,
+  summarizeAssetRollPacks
 } from '@microwavedev/backpack-game-core/client-view-model';
 
 const bagIds = new Set(['starter_bag', 'pouch']);
@@ -55,4 +59,75 @@ test('[client-view-model] prepares grid props with configurable dimensions', () 
   assert.deepEqual(result.items.map((item) => item.id), ['needle']);
   assert.ok(result.bagRows.some((bagRow) => bagRow.artifactId === 'starter_bag' && bagRow.row === 1));
   assert.equal(result.totalRows, 6);
+});
+
+test('[client-view-model] formats asset pack odds and availability labels', () => {
+  const pack = {
+    id: 'starter_pack',
+    availability: 'active',
+    raritySummary: [
+      { rarity: 'common', probability: 0.75 },
+      { rarity: 'rare', probability: 0.25 }
+    ]
+  };
+  const rarityLabel = (rarity) => ({ common: 'Common', rare: 'Rare' }[rarity] || rarity);
+
+  assert.equal(formatAssetPackRarityOdds(pack, { rarityLabel }), 'Common 75% · Rare 25%');
+  assert.equal(assetPackIsActive(pack), true);
+  assert.equal(assetPackAvailabilityLabel({ ...pack, availability: 'future' }, {
+    labels: { future: 'Pack opens later.' }
+  }), 'Pack opens later.');
+});
+
+test('[client-view-model] summarizes roll pack state for asset UIs', () => {
+  const summaries = summarizeAssetRollPacks({
+    portraits: [
+      { assetId: 'skin.a', packId: 'starter_pack', unlocked: false, rollAvailable: true },
+      { assetId: 'skin.c', unlocked: true }
+    ],
+    packs: [
+      {
+        id: 'starter_pack',
+        name: { en: 'Starter Pack' },
+        availability: 'active',
+        rollPriceAmount: 50,
+        rollSize: 2,
+        totalItems: 2,
+        ownedCount: 1,
+        remainingCount: 1,
+        raritySummary: [
+          { rarity: 'common', probability: 0.75 },
+          { rarity: 'rare', probability: 0.25 }
+        ],
+        duplicatePolicy: { enabled: true },
+        duplicateCopies: 3,
+        burn: { rules: [{ id: 'burn_common', ready: true, sourceCount: 5, sourceRarity: 'common' }] },
+        guarantees: { rules: [{ minRarity: 'rare', count: 1 }] },
+        pity: { rules: [{ minRarity: 'epic', threshold: 5, remaining: 1, active: false }] },
+        items: [
+          { assetId: 'skin.a', rarity: 'common', dropWeight: 75 },
+          { assetId: 'skin.b', rarity: 'rare', dropWeight: 25 }
+        ]
+      }
+    ],
+    packName: (pack) => pack.name.en,
+    rarityLabel: (rarity) => ({ common: 'Common', rare: 'Rare', epic: 'Epic' }[rarity] || rarity),
+    labels: {
+      guaranteeTemplate: 'Guarantee: {count} {rarity}+',
+      pityTemplate: '{rarity}+ pity in {count} opens',
+      pityReadyTemplate: '{rarity}+ guaranteed next open',
+      duplicateTemplate: 'Duplicates: {count}'
+    }
+  });
+
+  assert.equal(summaries.length, 1);
+  assert.equal(summaries[0].name, 'Starter Pack');
+  assert.equal(summaries[0].canRoll, true);
+  assert.equal(summaries[0].canBurn, true);
+  assert.equal(summaries[0].nextRollItemCount, 2);
+  assert.equal(summaries[0].odds, 'Common 75% · Rare 25%');
+  assert.equal(summaries[0].guaranteeText, 'Guarantee: 1 Rare+');
+  assert.equal(summaries[0].pityText, 'Epic+ pity in 1 opens');
+  assert.equal(summaries[0].duplicateText, 'Duplicates: 3');
+  assert.equal(summaries[0].burnRarity, 'Common');
 });

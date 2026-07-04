@@ -34,7 +34,8 @@ catalogs in their own repos.
   shaping, equip validation, purchase spend mutation shaping, and portrait
   variant projection over injected catalog/policy snapshots.
 - `client-view-model`: browser-safe frontend view-model shapers such as flat
-  loadout row projection and grid prop preparation.
+  loadout row projection, grid prop preparation, and asset pack summary/label
+  helpers over product-provided copy.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, and storage policy.
 

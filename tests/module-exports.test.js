@@ -40,6 +40,9 @@ import {
   pieceCells
 } from '@microwavedev/backpack-game-core/modules/loadout';
 import {
+  summarizeAssetRollPacks
+} from '@microwavedev/backpack-game-core/client-view-model';
+import {
   createSeededRng,
   simulateBattle
 } from '@microwavedev/backpack-game-core/modules/battle';
@@ -109,6 +112,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
 
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);
+  assert.deepEqual(summarizeAssetRollPacks(), []);
 
   const artifacts = new Map([
     ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 0 }],

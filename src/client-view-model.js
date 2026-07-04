@@ -107,3 +107,186 @@ export function prepareGridProps(loadoutItems = [], bagArtifactIds = [], getArti
     totalRows: maxBottom
   };
 }
+
+function identity(value) {
+  return value || '';
+}
+
+function numberOr(value, fallback = 0) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function fillTemplate(template, values = {}) {
+  return String(template || '').replace(/\{([^}]+)\}/g, (_, key) => values[key] ?? '');
+}
+
+export function formatAssetPackRarityOdds(pack, {
+  rarityLabel = identity
+} = {}) {
+  const summary = Array.isArray(pack?.raritySummary) && pack.raritySummary.length
+    ? pack.raritySummary
+    : null;
+  if (summary) {
+    return summary
+      .map((entry) => `${rarityLabel(entry.rarity)} ${Math.round(numberOr(entry.probability) * 100)}%`)
+      .join(' · ');
+  }
+  const items = Array.isArray(pack?.items) ? pack.items : [];
+  const total = items.reduce((sum, item) => sum + numberOr(item.dropWeight), 0);
+  if (!total) return '';
+  const grouped = items.reduce((acc, item) => {
+    const rarity = item.rarity || 'common';
+    acc[rarity] = (acc[rarity] || 0) + numberOr(item.dropWeight);
+    return acc;
+  }, {});
+  return Object.entries(grouped)
+    .sort((a, b) => b[1] - a[1])
+    .map(([rarity, weight]) => `${rarityLabel(rarity)} ${Math.round((weight / total) * 100)}%`)
+    .join(' · ');
+}
+
+export function formatAssetPackGuaranteeText(pack, {
+  rarityLabel = identity,
+  template = 'Guarantee: {count} {rarity}+'
+} = {}) {
+  const rules = Array.isArray(pack?.guarantees?.rules) ? pack.guarantees.rules : [];
+  return rules
+    .filter((rule) => numberOr(rule.count) > 0 && rule.minRarity)
+    .map((rule) => fillTemplate(template, {
+      count: rule.count,
+      rarity: rarityLabel(rule.minRarity)
+    }))
+    .join(' · ');
+}
+
+export function formatAssetPackPityText(pack, {
+  rarityLabel = identity,
+  template = '{rarity}+ pity in {count} opens',
+  readyTemplate = '{rarity}+ guaranteed next open'
+} = {}) {
+  const rules = Array.isArray(pack?.pity?.rules) ? pack.pity.rules : [];
+  return rules
+    .filter((rule) => numberOr(rule.threshold) > 0 && rule.minRarity)
+    .map((rule) => fillTemplate(rule.active ? readyTemplate : template, {
+      rarity: rarityLabel(rule.minRarity),
+      count: rule.remaining || rule.threshold
+    }))
+    .join(' · ');
+}
+
+export function formatAssetPackDuplicateText(pack, {
+  template = 'Duplicates: {count}'
+} = {}) {
+  if (!pack?.duplicatePolicy?.enabled) return '';
+  return fillTemplate(template, { count: numberOr(pack.duplicateCopies) });
+}
+
+export function assetPackIsActive(pack, {
+  now = Date.now()
+} = {}) {
+  if (!pack) return false;
+  if (pack.availability) return pack.availability === 'active';
+  if (pack.active === false || (pack.status && pack.status !== 'active')) return false;
+  const timestamp = typeof now === 'number' ? now : new Date(now).getTime();
+  const startsAt = pack.startsAt ? new Date(pack.startsAt).getTime() : null;
+  const endsAt = pack.endsAt ? new Date(pack.endsAt).getTime() : null;
+  if (startsAt && startsAt > timestamp) return false;
+  if (endsAt && endsAt <= timestamp) return false;
+  return true;
+}
+
+export function assetPackAvailabilityLabel(pack, {
+  now = Date.now(),
+  labels = {}
+} = {}) {
+  if (assetPackIsActive(pack, { now })) return '';
+  if (pack?.availability === 'invalid') return labels.invalid || '';
+  if (pack?.availability === 'disabled') return labels.disabled || labels.unavailable || '';
+  if (pack?.availability === 'future') return labels.future || '';
+  if (pack?.availability === 'expired') return labels.expired || '';
+  const timestamp = typeof now === 'number' ? now : new Date(now).getTime();
+  const startsAt = pack?.startsAt ? new Date(pack.startsAt).getTime() : null;
+  const endsAt = pack?.endsAt ? new Date(pack.endsAt).getTime() : null;
+  if (startsAt && startsAt > timestamp) return labels.future || '';
+  if (endsAt && endsAt <= timestamp) return labels.expired || '';
+  return labels.unavailable || '';
+}
+
+export function summarizeAssetRollPacks({
+  portraits = [],
+  packs = [],
+  ownedAssetIds = [],
+  now = Date.now(),
+  packName = (pack) => pack?.name || pack?.id || '',
+  rarityLabel = identity,
+  labels = {}
+} = {}) {
+  const packById = new Map((packs || []).filter(Boolean).map((pack) => [pack.id, pack]));
+  const selectedAssetIds = new Set((portraits || []).map((portrait) => portrait.assetId).filter(Boolean));
+  const packIds = new Set((portraits || [])
+    .filter((portrait) => portrait.packId && (!portrait.unlocked || portrait.rollAvailable))
+    .map((portrait) => portrait.packId));
+  for (const pack of packs || []) {
+    if ((pack?.items || []).some((item) => selectedAssetIds.has(item.assetId))) {
+      packIds.add(pack.id);
+    }
+  }
+  const owned = ownedAssetIds instanceof Set ? ownedAssetIds : new Set(ownedAssetIds || []);
+
+  return [...packIds]
+    .map((packId) => packById.get(packId))
+    .filter(Boolean)
+    .map((pack) => {
+      const total = Number.isFinite(Number(pack.totalItems)) ? Number(pack.totalItems) : (pack.items?.length || 0);
+      const ownedCount = Number.isFinite(Number(pack.ownedCount))
+        ? Number(pack.ownedCount)
+        : (pack.items || []).filter((item) => owned.has(item.assetId)).length;
+      const left = Number.isFinite(Number(pack.remainingCount))
+        ? Number(pack.remainingCount)
+        : Math.max(0, total - ownedCount);
+      const duplicateEnabled = Boolean(pack.duplicatePolicy?.enabled);
+      const burnRules = Array.isArray(pack?.burn?.rules) ? pack.burn.rules : [];
+      const readyBurnRule = burnRules.find((rule) => rule.ready) || burnRules[0] || null;
+      const rollableCount = Number.isFinite(Number(pack.rollableCount))
+        ? Number(pack.rollableCount)
+        : duplicateEnabled ? total : left;
+      const complete = Boolean(pack.complete) || (!duplicateEnabled && left <= 0);
+      const active = assetPackIsActive(pack, { now });
+      return {
+        id: pack.id,
+        name: packName(pack),
+        total,
+        owned: ownedCount,
+        left,
+        rollSize: Number(pack.rollSize || 1),
+        nextRollItemCount: Number(pack.nextRollItemCount || Math.min(Number(pack.rollSize || 1), rollableCount)),
+        active,
+        availabilityLabel: assetPackAvailabilityLabel(pack, { now, labels }),
+        price: pack.rollPriceAmount || 0,
+        complete,
+        duplicateEnabled,
+        uniqueComplete: Boolean(pack.uniqueComplete),
+        copyComplete: Boolean(pack.copyComplete),
+        duplicateCopies: numberOr(pack.duplicateCopies),
+        canRoll: active && !complete && rollableCount > 0,
+        canBurn: active && Boolean(readyBurnRule?.ready),
+        burnRuleId: readyBurnRule?.id || null,
+        burnCost: numberOr(readyBurnRule?.sourceCount),
+        burnRarity: readyBurnRule?.sourceRarity ? rarityLabel(readyBurnRule.sourceRarity) : '',
+        odds: formatAssetPackRarityOdds(pack, { rarityLabel }),
+        guaranteeText: formatAssetPackGuaranteeText(pack, {
+          rarityLabel,
+          template: labels.guaranteeTemplate
+        }),
+        pityText: formatAssetPackPityText(pack, {
+          rarityLabel,
+          template: labels.pityTemplate,
+          readyTemplate: labels.pityReadyTemplate
+        }),
+        duplicateText: formatAssetPackDuplicateText(pack, {
+          template: labels.duplicateTemplate
+        })
+      };
+    });
+}
