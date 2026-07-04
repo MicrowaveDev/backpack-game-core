@@ -138,6 +138,22 @@ export interface GachaAdminPackDraftDiff {
   changedItems: GachaAdminDraftItemChange[];
 }
 
+export interface GachaAdminFixtureOperation {
+  type?: string;
+  action?: string;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminFixtureOperationSummary {
+  total: number;
+  create: number;
+  update: number;
+  replace: number;
+  noop: number;
+  byType: Record<string, number>;
+  [action: string]: unknown;
+}
+
 export function createGachaAdminReleaseChecklist(options?: {
   runtimePack?: AssetGachaPack;
   validation?: AssetGachaValidationResult;
@@ -156,6 +172,10 @@ export function buildGachaAdminPackDraftDiff(options?: {
   draftPack?: AssetGachaPack | Record<string, unknown> | null;
   basePackId?: string | null;
 }): GachaAdminPackDraftDiff | null;
+
+export function summarizeGachaAdminFixtureOperations(
+  operations?: readonly GachaAdminFixtureOperation[]
+): GachaAdminFixtureOperationSummary;
 
 export function normalizeGachaAdminFixture(input?: GachaAdminFixture | { fixture?: GachaAdminFixture }, options?: {
   schemaVersion?: string;

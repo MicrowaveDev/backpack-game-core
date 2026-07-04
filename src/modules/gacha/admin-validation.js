@@ -318,6 +318,25 @@ export function buildGachaAdminPackDraftDiff({
   };
 }
 
+export function summarizeGachaAdminFixtureOperations(operations = []) {
+  const summary = {
+    total: 0,
+    create: 0,
+    update: 0,
+    replace: 0,
+    noop: 0,
+    byType: {}
+  };
+  for (const operation of Array.isArray(operations) ? operations : []) {
+    const action = operation?.action;
+    const type = operation?.type;
+    summary.total += 1;
+    if (action) summary[action] = (summary[action] || 0) + 1;
+    if (type) summary.byType[type] = (summary.byType[type] || 0) + 1;
+  }
+  return summary;
+}
+
 export function normalizeGachaAdminFixture(input = {}, {
   schemaVersion = DEFAULT_GACHA_ADMIN_FIXTURE_SCHEMA_VERSION
 } = {}) {

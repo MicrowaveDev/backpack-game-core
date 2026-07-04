@@ -13,6 +13,7 @@ import {
   normalizeGachaAdminFixture,
   normalizeGachaAdminPlanItemIds,
   resolveGachaAdminPlanItemAssetContract,
+  summarizeGachaAdminFixtureOperations,
   summarizeGachaAdminPlanItems
 } from '../src/modules/gacha/admin-validation.js';
 
@@ -178,6 +179,39 @@ test('[gacha-admin-validation] normalizes fixtures and nested flat items', () =>
   assert.equal(normalized.packs[0].items.length, 1);
   assert.equal(normalized.packs[0].items[0].id, 'item_1');
   assert.throws(() => normalizeGachaAdminFixture({ seasons: [{ id: 'dup' }, { id: 'dup' }] }), /duplicate id dup/);
+});
+
+test('[gacha-admin-validation] summarizes fixture operations by action and type', () => {
+  const summary = summarizeGachaAdminFixtureOperations([
+    { type: 'season', action: 'create' },
+    { type: 'pack', action: 'update' },
+    { type: 'pack', action: 'replace' },
+    { type: 'item', action: 'noop' },
+    { type: 'planItem', action: 'archive' }
+  ]);
+
+  assert.deepEqual(summary, {
+    total: 5,
+    create: 1,
+    update: 1,
+    replace: 1,
+    noop: 1,
+    archive: 1,
+    byType: {
+      season: 1,
+      pack: 2,
+      item: 1,
+      planItem: 1
+    }
+  });
+  assert.deepEqual(summarizeGachaAdminFixtureOperations(null), {
+    total: 0,
+    create: 0,
+    update: 0,
+    replace: 0,
+    noop: 0,
+    byType: {}
+  });
 });
 
 test('[gacha-admin-validation] resolves plan item asset-id contract without DB access', () => {

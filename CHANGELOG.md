@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added gacha admin fixture operation summary helpers to
+  `modules/gacha/admin-validation`, so product admin services can share dry-run
+  import summaries while keeping DB transactions, audit logs, permissions, and
+  route payloads local.
 - Added gacha admin validation/checklist/season-plan row helpers to
   `client-view-model`, so product admin panels can share issue rows, release
   rows, plan coverage rows, total weight, and chance text while keeping API

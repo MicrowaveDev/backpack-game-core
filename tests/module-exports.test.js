@@ -17,7 +17,8 @@ import {
   buildGachaAdminPackDraftDiff,
   createGachaAdminReleaseChecklist,
   gachaAdminPackSnapshot,
-  normalizeGachaAdminFixture
+  normalizeGachaAdminFixture,
+  summarizeGachaAdminFixtureOperations
 } from '@microwavedev/backpack-game-core/modules/gacha/admin-validation';
 import {
   simulateAssetGachaPackOdds
@@ -155,6 +156,7 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
     draftPack: { ...pack, id: 'draft', rollPriceAmount: 11 },
     basePackId: 'starter'
   }).changedFields.some((change) => change.field === 'rollPriceAmount'), true);
+  assert.equal(summarizeGachaAdminFixtureOperations([{ type: 'pack', action: 'update' }]).byType.pack, 1);
   assert.equal(simulateAssetGachaPackOdds(pack, {
     catalog,
     trials: 1,
