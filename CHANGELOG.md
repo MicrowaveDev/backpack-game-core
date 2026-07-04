@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `modules/gacha/simulation`: deterministic gacha odds simulation over
+  injected packs, catalogs, ownership snapshots, copy counts, pity state, seed,
+  and RNG. Product games still own static/runtime pack lookup and catalog
+  visibility policy, while admin previews, CLI tools, and tests can share one
+  roll simulation model.
 - Added `modules/gacha/admin-validation`: pure gacha admin helpers for release
   checklist evaluation, fixture normalization, plan-item generated asset-id
   invariants, season-plan catalog projection, promotion metadata shaping, and

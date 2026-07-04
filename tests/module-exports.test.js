@@ -14,6 +14,9 @@ import {
   createGachaAdminReleaseChecklist,
   normalizeGachaAdminFixture
 } from '@microwavedev/backpack-game-core/modules/gacha/admin-validation';
+import {
+  simulateAssetGachaPackOdds
+} from '@microwavedev/backpack-game-core/modules/gacha/simulation';
 import * as gachaInterface from '@microwavedev/backpack-game-core/modules/gacha/interface';
 import { generateShopOffer } from '@microwavedev/backpack-game-core/modules/shop';
 import {
@@ -65,6 +68,11 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
     validation: { ok: true, errors: [], warnings: [] }
   }).ok, false);
   assert.equal(normalizeGachaAdminFixture({ packs: [{ id: 'fixture_pack' }] }).packs[0].id, 'fixture_pack');
+  assert.equal(simulateAssetGachaPackOdds(pack, {
+    catalog,
+    trials: 1,
+    rng: () => 0
+  }).candidateCount, 2);
   assert.deepEqual(Object.keys(gachaInterface), []);
 });
 
