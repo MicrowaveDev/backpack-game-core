@@ -33,7 +33,7 @@ catalogs in their own repos.
   settlement invariants over injected persistence snapshots.
 - `profile-asset-state`: reusable profile asset ownership/equipment row
   shaping, equip validation, purchase spend mutation shaping, and portrait
-  variant projection over injected catalog/policy snapshots.
+  variant/list projection over injected catalog/policy snapshots.
 - `client-view-model`: browser-safe frontend view-model shapers such as flat
   loadout row projection, grid prop preparation, grid-cell classification,
   occupied-cell maps, preferred/canonical artifact preview orientation,

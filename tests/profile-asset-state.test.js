@@ -10,6 +10,7 @@ import {
   profileAssetInstanceDraftToRow,
   profileAssetIsOwned,
   profileAssetTargetKey,
+  shapeProfileAssetTargetVariants,
   shapeProfileAssetVariant,
   validateProfileAssetEquipment
 } from '@microwavedev/backpack-game-core/profile-asset-state';
@@ -203,4 +204,68 @@ test('[profile-asset-state] shapes portrait variants over injected policy state'
     packId: 'season_1_portraits',
     rarity: 'rare'
   });
+});
+
+test('[profile-asset-state] shapes target variant lists over catalog and policy adapters', () => {
+  const state = createProfileAssetState({
+    instances: [{ id: 'asset_1', asset_id: paidPortrait.assetId, status: 'active' }]
+  });
+  const catalog = [
+    paidPortrait,
+    {
+      assetId: 'portrait.axilin.2',
+      slot: 'portrait',
+      targetType: 'character',
+      targetId: 'axilin',
+      variantId: '2',
+      price: 1500,
+      currencyCode: 'soft_coin',
+      packId: 'season_1_portraits',
+      rarity: 'epic'
+    }
+  ];
+
+  const shaped = shapeProfileAssetTargetVariants({
+    variants: [
+      { id: '1', name: { en: 'Axilin Alt' }, path: '/portrait-1.png' },
+      { id: '2', name: { en: 'Axilin Epic' }, path: '/portrait-2.png' },
+      { id: 'missing', name: { en: 'Missing' } }
+    ],
+    target: { slot: 'portrait', targetType: 'character', targetId: 'axilin' },
+    state,
+    catalog,
+    activeVariantId: '2',
+    assetIdForVariant: (variant, target) => `${target.slot}.${target.targetId}.${variant.id}`,
+    policyForAsset: (asset) => ({
+      acquisitionMode: asset.price > 0 ? 'gacha' : 'direct',
+      purchaseAvailable: asset.price === 0,
+      rollAvailable: asset.price > 0
+    })
+  });
+
+  assert.deepEqual(shaped.map((variant) => ({
+    id: variant.id,
+    assetId: variant.assetId,
+    owned: variant.owned,
+    active: variant.active,
+    rollAvailable: variant.rollAvailable,
+    rarity: variant.rarity
+  })), [
+    {
+      id: '1',
+      assetId: 'portrait.axilin.1',
+      owned: true,
+      active: false,
+      rollAvailable: true,
+      rarity: 'rare'
+    },
+    {
+      id: '2',
+      assetId: 'portrait.axilin.2',
+      owned: false,
+      active: true,
+      rollAvailable: true,
+      rarity: 'epic'
+    }
+  ]);
 });

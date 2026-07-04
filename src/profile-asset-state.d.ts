@@ -103,3 +103,27 @@ export function shapeProfileAssetVariant(input?: {
   active?: boolean;
   policy?: Record<string, unknown>;
 }): Record<string, unknown> | null;
+export function shapeProfileAssetTargetVariants(input?: {
+  variants?: Array<Record<string, unknown>>;
+  target?: Record<string, unknown>;
+  state?: ProfileAssetState;
+  catalog?: Array<Record<string, unknown>> | Map<string, Record<string, unknown>>;
+  activeVariantId?: string | null;
+  assetIdForVariant?: (variant: Record<string, unknown>, target: Record<string, unknown>) => string | null | undefined;
+  policyForAsset?: (
+    asset: Record<string, unknown>,
+    context: {
+      variant: Record<string, unknown>;
+      target: Record<string, unknown>;
+      owned: boolean;
+      state: ProfileAssetState;
+    }
+  ) => Record<string, unknown> | null | undefined;
+  shapeVariant?: (input: {
+    variant?: Record<string, unknown> | null;
+    asset?: Record<string, unknown> | null;
+    owned?: boolean;
+    active?: boolean;
+    policy?: Record<string, unknown>;
+  }) => Record<string, unknown> | null;
+}): Array<Record<string, unknown>>;

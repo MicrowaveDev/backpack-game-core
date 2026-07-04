@@ -234,3 +234,41 @@ export function shapeProfileAssetVariant({
     rarity: asset.rarity
   };
 }
+
+function profileAssetCatalogLookup(catalog = [], assetId = null) {
+  if (!assetId) return null;
+  if (catalog instanceof Map) return catalog.get(assetId) || null;
+  return (catalog || []).find((asset) => asset?.assetId === assetId) || null;
+}
+
+function defaultVariantAssetId(variant = {}) {
+  return variant?.assetId || null;
+}
+
+export function shapeProfileAssetTargetVariants({
+  variants = [],
+  target = {},
+  state = {},
+  catalog = [],
+  activeVariantId = null,
+  assetIdForVariant = defaultVariantAssetId,
+  policyForAsset = () => ({}),
+  shapeVariant = shapeProfileAssetVariant
+} = {}) {
+  return (variants || [])
+    .map((variant) => {
+      const assetId = assetIdForVariant(variant, target);
+      const asset = profileAssetCatalogLookup(catalog, assetId);
+      if (!asset) return null;
+      const owned = profileAssetIsOwned(asset, state);
+      const policy = policyForAsset(asset, { variant, target, owned, state }) || {};
+      return shapeVariant({
+        variant,
+        asset,
+        owned,
+        active: variant?.id === activeVariantId,
+        policy
+      });
+    })
+    .filter(Boolean);
+}

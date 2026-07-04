@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added profile asset target-variant list shaping to `profile-asset-state` /
+  `modules/assets`, so games can share inventory/equipment response projection
+  while injecting product asset-id and acquisition-policy adapters.
 - Added asset gacha roll and duplicate-burn result DTO shapers to
   `asset-gacha` / `modules/gacha`, including persisted row normalizers for
   replay-safe consumer payloads.

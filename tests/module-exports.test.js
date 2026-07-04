@@ -29,6 +29,7 @@ import {
 } from '@microwavedev/backpack-game-core/modules/wallet/accounting';
 import {
   createProfileAssetState,
+  shapeProfileAssetTargetVariants,
   shapeProfileAssetVariant
 } from '@microwavedev/backpack-game-core/modules/assets';
 import {
@@ -212,4 +213,10 @@ test('[modules] assets facade exposes profile asset state helpers', () => {
     owned: true,
     policy: { acquisitionMode: 'direct', purchaseAvailable: true }
   }).purchaseAvailable, true);
+  assert.equal(shapeProfileAssetTargetVariants({
+    variants: [{ id: '1', assetId: 'portrait.axilin.1' }],
+    state,
+    catalog: [{ assetId: 'portrait.axilin.1', price: 500, currencyCode: 'soft_coin' }],
+    activeVariantId: '1'
+  })[0].active, true);
 });
