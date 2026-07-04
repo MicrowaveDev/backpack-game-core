@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added replay playback state helpers to `client-view-model`, so product
+  composables can share speed selection, long-battle boost, autoplay delay,
+  tick advancement, load/set-speed patches, and timeline shaping while keeping
+  timers, routes, settings persistence, event formatting, navigation, and UI
+  local.
 - Added game-run response patch helpers to `client-view-model`, so product
   composables can share start/ready/round-transition/completion state
   projection while keeping routes, replay loading, navigation, haptics, and

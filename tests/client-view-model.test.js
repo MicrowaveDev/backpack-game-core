@@ -26,6 +26,16 @@ import {
   preferredArtifactOrientation,
   projectLoadoutItems,
   resolveWalletBalance,
+  LONG_BATTLE_SPEED_BOOST_2X_INDEX,
+  LONG_BATTLE_SPEED_BOOST_3X_INDEX,
+  LONG_BATTLE_SPEED_BOOST_4X_INDEX,
+  preferredReplaySpeed,
+  replayAdvanceTickViewState,
+  replayAutoplayDelayViewState,
+  replayLoadResultViewState,
+  replayLongBattleSpeedBoost,
+  replaySetSpeedViewState,
+  replayTimelineViewState,
   runShopBuyResultViewState,
   runShopRefreshResultViewState,
   runShopSellResultViewState,
@@ -679,6 +689,78 @@ test('[client-view-model] shapes game-run response patches', () => {
   });
   assert.deepEqual(completion.result.achievements, [{ id: 'ach_1' }]);
   assert.deepEqual(completion.rounds, [{ roundNumber: 1 }]);
+});
+
+test('[client-view-model] shapes replay playback state', () => {
+  assert.equal(replayLongBattleSpeedBoost(30, 29), 1);
+  assert.equal(replayLongBattleSpeedBoost(LONG_BATTLE_SPEED_BOOST_2X_INDEX, LONG_BATTLE_SPEED_BOOST_2X_INDEX), 1);
+  assert.equal(replayLongBattleSpeedBoost(LONG_BATTLE_SPEED_BOOST_4X_INDEX + 12, LONG_BATTLE_SPEED_BOOST_2X_INDEX), 2);
+  assert.equal(replayLongBattleSpeedBoost(LONG_BATTLE_SPEED_BOOST_4X_INDEX + 12, LONG_BATTLE_SPEED_BOOST_3X_INDEX), 3);
+  assert.equal(replayLongBattleSpeedBoost(LONG_BATTLE_SPEED_BOOST_4X_INDEX + 12, LONG_BATTLE_SPEED_BOOST_4X_INDEX), 4);
+  assert.equal(preferredReplaySpeed({ replaySpeed: 4 }), 4);
+  assert.equal(preferredReplaySpeed({ replaySpeed: 16 }), 2);
+
+  assert.deepEqual(replayAutoplayDelayViewState({
+    eventCount: LONG_BATTLE_SPEED_BOOST_4X_INDEX + 12,
+    replayIndex: LONG_BATTLE_SPEED_BOOST_3X_INDEX,
+    replaySpeed: 4,
+    settings: { battleSpeed: '2x' },
+    defaultDelayMs: 1200,
+    fastDelayMs: 600
+  }), {
+    selectedSpeed: 4,
+    boost: 3,
+    speed: 12,
+    baseDelay: 600,
+    delay: 50
+  });
+
+  const battle = {
+    events: [
+      { type: 'start', state: { left: { currentHealth: 10 } } },
+      { type: 'action', actorSide: 'left', state: { left: { currentHealth: 10 } } },
+      { type: 'battle_end', winnerSide: 'left', state: { left: { currentHealth: 10 } } }
+    ]
+  };
+  assert.deepEqual(replayAdvanceTickViewState({ battle, replayIndex: 1 }), {
+    replayIndex: 2,
+    finished: true,
+    shouldStop: false,
+    shouldRestartTimer: false,
+    previousBoost: 1,
+    nextBoost: 1
+  });
+  assert.deepEqual(replayLoadResultViewState(battle, { settings: { replaySpeed: 8 } }), {
+    currentBattle: battle,
+    replayIndex: 0,
+    replaySpeed: 8,
+    errorMessage: ''
+  });
+  assert.deepEqual(replaySetSpeedViewState(4, {
+    settings: { lang: 'en', replaySpeed: 2 }
+  }), {
+    replaySpeed: 4,
+    settings: { lang: 'en', replaySpeed: 4 },
+    shouldPersist: true,
+    errorMessage: ''
+  });
+
+  const timeline = replayTimelineViewState({
+    battle,
+    replayIndex: 1,
+    formatEvent: (event, index) => ({
+      statusText: `${index}:${event.type}`,
+      speechSide: event.actorSide,
+      speechText: event.actorSide ? 'swing' : '',
+      speechParts: event.actorSide ? ['swing'] : []
+    })
+  });
+  assert.equal(timeline.activeEvent.type, 'action');
+  assert.deepEqual(timeline.activeSpeech, { side: 'left', narration: 'swing', parts: ['swing'] });
+  assert.equal(timeline.battleStatusText, '1:action');
+  assert.equal(timeline.replayFinished, false);
+  assert.deepEqual(timeline.visibleReplayEvents.map((event) => event.display.statusText), ['1:action', '0:start']);
+  assert.deepEqual(timeline.activeReplayState, { left: { currentHealth: 10 } });
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

@@ -59,7 +59,14 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   preferredArtifactOrientation,
+  preferredReplaySpeed,
   formatWalletBundlePrice,
+  replayAdvanceTickViewState,
+  replayAutoplayDelayViewState,
+  replayLoadResultViewState,
+  replayLongBattleSpeedBoost,
+  replaySetSpeedViewState,
+  replayTimelineViewState,
   runShopBuyResultViewState,
   runShopRefreshResultViewState,
   runShopSellResultViewState,
@@ -183,6 +190,13 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gameRunReadyResultViewState({ waiting: true }, { run: { id: 'run_1' } }).waiting, true);
   assert.equal(gameRunRoundTransitionViewState({ loadoutItems: [], shopOffer: [] }, { run: { id: 'run_1' } }).shouldRefreshBootstrap, false);
   assert.equal(gameRunCompletionResultViewState({ id: 'run_1', status: 'completed' }).run.status, 'completed');
+  assert.equal(preferredReplaySpeed({ replaySpeed: 4 }), 4);
+  assert.equal(replayLongBattleSpeedBoost(200, 120), 4);
+  assert.equal(replayAutoplayDelayViewState({ replaySpeed: 4 }).selectedSpeed, 4);
+  assert.equal(replayAdvanceTickViewState({ battle: { events: [{}, {}] }, replayIndex: 0 }).replayIndex, 1);
+  assert.equal(replayLoadResultViewState({ id: 'battle' }).replayIndex, 0);
+  assert.equal(replaySetSpeedViewState(4, { settings: { replaySpeed: 2 } }).settings.replaySpeed, 4);
+  assert.equal(replayTimelineViewState({ battle: { events: [{ type: 'start' }] } }).activeEvent.type, 'start');
 
   const artifacts = new Map([
     ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 0 }],

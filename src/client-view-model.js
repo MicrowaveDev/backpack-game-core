@@ -978,6 +978,163 @@ export function gameRunCompletionResultViewState(response) {
   };
 }
 
+export const LONG_BATTLE_SPEED_BOOST_2X_INDEX = 45;
+export const LONG_BATTLE_SPEED_BOOST_3X_INDEX = 90;
+export const LONG_BATTLE_SPEED_BOOST_4X_INDEX = 120;
+export const DEFAULT_REPLAY_SPEEDS = [2, 4, 8];
+
+export function replayLongBattleSpeedBoost(eventCount, replayIndex, {
+  boost2xIndex = LONG_BATTLE_SPEED_BOOST_2X_INDEX,
+  boost3xIndex = LONG_BATTLE_SPEED_BOOST_3X_INDEX,
+  boost4xIndex = LONG_BATTLE_SPEED_BOOST_4X_INDEX
+} = {}) {
+  const count = Number(eventCount) || 0;
+  const index = Number(replayIndex) || 0;
+  if (count <= boost2xIndex || index < boost2xIndex) return 1;
+  if (count > boost4xIndex && index >= boost4xIndex) return 4;
+  if (count > boost3xIndex && index >= boost3xIndex) return 3;
+  return 2;
+}
+
+export function preferredReplaySpeed(settings = null, {
+  allowedSpeeds = DEFAULT_REPLAY_SPEEDS,
+  fallback = 2
+} = {}) {
+  const speed = Number(settings?.replaySpeed);
+  return allowedSpeeds.includes(speed) ? speed : fallback;
+}
+
+export function replayAutoplayDelayViewState({
+  eventCount = 0,
+  replayIndex = 0,
+  replaySpeed = null,
+  settings = null,
+  defaultDelayMs = 1200,
+  fastDelayMs = 600,
+  minDelayMs = 50
+} = {}) {
+  const selectedSpeed = Number(replaySpeed) || preferredReplaySpeed(settings);
+  const boost = replayLongBattleSpeedBoost(eventCount, replayIndex);
+  const speed = selectedSpeed * boost;
+  const baseDelay = settings?.battleSpeed === '2x' ? fastDelayMs : defaultDelayMs;
+  return {
+    selectedSpeed,
+    boost,
+    speed,
+    baseDelay,
+    delay: Math.max(minDelayMs, Math.round(baseDelay / speed))
+  };
+}
+
+export function replayAdvanceTickViewState({
+  battle = null,
+  replayIndex = 0
+} = {}) {
+  const events = runArrayFrom(battle?.events);
+  if (!battle || !events.length) {
+    return {
+      replayIndex: numberOr(replayIndex),
+      finished: true,
+      shouldStop: true,
+      shouldRestartTimer: false,
+      previousBoost: 1,
+      nextBoost: 1
+    };
+  }
+  const index = numberOr(replayIndex);
+  const lastIndex = events.length - 1;
+  if (index >= lastIndex) {
+    const boost = replayLongBattleSpeedBoost(events.length, index);
+    return {
+      replayIndex: index,
+      finished: true,
+      shouldStop: true,
+      shouldRestartTimer: false,
+      previousBoost: boost,
+      nextBoost: boost
+    };
+  }
+  const previousBoost = replayLongBattleSpeedBoost(events.length, index);
+  const nextIndex = Math.min(lastIndex, index + 1);
+  const nextBoost = replayLongBattleSpeedBoost(events.length, nextIndex);
+  return {
+    replayIndex: nextIndex,
+    finished: nextIndex >= lastIndex,
+    shouldStop: false,
+    shouldRestartTimer: nextBoost !== previousBoost && nextIndex < lastIndex,
+    previousBoost,
+    nextBoost
+  };
+}
+
+export function replayLoadResultViewState(battle, {
+  settings = null
+} = {}) {
+  return {
+    currentBattle: battle || null,
+    replayIndex: 0,
+    replaySpeed: preferredReplaySpeed(settings),
+    errorMessage: ''
+  };
+}
+
+export function replaySetSpeedViewState(speed, {
+  settings = null,
+  allowedSpeeds = DEFAULT_REPLAY_SPEEDS
+} = {}) {
+  const nextSpeed = allowedSpeeds.includes(Number(speed))
+    ? Number(speed)
+    : preferredReplaySpeed(settings, { allowedSpeeds });
+  return {
+    replaySpeed: nextSpeed,
+    settings: settings
+      ? {
+          ...settings,
+          replaySpeed: nextSpeed
+        }
+      : null,
+    shouldPersist: Boolean(settings),
+    errorMessage: ''
+  };
+}
+
+export function replayTimelineViewState({
+  battle = null,
+  replayIndex = 0,
+  formatEvent = (event) => event,
+  longBattleSpeedBoost = replayLongBattleSpeedBoost
+} = {}) {
+  const events = runArrayFrom(battle?.events);
+  const index = Math.max(0, Math.min(numberOr(replayIndex), Math.max(0, events.length - 1)));
+  const activeEvent = events[index] || null;
+  const activeDisplay = activeEvent ? formatEvent(activeEvent, index) : null;
+  const visibleEvents = events
+    .slice(0, index + 1)
+    .map((event, eventIndex) => ({
+      ...event,
+      replayIndex: eventIndex,
+      display: formatEvent(event, eventIndex)
+    }))
+    .reverse();
+  const speech = activeDisplay?.speechSide && activeDisplay?.speechText
+    ? {
+        side: activeDisplay.speechSide,
+        narration: activeDisplay.speechText,
+        parts: runArrayFrom(activeDisplay.speechParts)
+      }
+    : null;
+  return {
+    activeEvent,
+    activeDisplay,
+    activeSpeech: speech,
+    battleStatusText: activeDisplay?.statusText || '',
+    replayFinished: events.length > 0 && index >= events.length - 1,
+    activeReplayState: activeEvent?.state || null,
+    visibleReplayEvents: visibleEvents,
+    longBattleSpeedBoost: longBattleSpeedBoost(events.length, index)
+  };
+}
+
 function patchRunCoins(run, coins) {
   if (!run || coins === undefined) return run || null;
   return {

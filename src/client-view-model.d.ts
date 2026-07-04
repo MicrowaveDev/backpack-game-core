@@ -339,6 +339,52 @@ export interface GameRunCompletionViewState {
   errorMessage: string;
 }
 
+export interface ReplayTimelineViewState {
+  activeEvent: Record<string, unknown> | null;
+  activeDisplay: unknown | null;
+  activeSpeech: {
+    side: unknown;
+    narration: unknown;
+    parts: unknown[];
+  } | null;
+  battleStatusText: string;
+  replayFinished: boolean;
+  activeReplayState: unknown | null;
+  visibleReplayEvents: Array<Record<string, unknown>>;
+  longBattleSpeedBoost: number;
+}
+
+export interface ReplayAutoplayDelayViewState {
+  selectedSpeed: number;
+  boost: number;
+  speed: number;
+  baseDelay: number;
+  delay: number;
+}
+
+export interface ReplayAdvanceTickViewState {
+  replayIndex: number;
+  finished: boolean;
+  shouldStop: boolean;
+  shouldRestartTimer: boolean;
+  previousBoost: number;
+  nextBoost: number;
+}
+
+export interface ReplayLoadViewState {
+  currentBattle: unknown | null;
+  replayIndex: number;
+  replaySpeed: number;
+  errorMessage: string;
+}
+
+export interface ReplaySetSpeedViewState {
+  replaySpeed: number;
+  settings: Record<string, unknown> | null;
+  shouldPersist: boolean;
+  errorMessage: string;
+}
+
 export interface RunShopItemState {
   id?: string | number | null;
   artifactId?: string | null;
@@ -415,6 +461,10 @@ export interface AssetRollFeedbackSummary {
 
 export const DEFAULT_ARTIFACT_STAT_KEYS: string[];
 export const DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY: ArtifactStatSuffixByKey;
+export const LONG_BATTLE_SPEED_BOOST_2X_INDEX: 45;
+export const LONG_BATTLE_SPEED_BOOST_3X_INDEX: 90;
+export const LONG_BATTLE_SPEED_BOOST_4X_INDEX: 120;
+export const DEFAULT_REPLAY_SPEEDS: number[];
 
 export function projectLoadoutItems(
   loadoutItems?: readonly LoadoutProjectionRow[],
@@ -727,6 +777,59 @@ export function gameRunRoundTransitionViewState(
 export function gameRunCompletionResultViewState(
   response?: Record<string, unknown> | null
 ): GameRunCompletionViewState;
+
+export function replayLongBattleSpeedBoost(
+  eventCount: unknown,
+  replayIndex: unknown,
+  options?: {
+    boost2xIndex?: number;
+    boost3xIndex?: number;
+    boost4xIndex?: number;
+  }
+): number;
+
+export function preferredReplaySpeed(
+  settings?: { replaySpeed?: unknown; [key: string]: unknown } | null,
+  options?: {
+    allowedSpeeds?: readonly number[];
+    fallback?: number;
+  }
+): number;
+
+export function replayAutoplayDelayViewState(input?: {
+  eventCount?: unknown;
+  replayIndex?: unknown;
+  replaySpeed?: unknown;
+  settings?: { battleSpeed?: unknown; replaySpeed?: unknown; [key: string]: unknown } | null;
+  defaultDelayMs?: number;
+  fastDelayMs?: number;
+  minDelayMs?: number;
+}): ReplayAutoplayDelayViewState;
+
+export function replayAdvanceTickViewState(input?: {
+  battle?: { events?: readonly Record<string, unknown>[]; [key: string]: unknown } | null;
+  replayIndex?: unknown;
+}): ReplayAdvanceTickViewState;
+
+export function replayLoadResultViewState(
+  battle?: unknown,
+  options?: { settings?: { replaySpeed?: unknown; [key: string]: unknown } | null }
+): ReplayLoadViewState;
+
+export function replaySetSpeedViewState(
+  speed?: unknown,
+  options?: {
+    settings?: Record<string, unknown> | null;
+    allowedSpeeds?: readonly number[];
+  }
+): ReplaySetSpeedViewState;
+
+export function replayTimelineViewState(input?: {
+  battle?: { events?: readonly Record<string, unknown>[]; [key: string]: unknown } | null;
+  replayIndex?: unknown;
+  formatEvent?: (event: Record<string, unknown>, replayIndex: number) => unknown;
+  longBattleSpeedBoost?: (eventCount: unknown, replayIndex: unknown) => number;
+}): ReplayTimelineViewState;
 
 export function runShopRefreshResultViewState(
   response?: { coins?: unknown; refreshCount?: unknown; shopOffer?: unknown[]; [key: string]: unknown } | null,

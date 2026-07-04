@@ -43,7 +43,8 @@ catalogs in their own repos.
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
   view states, wallet checkout next-action decisions, asset roll/burn mutation
   refresh decisions, run-shop response patch helpers, and game-run response
-  patch helpers over product-provided copy and route adapters.
+  patch helpers, plus replay playback state helpers over product-provided copy
+  and route adapters.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, storage policy, and optional
   `{ success, data, error }` envelope unwrapping.
