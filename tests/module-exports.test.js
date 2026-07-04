@@ -61,6 +61,11 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   gachaAdminDraftDiffRows,
+  gachaAdminPlanChanceText,
+  gachaAdminPlanCoverageRows,
+  gachaAdminPlanTotalWeight,
+  gachaAdminReleaseChecklistRows,
+  gachaAdminValidationIssueRows,
   preferredArtifactOrientation,
   preferredReplaySpeed,
   formatWalletBundlePrice,
@@ -190,6 +195,11 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(runShopRefreshResultViewState({ coins: 1 }, { run: { player: { coins: 0 } } }).run.player.coins, 1);
   assert.equal(runShopBuyResultViewState({ id: 'row_1' }, { artifactId: 'needle' }).boughtItem.artifactId, 'needle');
   assert.equal(gachaAdminDraftDiffRows({ addedItems: ['skin.a'] })[0].type, 'item_added');
+  assert.equal(gachaAdminValidationIssueRows({ errors: [{}] })[0].severity, 'error');
+  assert.equal(gachaAdminReleaseChecklistRows({ passed: [{ code: 'ok' }] })[0].code, 'ok');
+  assert.equal(gachaAdminPlanTotalWeight([{ dropWeight: 5 }]), 5);
+  assert.equal(gachaAdminPlanCoverageRows([{ characterId: 'ruby' }], { characters: [{ id: 'ruby' }] })[0].count, 1);
+  assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 4 }), '25.0%');
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [
       { id: 'row_1', artifactId: 'needle' },

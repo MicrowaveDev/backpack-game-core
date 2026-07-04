@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added gacha admin validation/checklist/season-plan row helpers to
+  `client-view-model`, so product admin panels can share issue rows, release
+  rows, plan coverage rows, total weight, and chance text while keeping API
+  calls, product copy, image upload, and page layout local.
 - Added gacha admin pack snapshot/live-draft diff helpers to
   `modules/gacha/admin-validation` and draft-diff table row shaping to
   `client-view-model`, so product admin panels can share pure diff DTOs while

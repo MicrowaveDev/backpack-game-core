@@ -1259,6 +1259,75 @@ export function gachaAdminDraftDiffRows(diff) {
   ];
 }
 
+function gachaAdminPositiveNumber(value) {
+  const numeric = Number(value || 0);
+  return Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
+}
+
+function formatGachaAdminPercent(value) {
+  const numeric = Number(value || 0);
+  return `${(numeric * 100).toFixed(numeric > 0 && numeric < 0.01 ? 2 : 1)}%`;
+}
+
+export function gachaAdminValidationIssueRows(validation) {
+  if (!validation) return [];
+  return [
+    ...(validation.errors || []).map((issue) => ({ ...issue, severity: 'error' })),
+    ...(validation.warnings || []).map((issue) => ({ ...issue, severity: 'warning' }))
+  ];
+}
+
+export function gachaAdminReleaseChecklistRows(checklist) {
+  if (!checklist) return [];
+  return [
+    ...(checklist.blockers || []),
+    ...(checklist.warnings || []),
+    ...(checklist.passed || [])
+  ];
+}
+
+export function gachaAdminPlanTotalWeight(planItems = []) {
+  return (planItems || []).reduce(
+    (sum, item) => sum + gachaAdminPositiveNumber(item?.dropWeight ?? item?.drop_weight),
+    0
+  );
+}
+
+export function gachaAdminPlanCoverageRows(planItems = [], {
+  characters = [],
+  targetPerCharacter = 5
+} = {}) {
+  const target = Number(targetPerCharacter) || 5;
+  const byCharacter = new Map();
+  for (const item of planItems || []) {
+    const characterId = item?.characterId ?? item?.character_id;
+    const row = byCharacter.get(characterId) || { count: 0, readyCount: 0, totalWeight: 0 };
+    row.count += 1;
+    if (item?.status === 'ready') row.readyCount += 1;
+    row.totalWeight += gachaAdminPositiveNumber(item?.dropWeight ?? item?.drop_weight);
+    byCharacter.set(characterId, row);
+  }
+  return (characters || []).map((character) => {
+    const row = byCharacter.get(character.id) || { count: 0, readyCount: 0, totalWeight: 0 };
+    return {
+      ...character,
+      ...row,
+      target,
+      missing: Math.max(0, target - row.count),
+      enough: row.count >= target
+    };
+  });
+}
+
+export function gachaAdminPlanChanceText(item, {
+  totalWeight = null,
+  formatPercent = formatGachaAdminPercent
+} = {}) {
+  const total = gachaAdminPositiveNumber(totalWeight);
+  if (!total) return '0.0%';
+  return formatPercent(gachaAdminPositiveNumber(item?.dropWeight ?? item?.drop_weight) / total);
+}
+
 export function formatAssetRollResultName(result, {
   localizeName = localizeUnknownName
 } = {}) {

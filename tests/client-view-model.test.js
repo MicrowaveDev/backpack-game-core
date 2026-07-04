@@ -20,6 +20,11 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   gachaAdminDraftDiffRows,
+  gachaAdminPlanChanceText,
+  gachaAdminPlanCoverageRows,
+  gachaAdminPlanTotalWeight,
+  gachaAdminReleaseChecklistRows,
+  gachaAdminValidationIssueRows,
   buildOccupiedCellMap,
   formatWalletBundlePrice,
   occupiedCellKeys,
@@ -784,6 +789,43 @@ test('[client-view-model] flattens gacha admin draft diffs for table rows', () =
     { type: 'item_removed', field: 'skin.b', before: 'skin.b', after: null },
     { type: 'item_changed', field: 'skin.a', before: [100, 'common'], after: [80, 'rare'] }
   ]);
+});
+
+test('[client-view-model] shapes gacha admin validation, checklist, and plan rows', () => {
+  assert.deepEqual(gachaAdminValidationIssueRows({
+    errors: [{ code: 'pack_missing' }],
+    warnings: [{ code: 'low_weight' }]
+  }), [
+    { code: 'pack_missing', severity: 'error' },
+    { code: 'low_weight', severity: 'warning' }
+  ]);
+  assert.deepEqual(gachaAdminReleaseChecklistRows({
+    blockers: [{ code: 'missing_dates', severity: 'blocker' }],
+    warnings: [{ code: 'policy_warning', severity: 'warning' }],
+    passed: [{ code: 'price_present', severity: 'pass' }]
+  }).map((issue) => issue.code), ['missing_dates', 'policy_warning', 'price_present']);
+
+  const planItems = [
+    { characterId: 'ruby', status: 'ready', dropWeight: 25 },
+    { character_id: 'ruby', status: 'planned', drop_weight: '75' },
+    { characterId: 'amber', status: 'ready', dropWeight: 0 }
+  ];
+  assert.equal(gachaAdminPlanTotalWeight(planItems), 100);
+  assert.deepEqual(gachaAdminPlanCoverageRows(planItems, {
+    characters: [
+      { id: 'ruby', label: 'Ruby' },
+      { id: 'amber', label: 'Amber' },
+      { id: 'opal', label: 'Opal' }
+    ],
+    targetPerCharacter: 2
+  }), [
+    { id: 'ruby', label: 'Ruby', count: 2, readyCount: 1, totalWeight: 100, target: 2, missing: 0, enough: true },
+    { id: 'amber', label: 'Amber', count: 1, readyCount: 1, totalWeight: 0, target: 2, missing: 1, enough: false },
+    { id: 'opal', label: 'Opal', count: 0, readyCount: 0, totalWeight: 0, target: 2, missing: 2, enough: false }
+  ]);
+  assert.equal(gachaAdminPlanChanceText({ dropWeight: 25 }, { totalWeight: 100 }), '25.0%');
+  assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 1000 }), '0.10%');
+  assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 0 }), '0.0%');
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

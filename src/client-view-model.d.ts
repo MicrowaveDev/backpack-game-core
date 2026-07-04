@@ -450,6 +450,40 @@ export interface GachaAdminDraftDiffRow {
   after: unknown;
 }
 
+export interface GachaAdminValidationIssueRow {
+  severity: 'error' | 'warning' | string;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminReleaseChecklistRow {
+  severity?: 'blocker' | 'warning' | 'pass' | string;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminPlanItemInput {
+  characterId?: string;
+  character_id?: string;
+  status?: string;
+  dropWeight?: unknown;
+  drop_weight?: unknown;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminPlanCharacterInput {
+  id: string;
+  label?: string;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminPlanCoverageRow extends GachaAdminPlanCharacterInput {
+  count: number;
+  readyCount: number;
+  totalWeight: number;
+  target: number;
+  missing: number;
+  enough: boolean;
+}
+
 export interface AssetRollResultItemInput {
   assetName?: unknown;
   assetId?: string | null;
@@ -888,6 +922,38 @@ export function runShopSellResultViewState(
 export function gachaAdminDraftDiffRows(
   diff?: GachaAdminDraftDiff | null
 ): GachaAdminDraftDiffRow[];
+
+export function gachaAdminValidationIssueRows(
+  validation?: { errors?: readonly Record<string, unknown>[]; warnings?: readonly Record<string, unknown>[] } | null
+): GachaAdminValidationIssueRow[];
+
+export function gachaAdminReleaseChecklistRows(
+  checklist?: {
+    blockers?: readonly Record<string, unknown>[];
+    warnings?: readonly Record<string, unknown>[];
+    passed?: readonly Record<string, unknown>[];
+  } | null
+): GachaAdminReleaseChecklistRow[];
+
+export function gachaAdminPlanTotalWeight(
+  planItems?: readonly GachaAdminPlanItemInput[]
+): number;
+
+export function gachaAdminPlanCoverageRows(
+  planItems?: readonly GachaAdminPlanItemInput[],
+  options?: {
+    characters?: readonly GachaAdminPlanCharacterInput[];
+    targetPerCharacter?: unknown;
+  }
+): GachaAdminPlanCoverageRow[];
+
+export function gachaAdminPlanChanceText(
+  item?: GachaAdminPlanItemInput | null,
+  options?: {
+    totalWeight?: unknown;
+    formatPercent?: (value: number) => string;
+  }
+): string;
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,
