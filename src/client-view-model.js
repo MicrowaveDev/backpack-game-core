@@ -592,6 +592,54 @@ export function walletPurchaseStatusFromTelegramInvoice(status) {
   return 'failed';
 }
 
+export function walletPurchaseOpeningViewState({
+  status = 'opening'
+} = {}) {
+  return {
+    status,
+    errorMessage: ''
+  };
+}
+
+export function walletPurchaseIntentViewState(intent, options = {}) {
+  const status = walletPurchaseStatusFromIntent(intent, options);
+  return {
+    status,
+    handled: Boolean(status),
+    shouldRefresh: status === 'confirmed'
+  };
+}
+
+export function walletPurchaseCheckoutViewState({
+  checkout = {},
+  hasTelegramInvoice = false,
+  hasWebCheckout = false,
+  setupRequiredMessage = 'Wallet purchases are not configured yet',
+  unavailableMessage = 'Payment checkout is not available'
+} = {}) {
+  if (hasTelegramInvoice || hasWebCheckout) {
+    return {
+      status: 'opened',
+      errorMessage: '',
+      canOpen: true
+    };
+  }
+  return {
+    status: 'failed',
+    errorMessage: checkout?.setupRequired ? setupRequiredMessage : unavailableMessage,
+    canOpen: false
+  };
+}
+
+export function walletPurchaseErrorViewState(error, {
+  fallbackMessage = 'Failed to start wallet purchase'
+} = {}) {
+  return {
+    status: 'failed',
+    errorMessage: messageFromError(error, fallbackMessage)
+  };
+}
+
 function localizeUnknownName(value) {
   if (value && typeof value === 'object') return value.en || Object.values(value)[0] || '';
   return value || '';
@@ -603,6 +651,11 @@ function statusIn(statuses = [], value) {
 
 function includesAny(value, patterns = []) {
   return patterns.some((pattern) => value.includes(String(pattern || '').toLowerCase()));
+}
+
+function messageFromError(error, fallbackMessage = '') {
+  if (typeof error === 'string') return error || fallbackMessage;
+  return error?.message || fallbackMessage;
 }
 
 export function assetRollStatusFromError(error, {
@@ -621,6 +674,57 @@ export function assetRollStatusFromError(error, {
   if (includesAny(message, unavailablePatterns)) return 'unavailable';
   if (includesAny(message, invalidPatterns)) return 'invalid';
   return 'failed';
+}
+
+export function assetRollPendingViewState({
+  status = 'rolling'
+} = {}) {
+  return {
+    status,
+    result: null,
+    errorMessage: '',
+    globalErrorMessage: ''
+  };
+}
+
+export function assetRollResultViewState(response, {
+  successKey = 'roll',
+  resultKey = 'rollResult',
+  successStatus = 'success',
+  failureStatus = 'failed',
+  failureMessage = 'Failed to roll pack'
+} = {}) {
+  const success = successKey ? Boolean(response?.[successKey]) : Boolean(response);
+  if (success) {
+    return {
+      status: successStatus,
+      result: resultKey ? response?.[resultKey] || null : response || null,
+      errorMessage: '',
+      globalErrorMessage: ''
+    };
+  }
+  return {
+    status: failureStatus,
+    result: null,
+    errorMessage: failureMessage,
+    globalErrorMessage: ''
+  };
+}
+
+export function assetRollErrorViewState(error, {
+  fallbackMessage = 'Failed to roll pack',
+  globalErrorStatuses = ['failed', 'invalid'],
+  statusOptions = {}
+} = {}) {
+  const status = assetRollStatusFromError(error, statusOptions);
+  const errorMessage = messageFromError(error, fallbackMessage);
+  const shouldSurface = new Set(globalErrorStatuses || []).has(status);
+  return {
+    status,
+    result: null,
+    errorMessage,
+    globalErrorMessage: shouldSurface ? errorMessage : ''
+  };
 }
 
 export function formatAssetRollResultName(result, {

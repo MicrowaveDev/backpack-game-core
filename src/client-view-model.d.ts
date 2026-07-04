@@ -223,6 +223,7 @@ export interface WalletPurchaseSurfaceSummary {
 
 export type WalletPurchaseIntentStatus = '' | 'confirmed' | 'expired' | 'failed';
 export type TelegramInvoiceStatus = 'confirmed' | 'pending' | 'expired' | 'failed';
+export type WalletPurchaseClientStatus = 'opening' | 'opened' | 'confirmed' | 'expired' | 'failed' | string;
 export type AssetRollErrorStatus =
   | 'complete'
   | 'burn_unavailable'
@@ -231,6 +232,31 @@ export type AssetRollErrorStatus =
   | 'unavailable'
   | 'invalid'
   | 'failed';
+export type AssetRollClientStatus = 'rolling' | 'burning' | 'success' | 'burned' | AssetRollErrorStatus | string;
+
+export interface WalletPurchaseViewState {
+  status: WalletPurchaseClientStatus;
+  errorMessage: string;
+}
+
+export interface WalletPurchaseIntentViewState {
+  status: WalletPurchaseIntentStatus;
+  handled: boolean;
+  shouldRefresh: boolean;
+}
+
+export interface WalletPurchaseCheckoutViewState {
+  status: 'opened' | 'failed';
+  errorMessage: string;
+  canOpen: boolean;
+}
+
+export interface AssetRollViewState {
+  status: AssetRollClientStatus;
+  result: unknown | null;
+  errorMessage: string;
+  globalErrorMessage: string;
+}
 
 export interface AssetRollResultItemInput {
   assetName?: unknown;
@@ -457,6 +483,34 @@ export function walletPurchaseStatusFromTelegramInvoice(
   status?: unknown
 ): TelegramInvoiceStatus;
 
+export function walletPurchaseOpeningViewState(input?: {
+  status?: WalletPurchaseClientStatus;
+}): WalletPurchaseViewState;
+
+export function walletPurchaseIntentViewState(
+  intent?: { status?: unknown; checkoutStatus?: unknown; [key: string]: unknown } | null,
+  options?: {
+    completedStatus?: string;
+    expiredStatuses?: readonly string[];
+    failedStatuses?: readonly string[];
+    checkoutExpiredStatuses?: readonly string[];
+    checkoutFailedStatuses?: readonly string[];
+  }
+): WalletPurchaseIntentViewState;
+
+export function walletPurchaseCheckoutViewState(input?: {
+  checkout?: { setupRequired?: boolean; [key: string]: unknown } | null;
+  hasTelegramInvoice?: boolean;
+  hasWebCheckout?: boolean;
+  setupRequiredMessage?: string;
+  unavailableMessage?: string;
+}): WalletPurchaseCheckoutViewState;
+
+export function walletPurchaseErrorViewState(
+  error?: unknown,
+  options?: { fallbackMessage?: string }
+): WalletPurchaseViewState;
+
 export function assetRollStatusFromError(
   error?: unknown,
   options?: {
@@ -468,6 +522,30 @@ export function assetRollStatusFromError(
     invalidPatterns?: readonly string[];
   }
 ): AssetRollErrorStatus;
+
+export function assetRollPendingViewState(input?: {
+  status?: AssetRollClientStatus;
+}): AssetRollViewState;
+
+export function assetRollResultViewState(
+  response?: Record<string, unknown> | null,
+  options?: {
+    successKey?: string | null;
+    resultKey?: string | null;
+    successStatus?: AssetRollClientStatus;
+    failureStatus?: AssetRollClientStatus;
+    failureMessage?: string;
+  }
+): AssetRollViewState;
+
+export function assetRollErrorViewState(
+  error?: unknown,
+  options?: {
+    fallbackMessage?: string;
+    globalErrorStatuses?: readonly string[];
+    statusOptions?: Parameters<typeof assetRollStatusFromError>[1];
+  }
+): AssetRollViewState;
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,

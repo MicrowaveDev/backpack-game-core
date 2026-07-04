@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {
   assetPackAvailabilityLabel,
   assetPackIsActive,
+  assetRollErrorViewState,
+  assetRollPendingViewState,
+  assetRollResultViewState,
   assetRollStatusFromError,
   artifactPreviewOrientation,
   bagRowEntryFor,
@@ -23,6 +26,10 @@ import {
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
   summarizeAssetRollPacks,
+  walletPurchaseCheckoutViewState,
+  walletPurchaseErrorViewState,
+  walletPurchaseIntentViewState,
+  walletPurchaseOpeningViewState,
   walletPurchaseStatusFromIntent,
   walletPurchaseStatusFromTelegramInvoice
 } from '@microwavedev/backpack-game-core/client-view-model';
@@ -328,6 +335,92 @@ test('[client-view-model] normalizes wallet and asset-roll client statuses', () 
   assert.equal(assetRollStatusFromError(new Error('Pack is inactive')), 'unavailable');
   assert.equal(assetRollStatusFromError(new Error('Configuration is invalid')), 'invalid');
   assert.equal(assetRollStatusFromError(new Error('Unexpected failure')), 'failed');
+});
+
+test('[client-view-model] shapes headless wallet purchase mutation view state', () => {
+  assert.deepEqual(walletPurchaseOpeningViewState(), {
+    status: 'opening',
+    errorMessage: ''
+  });
+  assert.deepEqual(walletPurchaseIntentViewState({ status: 'completed' }), {
+    status: 'confirmed',
+    handled: true,
+    shouldRefresh: true
+  });
+  assert.deepEqual(walletPurchaseIntentViewState({ status: 'open' }), {
+    status: '',
+    handled: false,
+    shouldRefresh: false
+  });
+  assert.deepEqual(walletPurchaseCheckoutViewState({
+    checkout: { invoiceLink: 'https://invoice.example' },
+    hasTelegramInvoice: true
+  }), {
+    status: 'opened',
+    errorMessage: '',
+    canOpen: true
+  });
+  assert.deepEqual(walletPurchaseCheckoutViewState({
+    checkout: { setupRequired: true }
+  }), {
+    status: 'failed',
+    errorMessage: 'Wallet purchases are not configured yet',
+    canOpen: false
+  });
+  assert.deepEqual(walletPurchaseErrorViewState(new Error('network down')), {
+    status: 'failed',
+    errorMessage: 'network down'
+  });
+});
+
+test('[client-view-model] shapes headless asset roll mutation view state', () => {
+  assert.deepEqual(assetRollPendingViewState(), {
+    status: 'rolling',
+    result: null,
+    errorMessage: '',
+    globalErrorMessage: ''
+  });
+  assert.deepEqual(assetRollResultViewState({
+    roll: { id: 'roll_1' },
+    rollResult: { assetId: 'skin.a' }
+  }), {
+    status: 'success',
+    result: { assetId: 'skin.a' },
+    errorMessage: '',
+    globalErrorMessage: ''
+  });
+  assert.deepEqual(assetRollResultViewState({
+    exchange: { id: 'burn_1' },
+    burnResult: { assetId: 'skin.b' }
+  }, {
+    successKey: 'exchange',
+    resultKey: 'burnResult',
+    successStatus: 'burned',
+    failureMessage: 'Failed to burn duplicates'
+  }), {
+    status: 'burned',
+    result: { assetId: 'skin.b' },
+    errorMessage: '',
+    globalErrorMessage: ''
+  });
+  assert.deepEqual(assetRollResultViewState(null, { failureMessage: 'Failed to roll pack' }), {
+    status: 'failed',
+    result: null,
+    errorMessage: 'Failed to roll pack',
+    globalErrorMessage: ''
+  });
+  assert.deepEqual(assetRollErrorViewState(new Error('Configuration is invalid')), {
+    status: 'invalid',
+    result: null,
+    errorMessage: 'Configuration is invalid',
+    globalErrorMessage: 'Configuration is invalid'
+  });
+  assert.deepEqual(assetRollErrorViewState(new Error('No rollable assets left')), {
+    status: 'complete',
+    result: null,
+    errorMessage: 'No rollable assets left',
+    globalErrorMessage: ''
+  });
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

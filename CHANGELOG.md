@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added headless wallet purchase and asset roll mutation view-state helpers to
+  `client-view-model`, so product composables can share opening/success/failure
+  state transitions while keeping API routes, checkout opening, refresh hooks,
+  and product copy local.
 - Added profile asset target-variant list shaping to `profile-asset-state` /
   `modules/assets`, so games can share inventory/equipment response projection
   while injecting product asset-id and acquisition-policy adapters.
