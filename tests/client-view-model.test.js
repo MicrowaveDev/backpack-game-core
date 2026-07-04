@@ -15,6 +15,10 @@ import {
   formatAssetPackRarityOdds,
   formatLoadoutStatsText,
   formatStatDelta,
+  gameRunCompletionResultViewState,
+  gameRunReadyResultViewState,
+  gameRunRoundTransitionViewState,
+  gameRunStartResultViewState,
   buildOccupiedCellMap,
   formatWalletBundlePrice,
   occupiedCellKeys,
@@ -588,6 +592,93 @@ test('[client-view-model] shapes run-shop response patches', () => {
     target: 'needle'
   });
   assert.deepEqual(fallbackSell.builderItems.map((item) => item.id), ['row_b']);
+});
+
+test('[client-view-model] shapes game-run response patches', () => {
+  const start = gameRunStartResultViewState({
+    id: 'run_1',
+    player: { coins: 5 },
+    shopOffer: ['needle']
+  });
+  assert.deepEqual(start.run.loadoutItems, []);
+  assert.deepEqual(start.shopOffer, ['needle']);
+  assert.deepEqual(start.rounds, []);
+  assert.equal(start.refreshCount, 0);
+
+  const run = {
+    id: 'run_1',
+    currentRound: 1,
+    player: { coins: 5 },
+    rounds: [{ roundNumber: 1, battleId: 'battle_1' }]
+  };
+  const ready = gameRunReadyResultViewState({
+    id: 'run_1',
+    currentRound: 2,
+    player: { coins: 6 },
+    lastRound: { roundNumber: 2, battleId: 'battle_2' },
+    battle: { id: 'battle_2' }
+  }, { run });
+  assert.equal(ready.waiting, false);
+  assert.equal(ready.run.currentRound, 2);
+  assert.deepEqual(ready.run.player, { coins: 6 });
+  assert.deepEqual(ready.rounds.map((round) => round.roundNumber), [1, 2]);
+  assert.equal(ready.battleId, 'battle_2');
+  assert.equal(ready.shouldLoadReplay, true);
+  assert.equal(ready.shouldShowComplete, false);
+  assert.deepEqual(ready.result.rounds.map((round) => round.roundNumber), [1, 2]);
+
+  const completed = gameRunReadyResultViewState({
+    id: 'run_1',
+    status: 'completed',
+    currentRound: 4,
+    completionBonus: { softCoin: 5 },
+    lastRound: { roundNumber: 4 }
+  }, {
+    run: { ...run, status: 'active' },
+    previousRounds: [{ roundNumber: 3 }]
+  });
+  assert.equal(completed.run.status, 'completed');
+  assert.equal(completed.shouldShowComplete, true);
+  assert.equal(completed.completionGameRunId, 'run_1');
+
+  const transition = gameRunRoundTransitionViewState({
+    status: 'active',
+    currentRound: 3,
+    player: { coins: 7 },
+    shopOffer: ['plate'],
+    loadoutItems: [{ id: 'row_plate', artifactId: 'plate' }],
+    fusions: [{ id: 'fusion_1' }]
+  }, { run });
+  assert.equal(transition.run.currentRound, 3);
+  assert.deepEqual(transition.shopOffer, ['plate']);
+  assert.deepEqual(transition.loadoutItems.map((item) => item.id), ['row_plate']);
+  assert.deepEqual(transition.fusionRevealQueue, [{ id: 'fusion_1' }]);
+  assert.equal(transition.shouldRefreshBootstrap, false);
+
+  const completion = gameRunCompletionResultViewState({
+    id: 'run_1',
+    mode: 'solo',
+    status: 'abandoned',
+    currentRound: 3,
+    endedAt: 'now',
+    endReason: 'abandoned',
+    player: { coins: 7 },
+    achievements: [{ id: 'ach_1' }],
+    rounds: [{ roundNumber: 1 }]
+  });
+  assert.deepEqual(completion.run, {
+    id: 'run_1',
+    mode: 'solo',
+    status: 'abandoned',
+    currentRound: 3,
+    startedAt: undefined,
+    endedAt: 'now',
+    endReason: 'abandoned',
+    completionBonus: null,
+    player: { coins: 7 }
+  });
+  assert.deepEqual(completion.result.achievements, [{ id: 'ach_1' }]);
+  assert.deepEqual(completion.rounds, [{ roundNumber: 1 }]);
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

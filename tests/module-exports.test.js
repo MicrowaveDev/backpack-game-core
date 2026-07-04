@@ -54,6 +54,10 @@ import {
   buildOccupiedCellMap,
   classifyCell,
   formatStatDelta,
+  gameRunCompletionResultViewState,
+  gameRunReadyResultViewState,
+  gameRunRoundTransitionViewState,
+  gameRunStartResultViewState,
   preferredArtifactOrientation,
   formatWalletBundlePrice,
   runShopBuyResultViewState,
@@ -175,6 +179,10 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
       { id: 'row_2', artifactId: 'needle' }
     ]
   }).builderItems.map((item) => item.id), ['row_2']);
+  assert.deepEqual(gameRunStartResultViewState({ id: 'run_1' }).run.loadoutItems, []);
+  assert.equal(gameRunReadyResultViewState({ waiting: true }, { run: { id: 'run_1' } }).waiting, true);
+  assert.equal(gameRunRoundTransitionViewState({ loadoutItems: [], shopOffer: [] }, { run: { id: 'run_1' } }).shouldRefreshBootstrap, false);
+  assert.equal(gameRunCompletionResultViewState({ id: 'run_1', status: 'completed' }).run.status, 'completed');
 
   const artifacts = new Map([
     ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 0 }],

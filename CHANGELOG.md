@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added game-run response patch helpers to `client-view-model`, so product
+  composables can share start/ready/round-transition/completion state
+  projection while keeping routes, replay loading, navigation, haptics, and
+  bootstrap side effects local.
 - Added run-shop response patch helpers to `client-view-model`, so product
   composables can share buy/sell/refresh state projection while keeping API
   calls, haptics, and artifact catalogs local.

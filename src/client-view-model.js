@@ -823,6 +823,161 @@ export function assetRollMutationErrorViewState(error, options = {}) {
   };
 }
 
+function runArrayFrom(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function gameRunCompletionRunFrom(response) {
+  if (!response) return null;
+  return {
+    id: response.id,
+    mode: response.mode,
+    status: response.status,
+    currentRound: response.currentRound,
+    startedAt: response.startedAt,
+    endedAt: response.endedAt,
+    endReason: response.endReason,
+    completionBonus: response.completionBonus || null,
+    player: response.player || null
+  };
+}
+
+function gameRunCompletionResultFrom(response) {
+  if (!response) return null;
+  return {
+    id: response.id,
+    mode: response.mode,
+    status: response.status,
+    currentRound: response.currentRound,
+    endedAt: response.endedAt,
+    endReason: response.endReason,
+    completionBonus: response.completionBonus || null,
+    season: response.season || null,
+    achievements: runArrayFrom(response.achievements),
+    player: response.player || null,
+    playerResults: response.playerResults || null,
+    lastRound: response.lastRound || null,
+    rounds: runArrayFrom(response.rounds)
+  };
+}
+
+function mergeGameRunRound(previousRounds, currentRound) {
+  if (!currentRound) return previousRounds;
+  return [
+    ...previousRounds.filter((round) => round?.roundNumber !== currentRound.roundNumber),
+    currentRound
+  ].sort((a, b) => (a?.roundNumber || 0) - (b?.roundNumber || 0));
+}
+
+function gameRunIsCompleteStatus(status) {
+  return status === 'completed' || status === 'abandoned';
+}
+
+export function gameRunStartResultViewState(response) {
+  const run = response
+    ? {
+        ...response,
+        loadoutItems: runArrayFrom(response.loadoutItems)
+      }
+    : null;
+  return {
+    run,
+    rounds: [],
+    shopOffer: runArrayFrom(run?.shopOffer),
+    refreshCount: 0,
+    result: null,
+    fusionRevealQueue: [],
+    errorMessage: ''
+  };
+}
+
+export function gameRunReadyResultViewState(response, {
+  run = null,
+  previousRounds = null
+} = {}) {
+  const waiting = Boolean(response?.waiting);
+  const baseRounds = Array.isArray(previousRounds)
+    ? previousRounds
+    : runArrayFrom(run?.rounds);
+  const currentRound = response?.lastRound || null;
+  const rounds = waiting
+    ? baseRounds
+    : mergeGameRunRound(baseRounds, currentRound);
+  const resultRounds = runArrayFrom(response?.rounds).length
+    ? response.rounds
+    : rounds;
+  let nextRun = run || null;
+
+  if (!waiting && nextRun) {
+    nextRun = {
+      ...nextRun,
+      currentRound: response?.currentRound ?? nextRun.currentRound,
+      player: response?.player || nextRun.player,
+      rounds
+    };
+    if (gameRunIsCompleteStatus(response?.status)) {
+      nextRun = {
+        ...nextRun,
+        status: response.status,
+        endReason: response.endReason,
+        completionBonus: response.completionBonus || null,
+        rounds
+      };
+    }
+  }
+
+  const battleId = response?.lastRound?.battleId || null;
+  const status = response?.status || nextRun?.status || '';
+  return {
+    waiting,
+    run: nextRun,
+    result: waiting || !response ? null : { ...response, rounds: resultRounds },
+    rounds,
+    battleId,
+    battle: response?.battle || null,
+    shouldLoadReplay: Boolean(battleId),
+    shouldShowComplete: !battleId && gameRunIsCompleteStatus(status),
+    completionGameRunId: response?.id || nextRun?.id || null,
+    errorMessage: ''
+  };
+}
+
+export function gameRunRoundTransitionViewState(resolvedRun, {
+  run = null
+} = {}) {
+  const hasRunPayload = Array.isArray(resolvedRun?.loadoutItems) && Array.isArray(resolvedRun?.shopOffer);
+  const nextRun = hasRunPayload && run
+    ? {
+        ...run,
+        status: resolvedRun.status || run.status,
+        currentRound: resolvedRun.currentRound ?? run.currentRound,
+        player: resolvedRun.player || run.player,
+        shopOffer: resolvedRun.shopOffer,
+        loadoutItems: resolvedRun.loadoutItems
+      }
+    : run || null;
+  return {
+    run: nextRun,
+    result: null,
+    refreshCount: 0,
+    fusionRevealQueue: runArrayFrom(resolvedRun?.fusions),
+    shopOffer: hasRunPayload ? resolvedRun.shopOffer : [],
+    loadoutItems: hasRunPayload ? resolvedRun.loadoutItems : [],
+    shouldRefreshBootstrap: !hasRunPayload,
+    errorMessage: ''
+  };
+}
+
+export function gameRunCompletionResultViewState(response) {
+  return {
+    run: gameRunCompletionRunFrom(response),
+    result: gameRunCompletionResultFrom(response),
+    rounds: runArrayFrom(response?.rounds),
+    shopOffer: [],
+    errorMessage: ''
+  };
+}
+
 function patchRunCoins(run, coins) {
   if (!run || coins === undefined) return run || null;
   return {

@@ -281,6 +281,64 @@ export interface AssetRollMutationViewState extends AssetRollViewState {
   shouldRefresh: boolean;
 }
 
+export interface GameRunRunState {
+  id?: unknown;
+  mode?: unknown;
+  status?: unknown;
+  currentRound?: unknown;
+  startedAt?: unknown;
+  endedAt?: unknown;
+  endReason?: unknown;
+  completionBonus?: unknown;
+  player?: Record<string, unknown> | null;
+  rounds?: unknown[];
+  shopOffer?: unknown[];
+  loadoutItems?: unknown[];
+  [key: string]: unknown;
+}
+
+export interface GameRunStartViewState {
+  run: GameRunRunState | null;
+  rounds: unknown[];
+  shopOffer: unknown[];
+  refreshCount: number;
+  result: null;
+  fusionRevealQueue: unknown[];
+  errorMessage: string;
+}
+
+export interface GameRunReadyViewState {
+  waiting: boolean;
+  run: GameRunRunState | null;
+  result: Record<string, unknown> | null;
+  rounds: unknown[];
+  battleId: unknown | null;
+  battle: unknown | null;
+  shouldLoadReplay: boolean;
+  shouldShowComplete: boolean;
+  completionGameRunId: unknown | null;
+  errorMessage: string;
+}
+
+export interface GameRunRoundTransitionViewState {
+  run: GameRunRunState | null;
+  result: null;
+  refreshCount: number;
+  fusionRevealQueue: unknown[];
+  shopOffer: unknown[];
+  loadoutItems: unknown[];
+  shouldRefreshBootstrap: boolean;
+  errorMessage: string;
+}
+
+export interface GameRunCompletionViewState {
+  run: GameRunRunState | null;
+  result: Record<string, unknown> | null;
+  rounds: unknown[];
+  shopOffer: unknown[];
+  errorMessage: string;
+}
+
 export interface RunShopItemState {
   id?: string | number | null;
   artifactId?: string | null;
@@ -648,6 +706,27 @@ export function assetRollMutationErrorViewState(
   error?: unknown,
   options?: Parameters<typeof assetRollErrorViewState>[1]
 ): AssetRollMutationViewState;
+
+export function gameRunStartResultViewState(
+  response?: Record<string, unknown> | null
+): GameRunStartViewState;
+
+export function gameRunReadyResultViewState(
+  response?: { waiting?: unknown; lastRound?: Record<string, unknown> | null; rounds?: unknown[]; battle?: unknown; [key: string]: unknown } | null,
+  options?: {
+    run?: GameRunRunState | null;
+    previousRounds?: readonly unknown[] | null;
+  }
+): GameRunReadyViewState;
+
+export function gameRunRoundTransitionViewState(
+  resolvedRun?: { loadoutItems?: unknown[]; shopOffer?: unknown[]; fusions?: unknown[]; [key: string]: unknown } | null,
+  options?: { run?: GameRunRunState | null }
+): GameRunRoundTransitionViewState;
+
+export function gameRunCompletionResultViewState(
+  response?: Record<string, unknown> | null
+): GameRunCompletionViewState;
 
 export function runShopRefreshResultViewState(
   response?: { coins?: unknown; refreshCount?: unknown; shopOffer?: unknown[]; [key: string]: unknown } | null,
