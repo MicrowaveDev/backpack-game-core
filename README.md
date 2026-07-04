@@ -25,7 +25,8 @@ catalogs in their own repos.
 - `battle-simulation`: deterministic 1v1 battle loop with injected combatant,
   ability, tiebreak, attribution, and narration hooks.
 - `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
-  injected catalogs, ownership snapshots, time, and RNG.
+  injected catalogs, ownership snapshots, time, and RNG, including
+  catalog-acquisition default/override resolution.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots.

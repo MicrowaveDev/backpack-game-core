@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added asset catalog acquisition-policy resolution to `asset-gacha` /
+  `modules/gacha`, so games can share paid/free default mode and per-asset
+  override handling while keeping env parsing and product catalog assembly
+  local.
 - Added `profile-asset-state` and `modules/assets`: pure profile asset helpers
   for ownership/equipment row shaping, equip validation, purchase spend
   mutation shaping, asset instance drafts, and portrait variant projection.

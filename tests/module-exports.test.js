@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  resolveAssetCatalogAcquisitionPolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaRollResults,
   shapeAssetGachaPack,
@@ -77,6 +78,13 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
 
   const shaped = shapeAssetGachaPack(pack, { catalog, includeAssets: true, gachaEnabled: true });
   assert.equal(shaped.items[0].asset.assetId, 'skin.a');
+  assert.deepEqual(resolveAssetCatalogAcquisitionPolicy({
+    assetId: 'skin.paid',
+    price: 100
+  }, {
+    defaultPaidMode: 'gacha',
+    defaultPackId: 'starter'
+  }), { acquisitionMode: 'gacha', packId: 'starter' });
   assert.equal(createGachaAdminReleaseChecklist({
     runtimePack: pack,
     validation: { ok: true, errors: [], warnings: [] }

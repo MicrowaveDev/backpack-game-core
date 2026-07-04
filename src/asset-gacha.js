@@ -3,6 +3,7 @@ const DEFAULT_PACK_STATUSES = ['active', 'future', 'expired', 'disabled'];
 const DEFAULT_PITY_RESET_SCOPES = ['pack'];
 const DEFAULT_DUPLICATE_POLICY_MODES = ['unowned_only', 'allow_duplicates'];
 const DEFAULT_BURN_TARGET_DUPLICATE_POLICIES = ['allow_duplicates', 'unowned_first', 'unowned_only'];
+const DEFAULT_ASSET_ACQUISITION_MODES = ['direct', 'gacha', 'both'];
 
 export const DEFAULT_ASSET_GACHA_OPTIONS = Object.freeze({
   validRarities: DEFAULT_RARITIES,
@@ -22,6 +23,20 @@ function optionSet(options, key) {
 
 function optionValue(options, key) {
   return options?.[key] ?? DEFAULT_ASSET_GACHA_OPTIONS[key];
+}
+
+function assetAcquisitionModeSet(modes = DEFAULT_ASSET_ACQUISITION_MODES) {
+  return new Set(modes || DEFAULT_ASSET_ACQUISITION_MODES);
+}
+
+function validAssetAcquisitionMode(mode, modes) {
+  return modes.has(String(mode || ''));
+}
+
+function assetPolicyOverrideForAsset(overrides, assetId) {
+  if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides) || !assetId) return {};
+  const override = overrides[assetId];
+  return override && typeof override === 'object' && !Array.isArray(override) ? override : {};
 }
 
 function optionalPositiveInteger(value) {
@@ -449,6 +464,35 @@ export function getAssetGachaPackAvailability(pack, {
   if (pack.endsAt && new Date(pack.endsAt) <= now) return 'expired';
   if (gachaEnabled && activePackIds && !activePackIds.includes(pack.id)) return 'disabled';
   return 'active';
+}
+
+export function resolveAssetCatalogAcquisitionPolicy(asset, {
+  overrides = {},
+  defaultPaidMode = null,
+  defaultPackId = null,
+  validAcquisitionModes = DEFAULT_ASSET_ACQUISITION_MODES
+} = {}) {
+  if (!asset) return null;
+  const validModes = assetAcquisitionModeSet(validAcquisitionModes);
+  const override = assetPolicyOverrideForAsset(overrides, asset.assetId);
+  const price = Number(asset.price ?? 0);
+  const paid = Number.isFinite(price) && price > 0;
+  const fallbackMode = paid && validAssetAcquisitionMode(defaultPaidMode, validModes)
+    ? String(defaultPaidMode)
+    : paid ? 'both' : 'direct';
+  const assetMode = validAssetAcquisitionMode(asset.acquisitionMode, validModes)
+    ? String(asset.acquisitionMode)
+    : null;
+  const overrideMode = validAssetAcquisitionMode(override.acquisitionMode, validModes)
+    ? String(override.acquisitionMode)
+    : null;
+  const acquisitionMode = overrideMode || assetMode || fallbackMode;
+  const packId = Object.hasOwn(override, 'packId')
+    ? override.packId ?? null
+    : Object.hasOwn(asset, 'packId')
+      ? asset.packId ?? null
+      : paid && acquisitionMode !== 'direct' ? defaultPackId ?? null : null;
+  return { acquisitionMode, packId };
 }
 
 function summarizePackRarities(items) {

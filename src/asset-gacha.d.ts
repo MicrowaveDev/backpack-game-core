@@ -19,6 +19,7 @@ export interface AssetGachaOptions {
 
 export interface AssetGachaCatalogAsset {
   assetId: string;
+  price?: number | null;
   rarity?: AssetGachaRarity | null;
   acquisitionMode?: 'direct' | 'gacha' | 'both' | string;
   packId?: string | null;
@@ -154,6 +155,11 @@ export interface AssetGachaPolicyResult {
   activePackId: string | null;
 }
 
+export interface AssetCatalogAcquisitionPolicy {
+  acquisitionMode: string;
+  packId: string | null;
+}
+
 export const DEFAULT_ASSET_GACHA_OPTIONS: Readonly<Required<AssetGachaOptions>>;
 
 export function assetGachaValidationIssue(code: string, message: string, itemIndex?: number | null): AssetGachaValidationIssue;
@@ -176,6 +182,12 @@ export function getAssetGachaPackAvailability(pack: AssetGachaPack, options?: As
   activePackIds?: readonly string[] | null;
   gachaEnabled?: boolean;
 }): string;
+export function resolveAssetCatalogAcquisitionPolicy(asset: AssetGachaCatalogAsset | null | undefined, options?: {
+  overrides?: Record<string, { acquisitionMode?: string; packId?: string | null; [key: string]: unknown }>;
+  defaultPaidMode?: string | null;
+  defaultPackId?: string | null;
+  validAcquisitionModes?: readonly string[];
+}): AssetCatalogAcquisitionPolicy | null;
 export function activeAssetGachaCopyCounts(activeAssetRows?: readonly AssetGachaInstanceRow[]): Map<string, number>;
 export function assetGachaBurnableDuplicateRows(
   pack: AssetGachaPack,

@@ -6,6 +6,7 @@ import {
   computeAssetGachaPackPityState,
   evaluateAssetAcquisitionPolicy,
   normalizeAssetGachaBurnRules,
+  resolveAssetCatalogAcquisitionPolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaBurnTargets,
   selectAssetGachaRollResults,
@@ -87,6 +88,58 @@ test('[asset-gacha] evaluates direct buy and roll policy without product routes'
   assert.equal(policy.purchaseAvailable, false);
   assert.equal(policy.rollAvailable, true);
   assert.equal(policy.activePackId, 'starter_pack');
+});
+
+test('[asset-gacha] resolves catalog acquisition defaults and overrides without env access', () => {
+  assert.deepEqual(resolveAssetCatalogAcquisitionPolicy({
+    assetId: 'skin.free',
+    price: 0
+  }, {
+    defaultPaidMode: 'gacha',
+    defaultPackId: 'starter_pack'
+  }), {
+    acquisitionMode: 'direct',
+    packId: null
+  });
+
+  assert.deepEqual(resolveAssetCatalogAcquisitionPolicy({
+    assetId: 'skin.paid',
+    price: 500
+  }, {
+    defaultPaidMode: 'gacha',
+    defaultPackId: 'starter_pack'
+  }), {
+    acquisitionMode: 'gacha',
+    packId: 'starter_pack'
+  });
+
+  assert.deepEqual(resolveAssetCatalogAcquisitionPolicy({
+    assetId: 'skin.override',
+    price: 500
+  }, {
+    overrides: {
+      'skin.override': { acquisitionMode: 'direct', packId: null }
+    },
+    defaultPaidMode: 'gacha',
+    defaultPackId: 'starter_pack'
+  }), {
+    acquisitionMode: 'direct',
+    packId: null
+  });
+
+  assert.deepEqual(resolveAssetCatalogAcquisitionPolicy({
+    assetId: 'skin.invalid',
+    price: 500
+  }, {
+    overrides: {
+      'skin.invalid': { acquisitionMode: 'bad_mode' }
+    },
+    defaultPaidMode: 'bad_mode',
+    defaultPackId: 'starter_pack'
+  }), {
+    acquisitionMode: 'both',
+    packId: 'starter_pack'
+  });
 });
 
 test('[asset-gacha] filters unowned and duplicate-capped roll candidates', () => {
