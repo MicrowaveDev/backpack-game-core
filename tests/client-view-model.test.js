@@ -20,12 +20,14 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   gachaAdminDraftDiffRows,
+  gachaAdminFixtureOperationRows,
   gachaAdminOddsItemRows,
   gachaAdminOddsRarityRows,
   gachaAdminPlanChanceText,
   gachaAdminPlanCoverageRows,
   gachaAdminPlanTotalWeight,
   gachaAdminReleaseChecklistRows,
+  gachaAdminSimulationItemRows,
   gachaAdminValidationIssueRows,
   buildOccupiedCellMap,
   formatWalletBundlePrice,
@@ -869,6 +871,44 @@ test('[client-view-model] shapes gacha admin odds preview rows', () => {
     }
   ]);
   assert.deepEqual(gachaAdminOddsRarityRows(null), []);
+});
+
+test('[client-view-model] shapes gacha admin fixture and simulation preview rows', () => {
+  assert.deepEqual(gachaAdminFixtureOperationRows({
+    operations: [
+      { type: 'pack', id: 'pack_1', action: 'update', afterCount: 2 },
+      { type: 'item', id: 'item_1', action: 'noop' },
+      { type: 'item', id: 'item_2', action: 'create', afterCount: 1 }
+    ]
+  }, { limit: 2 }), [
+    { type: 'pack', id: 'pack_1', action: 'update', afterCount: 2, afterCountText: 2 },
+    { type: 'item', id: 'item_1', action: 'noop', afterCountText: '-' }
+  ]);
+
+  assert.deepEqual(gachaAdminSimulationItemRows({
+    items: [
+      { assetId: 'skin.a', rarity: 'rare', dropWeight: 25, observedPerRoll: 0.25, observedCount: 250 },
+      { assetId: 'skin.b', rarity: 'secret', observedPerRoll: 0.001, observedCount: 1 }
+    ]
+  }), [
+    {
+      assetId: 'skin.a',
+      rarity: 'rare',
+      dropWeight: 25,
+      observedPerRoll: 0.25,
+      observedCount: 250,
+      observedPerRollText: '25.0%',
+      dropWeightText: 25
+    },
+    {
+      assetId: 'skin.b',
+      rarity: 'secret',
+      observedPerRoll: 0.001,
+      observedCount: 1,
+      observedPerRollText: '0.10%',
+      dropWeightText: '-'
+    }
+  ]);
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

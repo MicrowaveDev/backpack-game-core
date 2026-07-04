@@ -1335,6 +1335,13 @@ function gachaAdminOddsRows(source, key) {
   return [];
 }
 
+function gachaAdminLimitedRows(rows = [], limit = 8) {
+  const numericLimit = Number(limit);
+  return Number.isInteger(numericLimit) && numericLimit >= 0
+    ? rows.slice(0, numericLimit)
+    : rows;
+}
+
 export function gachaAdminOddsRarityRows(source = null, {
   formatPercent = formatGachaAdminPercent
 } = {}) {
@@ -1350,15 +1357,34 @@ export function gachaAdminOddsItemRows(source = null, {
   formatPercent = formatGachaAdminPercent
 } = {}) {
   const rows = gachaAdminOddsRows(source, 'items');
-  const numericLimit = Number(limit);
-  const limitedRows = Number.isInteger(numericLimit) && numericLimit >= 0
-    ? rows.slice(0, numericLimit)
-    : rows;
+  const limitedRows = gachaAdminLimitedRows(rows, limit);
   return limitedRows.map((row) => ({
     ...row,
     expectedText: formatPercent(row?.probability || 0),
     dropWeightText: row?.dropWeight ?? '-',
     copyLimitText: row?.copyLimit ?? '-'
+  }));
+}
+
+export function gachaAdminFixtureOperationRows(source = null, {
+  limit = 8
+} = {}) {
+  const rows = Array.isArray(source) ? source : source?.operations || [];
+  return gachaAdminLimitedRows(rows, limit).map((row) => ({
+    ...row,
+    afterCountText: row?.afterCount ?? '-'
+  }));
+}
+
+export function gachaAdminSimulationItemRows(source = null, {
+  limit = 8,
+  formatPercent = formatGachaAdminPercent
+} = {}) {
+  const rows = Array.isArray(source) ? source : source?.items || [];
+  return gachaAdminLimitedRows(rows, limit).map((row) => ({
+    ...row,
+    observedPerRollText: formatPercent(row?.observedPerRoll || 0),
+    dropWeightText: row?.dropWeight ?? '-'
   }));
 }
 

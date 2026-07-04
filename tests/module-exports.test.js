@@ -62,12 +62,14 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   gachaAdminDraftDiffRows,
+  gachaAdminFixtureOperationRows,
   gachaAdminOddsItemRows,
   gachaAdminOddsRarityRows,
   gachaAdminPlanChanceText,
   gachaAdminPlanCoverageRows,
   gachaAdminPlanTotalWeight,
   gachaAdminReleaseChecklistRows,
+  gachaAdminSimulationItemRows,
   gachaAdminValidationIssueRows,
   preferredArtifactOrientation,
   preferredReplaySpeed,
@@ -206,6 +208,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 4 }), '25.0%');
   assert.equal(gachaAdminOddsRarityRows({ raritySummary: [{ rarity: 'rare', probability: 0.25 }] })[0].expectedText, '25.0%');
   assert.equal(gachaAdminOddsItemRows({ items: [{ assetId: 'skin.a', probability: 0.25 }] })[0].copyLimitText, '-');
+  assert.equal(gachaAdminFixtureOperationRows({ operations: [{ type: 'pack' }] })[0].afterCountText, '-');
+  assert.equal(gachaAdminSimulationItemRows({ items: [{ assetId: 'skin.a', observedPerRoll: 0.25 }] })[0].observedPerRollText, '25.0%');
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [
       { id: 'row_1', artifactId: 'needle' },

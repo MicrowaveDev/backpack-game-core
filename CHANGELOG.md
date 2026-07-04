@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added gacha admin fixture-operation and simulation-item row helpers to
+  `client-view-model`, so admin panels can share row limiting and fallback
+  display fields for import previews and roll simulations.
 - Added gacha admin odds preview row helpers to `client-view-model`, so admin
   panels can share rarity/item row shaping, expected-percent text, and fallback
   display fields while keeping preview loading, product copy, and page layout

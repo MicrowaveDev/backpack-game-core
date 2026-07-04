@@ -520,6 +520,37 @@ export interface GachaAdminOddsItemRow extends GachaAdminOddsItemInput {
   copyLimitText: unknown;
 }
 
+export interface GachaAdminFixtureOperationInput {
+  type?: string;
+  id?: string;
+  action?: string;
+  afterCount?: unknown;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminFixtureOperationRow extends GachaAdminFixtureOperationInput {
+  afterCountText: unknown;
+}
+
+export interface GachaAdminSimulationInput {
+  items?: readonly GachaAdminSimulationItemInput[];
+  [key: string]: unknown;
+}
+
+export interface GachaAdminSimulationItemInput {
+  assetId?: string | null;
+  rarity?: string | null;
+  dropWeight?: unknown;
+  observedPerRoll?: number;
+  observedCount?: number;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminSimulationItemRow extends GachaAdminSimulationItemInput {
+  observedPerRollText: string;
+  dropWeightText: unknown;
+}
+
 export interface AssetRollResultItemInput {
   assetName?: unknown;
   assetId?: string | null;
@@ -1003,6 +1034,19 @@ export function gachaAdminOddsItemRows(
     formatPercent?: (value: number) => string;
   }
 ): GachaAdminOddsItemRow[];
+
+export function gachaAdminFixtureOperationRows(
+  source?: { operations?: readonly GachaAdminFixtureOperationInput[] } | readonly GachaAdminFixtureOperationInput[] | null,
+  options?: { limit?: number }
+): GachaAdminFixtureOperationRow[];
+
+export function gachaAdminSimulationItemRows(
+  source?: GachaAdminSimulationInput | readonly GachaAdminSimulationItemInput[] | null,
+  options?: {
+    limit?: number;
+    formatPercent?: (value: number) => string;
+  }
+): GachaAdminSimulationItemRow[];
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,

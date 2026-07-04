@@ -46,7 +46,8 @@ catalogs in their own repos.
   helpers, replay playback state helpers, gacha admin draft-diff table row
   shaping, and gacha admin checklist/validation/season-plan row shaping over
   product-provided copy and route adapters, plus gacha admin odds preview row
-  shaping for rarity and item tables.
+  shaping for rarity/item tables and row helpers for fixture import previews
+  and roll simulations.
 - `modules/gacha/admin-validation`: backend-safe gacha admin release checklist,
   fixture normalization, fixture operation summary, season-plan projection,
   draft-diff, and promotion metadata helpers over product-provided rows.
