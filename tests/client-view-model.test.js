@@ -3,9 +3,14 @@ import assert from 'node:assert/strict';
 import {
   assetPackAvailabilityLabel,
   assetPackIsActive,
+  formatAssetRollResultItemsText,
   formatAssetPackRarityOdds,
+  formatWalletBundlePrice,
   prepareGridProps,
   projectLoadoutItems,
+  resolveWalletBalance,
+  summarizeAssetRollFeedback,
+  summarizeWalletPurchaseSurface,
   summarizeAssetRollPacks
 } from '@microwavedev/backpack-game-core/client-view-model';
 
@@ -130,4 +135,91 @@ test('[client-view-model] summarizes roll pack state for asset UIs', () => {
   assert.equal(summaries[0].pityText, 'Epic+ pity in 1 opens');
   assert.equal(summaries[0].duplicateText, 'Duplicates: 3');
   assert.equal(summaries[0].burnRarity, 'Common');
+});
+
+test('[client-view-model] summarizes wallet purchase surfaces', () => {
+  const summary = summarizeWalletPurchaseSurface({
+    wallet: { balances: { soft_coin: 125 } },
+    player: { spore: 10 },
+    bundles: [
+      { id: 'coins_small', provider: 'btcpay', priceAmount: 500, priceCurrency: 'USD' },
+      { id: 'stars_small', provider: 'telegram_stars', priceAmount: 50, priceCurrency: 'XTR' }
+    ],
+    bundleSurface: 'web',
+    surface: 'web',
+    status: 'opened',
+    support: {
+      supportUrl: 'https://support.example/pay',
+      termsUrl: 'https://terms.example/pay'
+    },
+    labels: {
+      support: 'Support',
+      terms: 'Terms',
+      status: { opened: 'Checkout opened.' }
+    }
+  });
+
+  assert.equal(resolveWalletBalance({ player: { spore: 10 } }), 10);
+  assert.equal(summary.balance, 125);
+  assert.equal(summary.bundles.length, 2);
+  assert.equal(summary.statusText, 'Checkout opened.');
+  assert.deepEqual(summary.supportEntries, [
+    { label: 'Support', url: 'https://support.example/pay' },
+    { label: 'Terms', url: 'https://terms.example/pay' }
+  ]);
+  assert.equal(formatWalletBundlePrice(summary.bundles[0]), '$5.00');
+  assert.equal(formatWalletBundlePrice(summary.bundles[1]), '50 XTR');
+});
+
+test('[client-view-model] summarizes asset roll feedback', () => {
+  const localizeName = (value) => value?.en || value || '';
+  const rarityLabel = (rarity) => ({ common: 'Common', rare: 'Rare', epic: 'Epic' }[rarity] || rarity);
+  const labels = {
+    openingTitle: 'Opening pack',
+    openingText: 'Rolling...',
+    burnOpeningTitle: 'Trading duplicates',
+    burnOpeningText: 'Burning spare copies.',
+    multiResultTitleTemplate: '{count} skins unlocked',
+    resultTitle: 'New skin unlocked',
+    resultTemplate: '{asset} · {rarity}',
+    burnResultTitle: 'Exchange complete',
+    burnResultTemplate: '{asset} · {rarity}',
+    problemTitle: 'Pack not opened',
+    errors: { complete: 'Every skin is already owned.' }
+  };
+
+  assert.deepEqual(summarizeAssetRollFeedback({ status: 'rolling', labels }), {
+    status: 'rolling',
+    title: 'Opening pack',
+    text: 'Rolling...'
+  });
+  assert.deepEqual(summarizeAssetRollFeedback({
+    status: 'success',
+    result: { assetName: { en: 'Mooncap' }, assetId: 'skin.a', rarity: 'rare' },
+    labels,
+    localizeName,
+    rarityLabel
+  }), {
+    status: 'success',
+    title: 'New skin unlocked',
+    text: 'Mooncap · Rare'
+  });
+  assert.equal(formatAssetRollResultItemsText({
+    items: [
+      { assetName: { en: 'Mooncap' }, rarity: 'rare' },
+      { assetName: { en: 'Amber Veil' }, rarity: 'common' },
+      { assetName: { en: 'Spore Crown' }, rarity: 'epic' },
+      { assetName: { en: 'Night Bloom' }, rarity: 'rare' }
+    ]
+  }, { localizeName, rarityLabel }), 'Mooncap · Rare | Amber Veil · Common | Spore Crown · Epic +1');
+  assert.deepEqual(summarizeAssetRollFeedback({
+    status: 'complete',
+    errorMessage: 'No assets left',
+    labels
+  }), {
+    status: 'complete',
+    title: 'Pack not opened',
+    text: 'Every skin is already owned.'
+  });
+  assert.equal(summarizeAssetRollFeedback({ status: 'success', labels }), null);
 });

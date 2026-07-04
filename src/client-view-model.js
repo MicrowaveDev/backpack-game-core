@@ -290,3 +290,170 @@ export function summarizeAssetRollPacks({
       };
     });
 }
+
+export function resolveWalletBalance({
+  wallet = null,
+  player = null,
+  currencyCode = 'soft_coin',
+  legacyField = 'spore',
+  fallback = 0
+} = {}) {
+  return wallet?.balances?.[currencyCode] ?? player?.[legacyField] ?? fallback;
+}
+
+export function selectWalletBundles({
+  bundles = [],
+  bundleSurface = null,
+  surface = null
+} = {}) {
+  if (bundleSurface !== surface) return [];
+  return Array.isArray(bundles) ? bundles : [];
+}
+
+export function formatWalletBundlePrice(bundle, {
+  minorUnitCurrencyDecimals = { USD: 2 },
+  currencySymbols = { USD: '$' }
+} = {}) {
+  const amount = numberOr(bundle?.priceAmount);
+  const currency = bundle?.priceCurrency || '';
+  if (Object.prototype.hasOwnProperty.call(minorUnitCurrencyDecimals, currency)) {
+    const decimals = numberOr(minorUnitCurrencyDecimals[currency]);
+    const formatted = (amount / (10 ** decimals)).toFixed(decimals);
+    const symbol = currencySymbols[currency] || '';
+    return symbol ? `${symbol}${formatted}` : `${formatted} ${currency}`.trim();
+  }
+  return `${amount} ${currency}`.trim();
+}
+
+export function walletPurchaseStatusText(status, {
+  labels = {}
+} = {}) {
+  if (!status) return '';
+  return labels[status] || '';
+}
+
+export function walletSupportEntries({
+  support = {},
+  labels = {}
+} = {}) {
+  return [
+    support.supportUrl ? { label: labels.support || 'Support', url: support.supportUrl } : null,
+    support.termsUrl ? { label: labels.terms || 'Terms', url: support.termsUrl } : null
+  ].filter(Boolean);
+}
+
+export function summarizeWalletPurchaseSurface({
+  wallet = null,
+  player = null,
+  currencyCode = 'soft_coin',
+  legacyField = 'spore',
+  fallbackBalance = 0,
+  bundles = [],
+  bundleSurface = null,
+  surface = null,
+  status = '',
+  support = {},
+  labels = {}
+} = {}) {
+  return {
+    balance: resolveWalletBalance({ wallet, player, currencyCode, legacyField, fallback: fallbackBalance }),
+    bundles: selectWalletBundles({ bundles, bundleSurface, surface }),
+    statusText: walletPurchaseStatusText(status, { labels: labels.status || labels }),
+    supportEntries: walletSupportEntries({ support, labels })
+  };
+}
+
+function localizeUnknownName(value) {
+  if (value && typeof value === 'object') return value.en || Object.values(value)[0] || '';
+  return value || '';
+}
+
+export function formatAssetRollResultName(result, {
+  localizeName = localizeUnknownName
+} = {}) {
+  const firstItem = Array.isArray(result?.items) ? result.items[0] : null;
+  return localizeName(firstItem?.assetName || result?.assetName) ||
+    firstItem?.assetId ||
+    result?.assetId ||
+    '';
+}
+
+export function formatAssetRollResultItemsText(result, {
+  localizeName = localizeUnknownName,
+  rarityLabel = identity,
+  itemSeparator = ' · ',
+  resultSeparator = ' | ',
+  limit = 3
+} = {}) {
+  const items = Array.isArray(result?.items) ? result.items : [];
+  const named = items
+    .map((item) => {
+      const name = localizeName(item.assetName) || item.assetId || '';
+      const rarity = rarityLabel(item.rarity);
+      return [name, rarity].filter(Boolean).join(itemSeparator);
+    })
+    .filter(Boolean);
+  if (!named.length) return '';
+  if (named.length <= limit) return named.join(resultSeparator);
+  return `${named.slice(0, limit).join(resultSeparator)} +${named.length - limit}`;
+}
+
+export function summarizeAssetRollFeedback({
+  status = '',
+  result = null,
+  errorMessage = '',
+  labels = {},
+  localizeName = localizeUnknownName,
+  rarityLabel = identity
+} = {}) {
+  if (!status) return null;
+  if (status === 'rolling') {
+    return {
+      status,
+      title: labels.openingTitle || '',
+      text: labels.openingText || ''
+    };
+  }
+  if (status === 'burning') {
+    return {
+      status,
+      title: labels.burnOpeningTitle || '',
+      text: labels.burnOpeningText || ''
+    };
+  }
+  if (status === 'success' && result) {
+    const itemCount = Array.isArray(result?.items) ? result.items.length : 0;
+    const count = numberOr(result.count, itemCount || 1);
+    if (count > 1) {
+      return {
+        status,
+        title: fillTemplate(labels.multiResultTitleTemplate || '', { count }),
+        text: formatAssetRollResultItemsText(result, { localizeName, rarityLabel })
+      };
+    }
+    return {
+      status,
+      title: labels.resultTitle || '',
+      text: fillTemplate(labels.resultTemplate || '', {
+        asset: formatAssetRollResultName(result, { localizeName }),
+        rarity: rarityLabel(result.rarity)
+      })
+    };
+  }
+  if (status === 'burned' && result) {
+    return {
+      status: 'success',
+      title: labels.burnResultTitle || '',
+      text: fillTemplate(labels.burnResultTemplate || '', {
+        asset: formatAssetRollResultName(result, { localizeName }),
+        rarity: rarityLabel(result.rarity)
+      })
+    };
+  }
+  if (status === 'success' || status === 'burned') return null;
+  return {
+    status,
+    title: labels.problemTitle || '',
+    text: labels.errors?.[status] || errorMessage || ''
+  };
+}

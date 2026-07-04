@@ -40,6 +40,8 @@ import {
   pieceCells
 } from '@microwavedev/backpack-game-core/modules/loadout';
 import {
+  formatWalletBundlePrice,
+  summarizeAssetRollFeedback,
   summarizeAssetRollPacks
 } from '@microwavedev/backpack-game-core/client-view-model';
 import {
@@ -113,6 +115,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);
   assert.deepEqual(summarizeAssetRollPacks(), []);
+  assert.equal(formatWalletBundlePrice({ priceAmount: 100, priceCurrency: 'USD' }), '$1.00');
+  assert.equal(summarizeAssetRollFeedback(), null);
 
   const artifacts = new Map([
     ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 0 }],

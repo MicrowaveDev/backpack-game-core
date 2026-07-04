@@ -11,6 +11,9 @@ until package publishing starts.
 - Added asset pack client view-model helpers to `client-view-model`: rarity
   odds text, guarantee/pity/duplicate copy text, availability labels, active
   checks, and roll-pack summaries over product-provided labels.
+- Added wallet purchase-surface and asset roll-feedback view-model helpers to
+  `client-view-model`, so games can share wallet bundle/status/support shaping
+  and roll result/problem copy assembly while keeping labels and routes local.
 - Added asset catalog acquisition-policy resolution to `asset-gacha` /
   `modules/gacha`, so games can share paid/free default mode and per-asset
   override handling while keeping env parsing and product catalog assembly

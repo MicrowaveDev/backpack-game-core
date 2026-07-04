@@ -143,6 +143,72 @@ export interface AssetRollPackSummary {
   duplicateText: string;
 }
 
+export interface WalletBundleInput {
+  id?: string;
+  provider?: string;
+  priceAmount?: number;
+  priceCurrency?: string;
+  [key: string]: unknown;
+}
+
+export interface WalletSupportConfig {
+  supportUrl?: string;
+  termsUrl?: string;
+  [key: string]: unknown;
+}
+
+export interface WalletSupportLabels {
+  support?: string;
+  terms?: string;
+}
+
+export interface WalletPurchaseSurfaceLabels extends WalletSupportLabels {
+  status?: Record<string, string>;
+}
+
+export interface WalletPurchaseSurfaceSummary {
+  balance: unknown;
+  bundles: WalletBundleInput[];
+  statusText: string;
+  supportEntries: Array<{ label: string; url: string }>;
+}
+
+export interface AssetRollResultItemInput {
+  assetName?: unknown;
+  assetId?: string | null;
+  rarity?: string | null;
+  [key: string]: unknown;
+}
+
+export interface AssetRollResultInput {
+  assetName?: unknown;
+  assetId?: string | null;
+  rarity?: string | null;
+  count?: number;
+  items?: readonly AssetRollResultItemInput[];
+  [key: string]: unknown;
+}
+
+export interface AssetRollFeedbackLabels {
+  openingTitle?: string;
+  openingText?: string;
+  burnOpeningTitle?: string;
+  burnOpeningText?: string;
+  multiResultTitleTemplate?: string;
+  resultTitle?: string;
+  resultTemplate?: string;
+  burnResultTitle?: string;
+  burnResultTemplate?: string;
+  problemTitle?: string;
+  errors?: Record<string, string>;
+}
+
+export interface AssetRollFeedbackSummary {
+  status: string;
+  title: string;
+  text: string;
+}
+
 export function projectLoadoutItems(
   loadoutItems?: readonly LoadoutProjectionRow[],
   bagArtifactIds?: Iterable<string>,
@@ -195,3 +261,74 @@ export function summarizeAssetRollPacks(input?: {
   rarityLabel?: (rarity: unknown) => string;
   labels?: AssetPackSummaryLabels;
 }): AssetRollPackSummary[];
+
+export function resolveWalletBalance(input?: {
+  wallet?: { balances?: Record<string, unknown> } | null;
+  player?: Record<string, unknown> | null;
+  currencyCode?: string;
+  legacyField?: string;
+  fallback?: unknown;
+}): unknown;
+
+export function selectWalletBundles(input?: {
+  bundles?: readonly WalletBundleInput[];
+  bundleSurface?: string | null;
+  surface?: string | null;
+}): WalletBundleInput[];
+
+export function formatWalletBundlePrice(
+  bundle: WalletBundleInput | null | undefined,
+  options?: {
+    minorUnitCurrencyDecimals?: Record<string, number>;
+    currencySymbols?: Record<string, string>;
+  }
+): string;
+
+export function walletPurchaseStatusText(
+  status: string | null | undefined,
+  options?: { labels?: Record<string, string> }
+): string;
+
+export function walletSupportEntries(input?: {
+  support?: WalletSupportConfig;
+  labels?: WalletSupportLabels;
+}): Array<{ label: string; url: string }>;
+
+export function summarizeWalletPurchaseSurface(input?: {
+  wallet?: { balances?: Record<string, unknown> } | null;
+  player?: Record<string, unknown> | null;
+  currencyCode?: string;
+  legacyField?: string;
+  fallbackBalance?: unknown;
+  bundles?: readonly WalletBundleInput[];
+  bundleSurface?: string | null;
+  surface?: string | null;
+  status?: string;
+  support?: WalletSupportConfig;
+  labels?: WalletPurchaseSurfaceLabels;
+}): WalletPurchaseSurfaceSummary;
+
+export function formatAssetRollResultName(
+  result: AssetRollResultInput | null | undefined,
+  options?: { localizeName?: (value: unknown) => string }
+): string;
+
+export function formatAssetRollResultItemsText(
+  result: AssetRollResultInput | null | undefined,
+  options?: {
+    localizeName?: (value: unknown) => string;
+    rarityLabel?: (rarity: unknown) => string;
+    itemSeparator?: string;
+    resultSeparator?: string;
+    limit?: number;
+  }
+): string;
+
+export function summarizeAssetRollFeedback(input?: {
+  status?: string;
+  result?: AssetRollResultInput | null;
+  errorMessage?: string;
+  labels?: AssetRollFeedbackLabels;
+  localizeName?: (value: unknown) => string;
+  rarityLabel?: (rarity: unknown) => string;
+}): AssetRollFeedbackSummary | null;
