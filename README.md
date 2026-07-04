@@ -26,6 +26,9 @@ catalogs in their own repos.
   ability, tiebreak, attribution, and narration hooks.
 - `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
   injected catalogs, ownership snapshots, time, and RNG.
+- `wallet-accounting`: reusable profile-wallet delta validation, balance math,
+  purchase grant/reversal mutation shaping, status classification, and
+  settlement invariants over injected persistence snapshots.
 - `client-view-model`: browser-safe frontend view-model shapers such as flat
   loadout row projection and grid prop preparation.
 - `client`: route-adapter HTTP client primitives for product-provided API
@@ -38,6 +41,8 @@ compatibility, and now also exposes Geesome-inspired module paths:
 
 - `@microwavedev/backpack-game-core/modules/gacha`
 - `@microwavedev/backpack-game-core/modules/gacha/validation`
+- `@microwavedev/backpack-game-core/modules/wallet`
+- `@microwavedev/backpack-game-core/modules/wallet/accounting`
 - `@microwavedev/backpack-game-core/modules/shop`
 - `@microwavedev/backpack-game-core/modules/loadout`
 - `@microwavedev/backpack-game-core/modules/battle`

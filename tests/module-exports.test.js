@@ -17,6 +17,13 @@ import {
 import {
   simulateAssetGachaPackOdds
 } from '@microwavedev/backpack-game-core/modules/gacha/simulation';
+import {
+  applyWalletBalanceDelta,
+  createWalletPurchaseGrantMutation
+} from '@microwavedev/backpack-game-core/modules/wallet';
+import {
+  walletSettlementRequiresClawback
+} from '@microwavedev/backpack-game-core/modules/wallet/accounting';
 import * as gachaInterface from '@microwavedev/backpack-game-core/modules/gacha/interface';
 import { generateShopOffer } from '@microwavedev/backpack-game-core/modules/shop';
 import {
@@ -121,4 +128,18 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     ingredientArtifactIds: ['a', 'b']
   }]);
   assert.equal(matches[0].resultArtifactId, 'ab');
+});
+
+test('[modules] wallet facade exposes accounting helpers', () => {
+  assert.equal(applyWalletBalanceDelta(10, -3).balanceAfter, 7);
+  assert.equal(walletSettlementRequiresClawback('refunded'), true);
+  assert.equal(createWalletPurchaseGrantMutation({
+    id: 'intent_1',
+    playerId: 'player_1',
+    provider: 'btcpay',
+    providerInvoiceId: 'invoice_1',
+    providerPaymentId: 'payment_1',
+    currencyCode: 'soft_coin',
+    walletAmount: 100
+  }).idempotencyKey, 'wallet_purchase:intent_1');
 });

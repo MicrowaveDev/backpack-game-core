@@ -45,6 +45,10 @@
       "types": "./src/asset-gacha.d.ts",
       "import": "./src/asset-gacha.js"
     },
+    "./wallet-accounting": {
+      "types": "./src/wallet-accounting.d.ts",
+      "import": "./src/wallet-accounting.js"
+    },
     "./client": {
       "types": "./src/client/index.d.ts",
       "import": "./src/client/index.js"
@@ -72,6 +76,14 @@
     "./modules/gacha/simulation": {
       "types": "./src/modules/gacha/simulation.d.ts",
       "import": "./src/modules/gacha/simulation.js"
+    },
+    "./modules/wallet": {
+      "types": "./src/modules/wallet/index.d.ts",
+      "import": "./src/modules/wallet/index.js"
+    },
+    "./modules/wallet/accounting": {
+      "types": "./src/modules/wallet/accounting.d.ts",
+      "import": "./src/modules/wallet/accounting.js"
     },
     "./modules/shop": {
       "types": "./src/modules/shop/index.d.ts",

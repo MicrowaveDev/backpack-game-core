@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `wallet-accounting` and `modules/wallet`: pure profile-wallet helpers
+  for delta validation, balance math, purchase grant/reversal mutation shaping,
+  purchase status classification, and settlement invariants. Product games
+  still own balance rows, transaction inserts, idempotency locks, mirrors,
+  provider callbacks, support actions, and reconciliation queries.
 - Added `modules/gacha/simulation`: deterministic gacha odds simulation over
   injected packs, catalogs, ownership snapshots, copy counts, pity state, seed,
   and RNG. Product games still own static/runtime pack lookup and catalog
