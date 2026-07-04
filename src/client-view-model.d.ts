@@ -484,6 +484,42 @@ export interface GachaAdminPlanCoverageRow extends GachaAdminPlanCharacterInput 
   enough: boolean;
 }
 
+export interface GachaAdminOddsPreviewInput {
+  raritySummary?: readonly GachaAdminOddsRarityInput[];
+  items?: readonly GachaAdminOddsItemInput[];
+  preview?: GachaAdminOddsPreviewInput;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminOddsRarityInput {
+  rarity?: string | null;
+  probability?: number;
+  expectedPerOpen?: number;
+  count?: number;
+  dropWeight?: unknown;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminOddsItemInput {
+  assetId?: string | null;
+  rarity?: string | null;
+  probability?: number;
+  dropWeight?: unknown;
+  copyLimit?: unknown;
+  [key: string]: unknown;
+}
+
+export interface GachaAdminOddsRarityRow extends GachaAdminOddsRarityInput {
+  expectedText: string;
+  dropWeightText: unknown;
+}
+
+export interface GachaAdminOddsItemRow extends GachaAdminOddsItemInput {
+  expectedText: string;
+  dropWeightText: unknown;
+  copyLimitText: unknown;
+}
+
 export interface AssetRollResultItemInput {
   assetName?: unknown;
   assetId?: string | null;
@@ -954,6 +990,19 @@ export function gachaAdminPlanChanceText(
     formatPercent?: (value: number) => string;
   }
 ): string;
+
+export function gachaAdminOddsRarityRows(
+  source?: GachaAdminOddsPreviewInput | readonly GachaAdminOddsRarityInput[] | null,
+  options?: { formatPercent?: (value: number) => string }
+): GachaAdminOddsRarityRow[];
+
+export function gachaAdminOddsItemRows(
+  source?: GachaAdminOddsPreviewInput | readonly GachaAdminOddsItemInput[] | null,
+  options?: {
+    limit?: number;
+    formatPercent?: (value: number) => string;
+  }
+): GachaAdminOddsItemRow[];
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,

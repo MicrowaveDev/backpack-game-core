@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added gacha admin odds preview row helpers to `client-view-model`, so admin
+  panels can share rarity/item row shaping, expected-percent text, and fallback
+  display fields while keeping preview loading, product copy, and page layout
+  local.
 - Added gacha admin fixture operation summary helpers to
   `modules/gacha/admin-validation`, so product admin services can share dry-run
   import summaries while keeping DB transactions, audit logs, permissions, and

@@ -20,6 +20,8 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   gachaAdminDraftDiffRows,
+  gachaAdminOddsItemRows,
+  gachaAdminOddsRarityRows,
   gachaAdminPlanChanceText,
   gachaAdminPlanCoverageRows,
   gachaAdminPlanTotalWeight,
@@ -826,6 +828,47 @@ test('[client-view-model] shapes gacha admin validation, checklist, and plan row
   assert.equal(gachaAdminPlanChanceText({ dropWeight: 25 }, { totalWeight: 100 }), '25.0%');
   assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 1000 }), '0.10%');
   assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 0 }), '0.0%');
+});
+
+test('[client-view-model] shapes gacha admin odds preview rows', () => {
+  const preview = {
+    raritySummary: [
+      { rarity: 'rare', probability: 0.25, count: 2, dropWeight: 25 },
+      { rarity: 'secret', expectedPerOpen: 0.001, count: 1, dropWeight: 1 }
+    ],
+    items: [
+      { assetId: 'skin.a', rarity: 'rare', dropWeight: 25, probability: 0.25, copyLimit: 1 },
+      { assetId: 'skin.b', rarity: 'secret', dropWeight: 1, probability: 0.001 },
+      { assetId: 'skin.c', rarity: 'common', dropWeight: 100, probability: 0.749 }
+    ]
+  };
+
+  assert.deepEqual(gachaAdminOddsRarityRows({ preview }), [
+    { rarity: 'rare', probability: 0.25, count: 2, dropWeight: 25, expectedText: '25.0%', dropWeightText: 25 },
+    { rarity: 'secret', expectedPerOpen: 0.001, count: 1, dropWeight: 1, expectedText: '0.10%', dropWeightText: 1 }
+  ]);
+  assert.deepEqual(gachaAdminOddsItemRows(preview, { limit: 2 }), [
+    {
+      assetId: 'skin.a',
+      rarity: 'rare',
+      dropWeight: 25,
+      probability: 0.25,
+      copyLimit: 1,
+      expectedText: '25.0%',
+      dropWeightText: 25,
+      copyLimitText: 1
+    },
+    {
+      assetId: 'skin.b',
+      rarity: 'secret',
+      dropWeight: 1,
+      probability: 0.001,
+      expectedText: '0.10%',
+      dropWeightText: 1,
+      copyLimitText: '-'
+    }
+  ]);
+  assert.deepEqual(gachaAdminOddsRarityRows(null), []);
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

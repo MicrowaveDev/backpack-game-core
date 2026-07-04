@@ -1328,6 +1328,40 @@ export function gachaAdminPlanChanceText(item, {
   return formatPercent(gachaAdminPositiveNumber(item?.dropWeight ?? item?.drop_weight) / total);
 }
 
+function gachaAdminOddsRows(source, key) {
+  if (Array.isArray(source)) return source;
+  if (Array.isArray(source?.[key])) return source[key];
+  if (Array.isArray(source?.preview?.[key])) return source.preview[key];
+  return [];
+}
+
+export function gachaAdminOddsRarityRows(source = null, {
+  formatPercent = formatGachaAdminPercent
+} = {}) {
+  return gachaAdminOddsRows(source, 'raritySummary').map((row) => ({
+    ...row,
+    expectedText: formatPercent(row?.probability ?? row?.expectedPerOpen ?? 0),
+    dropWeightText: row?.dropWeight || '-'
+  }));
+}
+
+export function gachaAdminOddsItemRows(source = null, {
+  limit = 8,
+  formatPercent = formatGachaAdminPercent
+} = {}) {
+  const rows = gachaAdminOddsRows(source, 'items');
+  const numericLimit = Number(limit);
+  const limitedRows = Number.isInteger(numericLimit) && numericLimit >= 0
+    ? rows.slice(0, numericLimit)
+    : rows;
+  return limitedRows.map((row) => ({
+    ...row,
+    expectedText: formatPercent(row?.probability || 0),
+    dropWeightText: row?.dropWeight ?? '-',
+    copyLimitText: row?.copyLimit ?? '-'
+  }));
+}
+
 export function formatAssetRollResultName(result, {
   localizeName = localizeUnknownName
 } = {}) {

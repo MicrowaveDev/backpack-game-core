@@ -62,6 +62,8 @@ import {
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
   gachaAdminDraftDiffRows,
+  gachaAdminOddsItemRows,
+  gachaAdminOddsRarityRows,
   gachaAdminPlanChanceText,
   gachaAdminPlanCoverageRows,
   gachaAdminPlanTotalWeight,
@@ -202,6 +204,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminPlanTotalWeight([{ dropWeight: 5 }]), 5);
   assert.equal(gachaAdminPlanCoverageRows([{ characterId: 'ruby' }], { characters: [{ id: 'ruby' }] })[0].count, 1);
   assert.equal(gachaAdminPlanChanceText({ dropWeight: 1 }, { totalWeight: 4 }), '25.0%');
+  assert.equal(gachaAdminOddsRarityRows({ raritySummary: [{ rarity: 'rare', probability: 0.25 }] })[0].expectedText, '25.0%');
+  assert.equal(gachaAdminOddsItemRows({ items: [{ assetId: 'skin.a', probability: 0.25 }] })[0].copyLimitText, '-');
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [
       { id: 'row_1', artifactId: 'needle' },
