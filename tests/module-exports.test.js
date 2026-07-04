@@ -4,7 +4,9 @@ import {
   resolveAssetCatalogAcquisitionPolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaRollResults,
+  shapeAssetGachaBurnResult,
   shapeAssetGachaPack,
+  shapeAssetGachaRollResult,
   validateAssetGachaPack
 } from '@microwavedev/backpack-game-core/modules/gacha';
 import {
@@ -91,6 +93,17 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
 
   const shaped = shapeAssetGachaPack(pack, { catalog, includeAssets: true, gachaEnabled: true });
   assert.equal(shaped.items[0].asset.assetId, 'skin.a');
+  assert.equal(shapeAssetGachaRollResult({
+    id: 'roll_1',
+    packId: 'starter',
+    resultAssetIds: ['skin.a']
+  }, { pack, catalog }).assetId, 'skin.a');
+  assert.equal(shapeAssetGachaBurnResult({
+    id: 'burn_1',
+    packId: 'starter',
+    ruleId: 'burn_common',
+    resultAssetIds: ['skin.b']
+  }, { pack, catalog }).assetId, 'skin.b');
   assert.deepEqual(resolveAssetCatalogAcquisitionPolicy({
     assetId: 'skin.paid',
     price: 100

@@ -702,6 +702,160 @@ export function shapeAssetGachaPack(pack, {
   };
 }
 
+function parseJsonField(value, fallback) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function assetByIdFromCatalog(catalog = [], assetId = null) {
+  if (!assetId) return null;
+  if (catalog instanceof Map) return catalog.get(assetId) || null;
+  return (catalog || []).find((asset) => asset?.assetId === assetId) || null;
+}
+
+function defaultLocalizeName(name) {
+  if (!name || typeof name !== 'object') return name || '';
+  return name.en || Object.values(name)[0] || '';
+}
+
+export function normalizeAssetGachaRollRow(row = {}) {
+  const metadata = parseJsonField(row.metadata ?? row.metadata_json, {});
+  const guaranteeState = parseJsonField(row.guaranteeState ?? row.guarantee_state_json, {});
+  const resultAssetIds = parseJsonField(row.resultAssetIds ?? row.result_asset_ids_json, []);
+  return {
+    id: row.id,
+    playerId: row.playerId ?? row.player_id,
+    packId: row.packId ?? row.pack_id,
+    currencyCode: row.currencyCode ?? row.currency_code,
+    priceAmount: Number(row.priceAmount ?? row.price_amount ?? 0),
+    resultAssetIds: Array.isArray(resultAssetIds) ? resultAssetIds : [],
+    guaranteeState: guaranteeState && typeof guaranteeState === 'object' && !Array.isArray(guaranteeState)
+      ? guaranteeState
+      : {},
+    candidatePoolHash: row.candidatePoolHash ?? row.candidate_pool_hash ?? null,
+    selectedAssetId: row.selectedAssetId ?? row.selected_asset_id ?? null,
+    resultInstanceId: row.resultInstanceId ?? row.result_instance_id ?? null,
+    idempotencyKey: row.idempotencyKey ?? row.idempotency_key ?? null,
+    metadata: metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {},
+    createdAt: row.createdAt ?? row.created_at
+  };
+}
+
+export function normalizeAssetGachaBurnExchangeRow(row = {}) {
+  const metadata = parseJsonField(row.metadata ?? row.metadata_json, {});
+  const sourceAssetInstanceIds = parseJsonField(row.sourceAssetInstanceIds ?? row.source_asset_instance_ids_json, []);
+  const resultAssetIds = parseJsonField(row.resultAssetIds ?? row.result_asset_ids_json, []);
+  const resultInstanceIds = parseJsonField(row.resultInstanceIds ?? row.result_instance_ids_json, []);
+  return {
+    id: row.id,
+    playerId: row.playerId ?? row.player_id,
+    packId: row.packId ?? row.pack_id,
+    ruleId: row.ruleId ?? row.rule_id,
+    sourceAssetInstanceIds: Array.isArray(sourceAssetInstanceIds) ? sourceAssetInstanceIds : [],
+    resultAssetIds: Array.isArray(resultAssetIds) ? resultAssetIds : [],
+    resultInstanceIds: Array.isArray(resultInstanceIds) ? resultInstanceIds : [],
+    idempotencyKey: row.idempotencyKey ?? row.idempotency_key ?? null,
+    metadata: metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? metadata : {},
+    createdAt: row.createdAt ?? row.created_at
+  };
+}
+
+export function shapeAssetGachaRollResult(rollInput, {
+  asset = null,
+  pack = null,
+  instance = null,
+  rarity = null,
+  items = null,
+  catalog = [],
+  localizeName = defaultLocalizeName
+} = {}) {
+  const roll = normalizeAssetGachaRollRow(rollInput);
+  const selectedAsset = asset || assetByIdFromCatalog(catalog, roll.selectedAssetId || roll.resultAssetIds[0]);
+  const metadataItems = Array.isArray(roll.metadata?.results) ? roll.metadata.results : [];
+  const resultItems = Array.isArray(items)
+    ? items
+    : roll.resultAssetIds.map((assetId, index) => {
+      const metadataItem = metadataItems.find((entry) => entry?.assetId === assetId) || metadataItems[index] || {};
+      const itemAsset = assetByIdFromCatalog(catalog, assetId);
+      return {
+        slotIndex: Number.isInteger(Number(metadataItem.slotIndex)) ? Number(metadataItem.slotIndex) : index,
+        assetId,
+        assetName: itemAsset?.name || null,
+        assetPath: itemAsset?.path || null,
+        rarity: metadataItem.rarity || itemAsset?.rarity || null,
+        selectedRarity: metadataItem.selectedRarity || metadataItem.rarity || itemAsset?.rarity || null,
+        duplicateCopy: Boolean(metadataItem.duplicateCopy),
+        resultInstanceId: metadataItem.instanceId || (index === 0 ? roll.resultInstanceId : null)
+      };
+    });
+  const firstItem = resultItems[0] || null;
+  return {
+    rollId: roll.id,
+    packId: roll.packId,
+    packName: pack ? localizeName(pack.name) : roll.packId,
+    assetId: firstItem?.assetId || selectedAsset?.assetId || roll.selectedAssetId || roll.resultAssetIds[0] || null,
+    assetName: firstItem?.assetName || selectedAsset?.name || null,
+    assetPath: firstItem?.assetPath || selectedAsset?.path || null,
+    rarity: firstItem?.rarity || rarity || selectedAsset?.rarity || null,
+    resultInstanceId: firstItem?.resultInstanceId || instance?.id || roll.resultInstanceId || null,
+    count: resultItems.length,
+    guaranteesApplied: Array.isArray(roll.guaranteeState?.guaranteesApplied)
+      ? roll.guaranteeState.guaranteesApplied
+      : [],
+    pityBefore: Array.isArray(roll.guaranteeState?.pityBefore) ? roll.guaranteeState.pityBefore : [],
+    pityAfter: Array.isArray(roll.guaranteeState?.pityAfter) ? roll.guaranteeState.pityAfter : [],
+    items: resultItems
+  };
+}
+
+export function shapeAssetGachaBurnResult(exchangeInput, {
+  pack = null,
+  items = null,
+  catalog = [],
+  localizeName = defaultLocalizeName
+} = {}) {
+  const exchange = normalizeAssetGachaBurnExchangeRow(exchangeInput);
+  const duplicateAssetIds = Array.isArray(exchange.metadata?.duplicateAssetIds)
+    ? exchange.metadata.duplicateAssetIds
+    : [];
+  const resultItems = Array.isArray(items)
+    ? items
+    : exchange.resultAssetIds.map((assetId, index) => {
+      const itemAsset = assetByIdFromCatalog(catalog, assetId);
+      const itemRarity = assetRarityForPack(pack, assetId, null, catalog);
+      return {
+        slotIndex: index,
+        assetId,
+        assetName: itemAsset?.name || null,
+        assetPath: itemAsset?.path || null,
+        rarity: itemRarity,
+        selectedRarity: itemRarity,
+        duplicateCopy: duplicateAssetIds.includes(assetId),
+        resultInstanceId: exchange.resultInstanceIds[index] || null
+      };
+    });
+  const firstItem = resultItems[0] || null;
+  return {
+    exchangeId: exchange.id,
+    packId: exchange.packId,
+    packName: pack ? localizeName(pack.name) : exchange.packId,
+    ruleId: exchange.ruleId,
+    assetId: firstItem?.assetId || exchange.resultAssetIds[0] || null,
+    assetName: firstItem?.assetName || null,
+    assetPath: firstItem?.assetPath || null,
+    rarity: firstItem?.rarity || null,
+    resultInstanceId: firstItem?.resultInstanceId || exchange.resultInstanceIds[0] || null,
+    sourceAssetInstanceIds: exchange.sourceAssetInstanceIds,
+    count: resultItems.length,
+    items: resultItems
+  };
+}
+
 function assetRarityForPack(pack, assetId, metadataItem = null, catalog = []) {
   if (metadataItem?.rarity) return metadataItem.rarity;
   const packItem = (pack?.items || []).find((item) => item.assetId === assetId);

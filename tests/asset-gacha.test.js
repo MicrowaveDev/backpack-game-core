@@ -6,11 +6,15 @@ import {
   computeAssetGachaPackPityState,
   evaluateAssetAcquisitionPolicy,
   normalizeAssetGachaBurnRules,
+  normalizeAssetGachaBurnExchangeRow,
+  normalizeAssetGachaRollRow,
   resolveAssetCatalogAcquisitionPolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaBurnTargets,
   selectAssetGachaRollResults,
+  shapeAssetGachaBurnResult,
   shapeAssetGachaPack,
+  shapeAssetGachaRollResult,
   validateAssetGachaPack
 } from '../src/index.js';
 
@@ -251,6 +255,83 @@ test('[asset-gacha] shapes pack state for consumer UIs', () => {
   assert.equal(shaped.duplicateCopies, 1);
   assert.equal(shaped.items[0].asset.assetId, 'skin.a');
   assert.equal(shaped.items[0].duplicateCopies, 1);
+});
+
+test('[asset-gacha] shapes roll and burn result DTOs from persisted rows', () => {
+  const rollPack = pack({
+    name: { en: 'Starter Pack' },
+    rollSize: 2,
+    items: [
+      { assetId: 'skin.a', rarity: 'common', dropWeight: 100 },
+      { assetId: 'skin.b', rarity: 'rare', dropWeight: 10 }
+    ]
+  });
+  const namedCatalog = catalog.map((asset) => ({
+    ...asset,
+    name: { en: asset.assetId === 'skin.a' ? 'Amber Cut' : 'Ruby Cut' },
+    path: `/assets/${asset.assetId}.png`
+  }));
+  const rollRow = {
+    id: 'roll_1',
+    player_id: 'player_1',
+    pack_id: 'starter_pack',
+    currency_code: 'soft_coin',
+    price_amount: '100',
+    result_asset_ids_json: JSON.stringify(['skin.a', 'skin.b']),
+    guarantee_state_json: JSON.stringify({
+      guaranteesApplied: [{ id: 'rare_one', selectedAssetId: 'skin.b' }],
+      pityBefore: [{ id: 'rare_pity', active: true }],
+      pityAfter: [{ id: 'rare_pity', active: false }]
+    }),
+    candidate_pool_hash: 'abc123',
+    selected_asset_id: 'skin.a',
+    result_instance_id: 'inst_a',
+    idempotency_key: 'roll-key',
+    metadata_json: JSON.stringify({
+      results: [
+        { slotIndex: 0, assetId: 'skin.a', rarity: 'common', selectedRarity: 'common', instanceId: 'inst_a' },
+        { slotIndex: 1, assetId: 'skin.b', rarity: 'rare', selectedRarity: 'rare', instanceId: 'inst_b', duplicateCopy: true }
+      ]
+    }),
+    created_at: '2026-07-04T00:00:00.000Z'
+  };
+
+  const roll = normalizeAssetGachaRollRow(rollRow);
+  const rollResult = shapeAssetGachaRollResult(roll, { pack: rollPack, catalog: namedCatalog });
+
+  assert.equal(roll.priceAmount, 100);
+  assert.equal(rollResult.rollId, 'roll_1');
+  assert.equal(rollResult.packName, 'Starter Pack');
+  assert.equal(rollResult.assetName.en, 'Amber Cut');
+  assert.equal(rollResult.count, 2);
+  assert.deepEqual(rollResult.items.map((item) => item.assetId), ['skin.a', 'skin.b']);
+  assert.equal(rollResult.items[1].duplicateCopy, true);
+  assert.equal(rollResult.guaranteesApplied[0].selectedAssetId, 'skin.b');
+  assert.equal(rollResult.pityBefore[0].active, true);
+  assert.equal(rollResult.pityAfter[0].active, false);
+
+  const burnRow = {
+    id: 'burn_1',
+    player_id: 'player_1',
+    pack_id: 'starter_pack',
+    rule_id: 'common_to_rare',
+    source_asset_instance_ids_json: JSON.stringify(['inst_old_a', 'inst_old_b']),
+    result_asset_ids_json: JSON.stringify(['skin.b']),
+    result_instance_ids_json: JSON.stringify(['inst_new_b']),
+    metadata_json: JSON.stringify({ duplicateAssetIds: ['skin.b'] }),
+    created_at: '2026-07-04T00:00:00.000Z'
+  };
+  const exchange = normalizeAssetGachaBurnExchangeRow(burnRow);
+  const burnResult = shapeAssetGachaBurnResult(exchange, { pack: rollPack, catalog: namedCatalog });
+
+  assert.equal(burnResult.exchangeId, 'burn_1');
+  assert.equal(burnResult.ruleId, 'common_to_rare');
+  assert.equal(burnResult.assetId, 'skin.b');
+  assert.equal(burnResult.assetName.en, 'Ruby Cut');
+  assert.equal(burnResult.resultInstanceId, 'inst_new_b');
+  assert.equal(burnResult.items[0].rarity, 'rare');
+  assert.equal(burnResult.items[0].duplicateCopy, true);
+  assert.deepEqual(burnResult.sourceAssetInstanceIds, ['inst_old_a', 'inst_old_b']);
 });
 
 test('[asset-gacha] chooses weighted candidates with an injected RNG', () => {

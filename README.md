@@ -26,7 +26,8 @@ catalogs in their own repos.
   ability, tiebreak, attribution, and narration hooks.
 - `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
   injected catalogs, ownership snapshots, time, and RNG, including
-  catalog-acquisition default/override resolution.
+  catalog-acquisition default/override resolution and roll/burn result DTO
+  shaping.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots.

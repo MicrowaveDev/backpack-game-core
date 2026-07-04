@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added asset gacha roll and duplicate-burn result DTO shapers to
+  `asset-gacha` / `modules/gacha`, including persisted row normalizers for
+  replay-safe consumer payloads.
 - Added wallet intent, Telegram invoice, and asset-roll error status
   normalization helpers to `client-view-model`, so product UIs can reuse one
   status contract while keeping provider routes and copy local.

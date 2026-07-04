@@ -155,6 +155,127 @@ export interface AssetGachaPolicyResult {
   activePackId: string | null;
 }
 
+export interface AssetGachaRollRow {
+  id?: string;
+  playerId?: string;
+  player_id?: string;
+  packId?: string;
+  pack_id?: string;
+  currencyCode?: string;
+  currency_code?: string;
+  priceAmount?: number;
+  price_amount?: number;
+  resultAssetIds?: string[];
+  result_asset_ids_json?: string | string[];
+  guaranteeState?: Record<string, unknown>;
+  guarantee_state_json?: string | Record<string, unknown>;
+  candidatePoolHash?: string | null;
+  candidate_pool_hash?: string | null;
+  selectedAssetId?: string | null;
+  selected_asset_id?: string | null;
+  resultInstanceId?: string | null;
+  result_instance_id?: string | null;
+  idempotencyKey?: string | null;
+  idempotency_key?: string | null;
+  metadata?: Record<string, unknown>;
+  metadata_json?: string | Record<string, unknown>;
+  createdAt?: string;
+  created_at?: string;
+}
+
+export interface NormalizedAssetGachaRoll {
+  id?: string;
+  playerId?: string;
+  packId?: string;
+  currencyCode?: string;
+  priceAmount: number;
+  resultAssetIds: string[];
+  guaranteeState: Record<string, unknown>;
+  candidatePoolHash: string | null;
+  selectedAssetId: string | null;
+  resultInstanceId: string | null;
+  idempotencyKey: string | null;
+  metadata: Record<string, unknown>;
+  createdAt?: string;
+}
+
+export interface AssetGachaBurnExchangeRow {
+  id?: string;
+  playerId?: string;
+  player_id?: string;
+  packId?: string;
+  pack_id?: string;
+  ruleId?: string;
+  rule_id?: string;
+  sourceAssetInstanceIds?: string[];
+  source_asset_instance_ids_json?: string | string[];
+  resultAssetIds?: string[];
+  result_asset_ids_json?: string | string[];
+  resultInstanceIds?: string[];
+  result_instance_ids_json?: string | string[];
+  idempotencyKey?: string | null;
+  idempotency_key?: string | null;
+  metadata?: Record<string, unknown>;
+  metadata_json?: string | Record<string, unknown>;
+  createdAt?: string;
+  created_at?: string;
+}
+
+export interface NormalizedAssetGachaBurnExchange {
+  id?: string;
+  playerId?: string;
+  packId?: string;
+  ruleId?: string;
+  sourceAssetInstanceIds: string[];
+  resultAssetIds: string[];
+  resultInstanceIds: string[];
+  idempotencyKey: string | null;
+  metadata: Record<string, unknown>;
+  createdAt?: string;
+}
+
+export interface AssetGachaResultItem {
+  slotIndex: number;
+  assetId: string;
+  assetName: unknown | null;
+  assetPath: string | null;
+  rarity: AssetGachaRarity | null;
+  selectedRarity: AssetGachaRarity | null;
+  duplicateCopy: boolean;
+  resultInstanceId: string | null;
+}
+
+export interface AssetGachaRollResult {
+  rollId?: string;
+  packId?: string;
+  packName: unknown;
+  assetId: string | null;
+  assetName: unknown | null;
+  assetPath: string | null;
+  rarity: AssetGachaRarity | null;
+  resultInstanceId: string | null;
+  count: number;
+  guaranteesApplied: unknown[];
+  pityBefore: unknown[];
+  pityAfter: unknown[];
+  items: AssetGachaResultItem[];
+}
+
+export interface AssetGachaBurnResult {
+  exchangeId?: string;
+  packId?: string;
+  packName: unknown;
+  ruleId?: string;
+  assetId: string | null;
+  assetName: unknown | null;
+  assetPath: string | null;
+  rarity: AssetGachaRarity | null;
+  resultInstanceId: string | null;
+  sourceAssetInstanceIds: string[];
+  count: number;
+  items: AssetGachaResultItem[];
+}
+
 export interface AssetCatalogAcquisitionPolicy {
   acquisitionMode: string;
   packId: string | null;
@@ -206,6 +327,23 @@ export function shapeAssetGachaPack(pack: AssetGachaPack, options?: AssetGachaOp
   activePackIds?: readonly string[] | null;
   gachaEnabled?: boolean;
 }): AssetGachaPack & Record<string, unknown>;
+export function normalizeAssetGachaRollRow(row?: AssetGachaRollRow | NormalizedAssetGachaRoll): NormalizedAssetGachaRoll;
+export function normalizeAssetGachaBurnExchangeRow(row?: AssetGachaBurnExchangeRow | NormalizedAssetGachaBurnExchange): NormalizedAssetGachaBurnExchange;
+export function shapeAssetGachaRollResult(roll: AssetGachaRollRow | NormalizedAssetGachaRoll, options?: {
+  asset?: AssetGachaCatalogAsset | null;
+  pack?: AssetGachaPack | null;
+  instance?: { id?: string | null; [key: string]: unknown } | null;
+  rarity?: AssetGachaRarity | null;
+  items?: readonly AssetGachaResultItem[] | null;
+  catalog?: readonly AssetGachaCatalogAsset[] | Map<string, AssetGachaCatalogAsset>;
+  localizeName?: (name: unknown) => unknown;
+}): AssetGachaRollResult;
+export function shapeAssetGachaBurnResult(exchange: AssetGachaBurnExchangeRow | NormalizedAssetGachaBurnExchange, options?: {
+  pack?: AssetGachaPack | null;
+  items?: readonly AssetGachaResultItem[] | null;
+  catalog?: readonly AssetGachaCatalogAsset[] | Map<string, AssetGachaCatalogAsset>;
+  localizeName?: (name: unknown) => unknown;
+}): AssetGachaBurnResult;
 export function computeAssetGachaPackPityState(pack: AssetGachaPack, options?: AssetGachaOptions & {
   rolls?: readonly unknown[];
   catalog?: readonly AssetGachaCatalogAsset[];
