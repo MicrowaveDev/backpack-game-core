@@ -47,6 +47,7 @@ import {
 } from '@microwavedev/backpack-game-core/modules/loadout';
 import {
   assetRollErrorViewState,
+  assetRollMutationResultViewState,
   assetRollPendingViewState,
   assetRollStatusFromError,
   artifactPreviewOrientation,
@@ -57,7 +58,9 @@ import {
   formatWalletBundlePrice,
   summarizeAssetRollFeedback,
   summarizeAssetRollPacks,
+  walletBundlesLoadedViewState,
   walletPurchaseCheckoutViewState,
+  walletPurchaseNextAction,
   walletPurchaseOpeningViewState,
   walletPurchaseStatusFromIntent,
   walletPurchaseStatusFromTelegramInvoice
@@ -153,10 +156,13 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(summarizeAssetRollFeedback(), null);
   assert.equal(walletPurchaseStatusFromIntent({ status: 'completed' }), 'confirmed');
   assert.equal(walletPurchaseStatusFromTelegramInvoice('paid'), 'confirmed');
+  assert.equal(walletBundlesLoadedViewState([{ id: 'coins' }]).bundles.length, 1);
   assert.equal(walletPurchaseOpeningViewState().status, 'opening');
   assert.equal(walletPurchaseCheckoutViewState({ hasWebCheckout: true }).status, 'opened');
+  assert.equal(walletPurchaseNextAction({ checkout: { checkoutUrl: 'https://pay.example' } }, { hasWebCheckout: true }).action, 'web_checkout');
   assert.equal(assetRollStatusFromError(new Error('No rollable assets left')), 'complete');
   assert.equal(assetRollPendingViewState().status, 'rolling');
+  assert.equal(assetRollMutationResultViewState({ roll: { id: 'roll' }, rollResult: { assetId: 'skin.a' } }).shouldRefresh, true);
   assert.equal(assetRollErrorViewState(new Error('No rollable assets left')).status, 'complete');
 
   const artifacts = new Map([

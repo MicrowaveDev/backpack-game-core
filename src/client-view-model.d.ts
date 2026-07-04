@@ -221,9 +221,17 @@ export interface WalletPurchaseSurfaceSummary {
   supportEntries: Array<{ label: string; url: string }>;
 }
 
+export interface WalletBundlesViewState {
+  loading: boolean;
+  bundles: WalletBundleInput[];
+  surface: string | null;
+  errorMessage: string;
+}
+
 export type WalletPurchaseIntentStatus = '' | 'confirmed' | 'expired' | 'failed';
 export type TelegramInvoiceStatus = 'confirmed' | 'pending' | 'expired' | 'failed';
 export type WalletPurchaseClientStatus = 'opening' | 'opened' | 'confirmed' | 'expired' | 'failed' | string;
+export type WalletPurchaseNextActionType = 'status' | 'telegram_invoice' | 'web_checkout' | 'unavailable';
 export type AssetRollErrorStatus =
   | 'complete'
   | 'burn_unavailable'
@@ -251,11 +259,26 @@ export interface WalletPurchaseCheckoutViewState {
   canOpen: boolean;
 }
 
+export interface WalletPurchaseNextAction {
+  action: WalletPurchaseNextActionType;
+  status: WalletPurchaseClientStatus;
+  errorMessage: string;
+  shouldRefresh: boolean;
+  checkout: Record<string, unknown> | null;
+  invoiceLink: unknown | null;
+  checkoutUrl: unknown | null;
+  viewState: WalletPurchaseIntentViewState | WalletPurchaseCheckoutViewState;
+}
+
 export interface AssetRollViewState {
   status: AssetRollClientStatus;
   result: unknown | null;
   errorMessage: string;
   globalErrorMessage: string;
+}
+
+export interface AssetRollMutationViewState extends AssetRollViewState {
+  shouldRefresh: boolean;
 }
 
 export interface AssetRollResultItemInput {
@@ -436,6 +459,24 @@ export function selectWalletBundles(input?: {
   surface?: string | null;
 }): WalletBundleInput[];
 
+export function walletBundlesLoadingViewState(input?: {
+  surface?: string | null;
+}): WalletBundlesViewState;
+
+export function walletBundlesLoadedViewState(
+  bundles?: readonly WalletBundleInput[],
+  options?: { surface?: string | null }
+): WalletBundlesViewState;
+
+export function walletBundlesErrorViewState(
+  error?: unknown,
+  options?: {
+    surface?: string | null;
+    bundles?: readonly WalletBundleInput[];
+    fallbackMessage?: string;
+  }
+): WalletBundlesViewState;
+
 export function formatWalletBundlePrice(
   bundle: WalletBundleInput | null | undefined,
   options?: {
@@ -506,6 +547,17 @@ export function walletPurchaseCheckoutViewState(input?: {
   unavailableMessage?: string;
 }): WalletPurchaseCheckoutViewState;
 
+export function walletPurchaseNextAction(
+  intent?: { status?: unknown; checkoutStatus?: unknown; checkout?: Record<string, unknown>; [key: string]: unknown } | null,
+  options?: {
+    hasTelegramInvoice?: boolean;
+    hasWebCheckout?: boolean;
+    setupRequiredMessage?: string;
+    unavailableMessage?: string;
+    intentOptions?: Parameters<typeof walletPurchaseIntentViewState>[1];
+  }
+): WalletPurchaseNextAction;
+
 export function walletPurchaseErrorViewState(
   error?: unknown,
   options?: { fallbackMessage?: string }
@@ -546,6 +598,18 @@ export function assetRollErrorViewState(
     statusOptions?: Parameters<typeof assetRollStatusFromError>[1];
   }
 ): AssetRollViewState;
+
+export function assetRollMutationResultViewState(
+  response?: Record<string, unknown> | null,
+  options?: Parameters<typeof assetRollResultViewState>[1] & {
+    refreshStatuses?: readonly AssetRollClientStatus[];
+  }
+): AssetRollMutationViewState;
+
+export function assetRollMutationErrorViewState(
+  error?: unknown,
+  options?: Parameters<typeof assetRollErrorViewState>[1]
+): AssetRollMutationViewState;
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,

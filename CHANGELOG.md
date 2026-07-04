@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added headless wallet/gacha state helpers to `client-view-model` for wallet
+  bundle loading, wallet checkout next-action decisions, and asset roll/burn
+  mutation refresh decisions while games keep API calls and checkout side
+  effects local.
 - Added profile asset record, instance/equipment summary, purchase result,
   equip result, and grant summary DTO shapers to `profile-asset-state` /
   `modules/assets`, so games can share inventory response contracts while

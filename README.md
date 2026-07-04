@@ -40,8 +40,9 @@ catalogs in their own repos.
   occupied-cell maps, preferred/canonical artifact preview orientation,
   artifact stat summary helpers, asset pack summary/label helpers, wallet
   purchase-surface/status helpers, asset roll-feedback/error-status helpers,
-  and headless wallet/asset-roll mutation view-state helpers over
-  product-provided copy and route adapters.
+  headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
+  view states, wallet checkout next-action decisions, and asset roll/burn
+  mutation refresh decisions over product-provided copy and route adapters.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, storage policy, and optional
   `{ success, data, error }` envelope unwrapping.

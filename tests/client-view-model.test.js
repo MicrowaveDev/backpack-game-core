@@ -26,9 +26,15 @@ import {
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
   summarizeAssetRollPacks,
+  assetRollMutationErrorViewState,
+  assetRollMutationResultViewState,
+  walletBundlesErrorViewState,
+  walletBundlesLoadedViewState,
+  walletBundlesLoadingViewState,
   walletPurchaseCheckoutViewState,
   walletPurchaseErrorViewState,
   walletPurchaseIntentViewState,
+  walletPurchaseNextAction,
   walletPurchaseOpeningViewState,
   walletPurchaseStatusFromIntent,
   walletPurchaseStatusFromTelegramInvoice
@@ -314,6 +320,30 @@ test('[client-view-model] summarizes wallet purchase surfaces', () => {
   assert.equal(formatWalletBundlePrice(summary.bundles[1]), '50 XTR');
 });
 
+test('[client-view-model] shapes headless wallet bundle loading state', () => {
+  assert.deepEqual(walletBundlesLoadingViewState({ surface: 'web' }), {
+    loading: true,
+    bundles: [],
+    surface: 'web',
+    errorMessage: ''
+  });
+  assert.deepEqual(walletBundlesLoadedViewState([{ id: 'coins_small' }], { surface: 'web' }), {
+    loading: false,
+    bundles: [{ id: 'coins_small' }],
+    surface: 'web',
+    errorMessage: ''
+  });
+  assert.deepEqual(walletBundlesErrorViewState(new Error('network down'), {
+    surface: 'web',
+    bundles: [{ id: 'cached' }]
+  }), {
+    loading: false,
+    bundles: [{ id: 'cached' }],
+    surface: 'web',
+    errorMessage: 'network down'
+  });
+});
+
 test('[client-view-model] normalizes wallet and asset-roll client statuses', () => {
   assert.equal(walletPurchaseStatusFromIntent({ status: 'completed' }), 'confirmed');
   assert.equal(walletPurchaseStatusFromIntent({ checkoutStatus: 'expired' }), 'expired');
@@ -367,6 +397,44 @@ test('[client-view-model] shapes headless wallet purchase mutation view state', 
     errorMessage: 'Wallet purchases are not configured yet',
     canOpen: false
   });
+  assert.deepEqual(walletPurchaseNextAction({ status: 'completed' }), {
+    action: 'status',
+    status: 'confirmed',
+    errorMessage: '',
+    shouldRefresh: true,
+    checkout: null,
+    invoiceLink: null,
+    checkoutUrl: null,
+    viewState: {
+      status: 'confirmed',
+      handled: true,
+      shouldRefresh: true
+    }
+  });
+  assert.deepEqual(walletPurchaseNextAction({
+    checkout: { invoiceLink: 'https://invoice.example' }
+  }, {
+    hasTelegramInvoice: true
+  }), {
+    action: 'telegram_invoice',
+    status: 'opened',
+    errorMessage: '',
+    shouldRefresh: false,
+    checkout: { invoiceLink: 'https://invoice.example' },
+    invoiceLink: 'https://invoice.example',
+    checkoutUrl: null,
+    viewState: {
+      status: 'opened',
+      errorMessage: '',
+      canOpen: true
+    }
+  });
+  assert.equal(walletPurchaseNextAction({
+    checkout: { checkoutUrl: 'https://checkout.example' }
+  }, {
+    hasWebCheckout: true
+  }).action, 'web_checkout');
+  assert.equal(walletPurchaseNextAction({ checkout: { setupRequired: true } }).action, 'unavailable');
   assert.deepEqual(walletPurchaseErrorViewState(new Error('network down')), {
     status: 'failed',
     errorMessage: 'network down'
@@ -403,6 +471,30 @@ test('[client-view-model] shapes headless asset roll mutation view state', () =>
     errorMessage: '',
     globalErrorMessage: ''
   });
+  assert.deepEqual(assetRollMutationResultViewState({
+    roll: { id: 'roll_1' },
+    rollResult: { assetId: 'skin.a' }
+  }), {
+    status: 'success',
+    result: { assetId: 'skin.a' },
+    errorMessage: '',
+    globalErrorMessage: '',
+    shouldRefresh: true
+  });
+  assert.deepEqual(assetRollMutationResultViewState({
+    exchange: { id: 'burn_1' },
+    burnResult: { assetId: 'skin.b' }
+  }, {
+    successKey: 'exchange',
+    resultKey: 'burnResult',
+    successStatus: 'burned'
+  }), {
+    status: 'burned',
+    result: { assetId: 'skin.b' },
+    errorMessage: '',
+    globalErrorMessage: '',
+    shouldRefresh: true
+  });
   assert.deepEqual(assetRollResultViewState(null, { failureMessage: 'Failed to roll pack' }), {
     status: 'failed',
     result: null,
@@ -420,6 +512,13 @@ test('[client-view-model] shapes headless asset roll mutation view state', () =>
     result: null,
     errorMessage: 'No rollable assets left',
     globalErrorMessage: ''
+  });
+  assert.deepEqual(assetRollMutationErrorViewState(new Error('No rollable assets left')), {
+    status: 'complete',
+    result: null,
+    errorMessage: 'No rollable assets left',
+    globalErrorMessage: '',
+    shouldRefresh: false
   });
 });
 

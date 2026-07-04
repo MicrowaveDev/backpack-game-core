@@ -515,6 +515,41 @@ export function selectWalletBundles({
   return Array.isArray(bundles) ? bundles : [];
 }
 
+export function walletBundlesLoadingViewState({
+  surface = null
+} = {}) {
+  return {
+    loading: true,
+    bundles: [],
+    surface,
+    errorMessage: ''
+  };
+}
+
+export function walletBundlesLoadedViewState(bundles = [], {
+  surface = null
+} = {}) {
+  return {
+    loading: false,
+    bundles: Array.isArray(bundles) ? bundles : [],
+    surface,
+    errorMessage: ''
+  };
+}
+
+export function walletBundlesErrorViewState(error, {
+  surface = null,
+  bundles = [],
+  fallbackMessage = 'Failed to load wallet bundles'
+} = {}) {
+  return {
+    loading: false,
+    bundles: Array.isArray(bundles) ? bundles : [],
+    surface,
+    errorMessage: messageFromError(error, fallbackMessage)
+  };
+}
+
 export function formatWalletBundlePrice(bundle, {
   minorUnitCurrencyDecimals = { USD: 2 },
   currencySymbols = { USD: '$' }
@@ -631,6 +666,49 @@ export function walletPurchaseCheckoutViewState({
   };
 }
 
+export function walletPurchaseNextAction(intent, {
+  hasTelegramInvoice = false,
+  hasWebCheckout = false,
+  setupRequiredMessage = 'Wallet purchases are not configured yet',
+  unavailableMessage = 'Payment checkout is not available',
+  intentOptions = {}
+} = {}) {
+  const intentViewState = walletPurchaseIntentViewState(intent, intentOptions);
+  if (intentViewState.handled) {
+    return {
+      action: 'status',
+      status: intentViewState.status,
+      errorMessage: '',
+      shouldRefresh: intentViewState.shouldRefresh,
+      checkout: null,
+      invoiceLink: null,
+      checkoutUrl: null,
+      viewState: intentViewState
+    };
+  }
+
+  const checkout = intent?.checkout && typeof intent.checkout === 'object' ? intent.checkout : {};
+  const canOpenTelegramInvoice = Boolean(checkout.invoiceLink) && Boolean(hasTelegramInvoice);
+  const canOpenWebCheckout = Boolean(checkout.checkoutUrl) && Boolean(hasWebCheckout);
+  const checkoutViewState = walletPurchaseCheckoutViewState({
+    checkout,
+    hasTelegramInvoice: canOpenTelegramInvoice,
+    hasWebCheckout: canOpenWebCheckout,
+    setupRequiredMessage,
+    unavailableMessage
+  });
+  return {
+    action: canOpenTelegramInvoice ? 'telegram_invoice' : canOpenWebCheckout ? 'web_checkout' : 'unavailable',
+    status: checkoutViewState.status,
+    errorMessage: checkoutViewState.errorMessage,
+    shouldRefresh: false,
+    checkout,
+    invoiceLink: canOpenTelegramInvoice ? checkout.invoiceLink : null,
+    checkoutUrl: canOpenWebCheckout ? checkout.checkoutUrl : null,
+    viewState: checkoutViewState
+  };
+}
+
 export function walletPurchaseErrorViewState(error, {
   fallbackMessage = 'Failed to start wallet purchase'
 } = {}) {
@@ -724,6 +802,24 @@ export function assetRollErrorViewState(error, {
     result: null,
     errorMessage,
     globalErrorMessage: shouldSurface ? errorMessage : ''
+  };
+}
+
+export function assetRollMutationResultViewState(response, options = {}) {
+  const viewState = assetRollResultViewState(response, options);
+  const refreshStatuses = Array.isArray(options.refreshStatuses)
+    ? options.refreshStatuses
+    : [options.successStatus || 'success'];
+  return {
+    ...viewState,
+    shouldRefresh: refreshStatuses.includes(viewState.status)
+  };
+}
+
+export function assetRollMutationErrorViewState(error, options = {}) {
+  return {
+    ...assetRollErrorViewState(error, options),
+    shouldRefresh: false
   };
 }
 
