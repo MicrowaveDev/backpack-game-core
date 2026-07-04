@@ -6,6 +6,14 @@
 from a published registry package. Treat the commit SHA as the release identity
 until package publishing starts.
 
+### Post-baseline additions
+
+- Added `asset-gacha`: reusable asset acquisition and gacha pack policy helpers
+  over injected catalogs, ownership snapshots, time, and RNG. The module covers
+  pack validation, acquisition policy, candidate filtering, weighted roll
+  selection, guarantees, pity, duplicate copy caps, burn target selection, pack
+  UI shaping, and TypeScript declarations.
+
 ### Runtime/API baseline
 
 `d5fb481` is the first typed runtime/API baseline. Later documentation-only

@@ -42,3 +42,5 @@ export {
 export {
   simulateBattle
 } from './battle-simulation.js';
+
+export * from './asset-gacha.js';

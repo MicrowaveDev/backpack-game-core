@@ -24,6 +24,8 @@ catalogs in their own repos.
   over injected catalog, pricing, bag policy, and stat rules.
 - `battle-simulation`: deterministic 1v1 battle loop with injected combatant,
   ability, tiebreak, attribution, and narration hooks.
+- `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
+  injected catalogs, ownership snapshots, time, and RNG.
 
 ## Usage
 

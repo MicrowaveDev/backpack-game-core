@@ -40,6 +40,10 @@
     "./battle-simulation": {
       "types": "./src/battle-simulation.d.ts",
       "import": "./src/battle-simulation.js"
+    },
+    "./asset-gacha": {
+      "types": "./src/asset-gacha.d.ts",
+      "import": "./src/asset-gacha.js"
     }
   },
   "files": [
