@@ -65,6 +65,10 @@
       "types": "./src/modules/gacha/validation.d.ts",
       "import": "./src/modules/gacha/validation.js"
     },
+    "./modules/gacha/admin-validation": {
+      "types": "./src/modules/gacha/admin-validation.d.ts",
+      "import": "./src/modules/gacha/admin-validation.js"
+    },
     "./modules/shop": {
       "types": "./src/modules/shop/index.d.ts",
       "import": "./src/modules/shop/index.js"

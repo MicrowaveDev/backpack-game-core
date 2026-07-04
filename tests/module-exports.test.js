@@ -10,6 +10,10 @@ import {
   assetGachaPackRollSize,
   validateAssetGachaPack as validateAssetGachaPackOnly
 } from '@microwavedev/backpack-game-core/modules/gacha/validation';
+import {
+  createGachaAdminReleaseChecklist,
+  normalizeGachaAdminFixture
+} from '@microwavedev/backpack-game-core/modules/gacha/admin-validation';
 import * as gachaInterface from '@microwavedev/backpack-game-core/modules/gacha/interface';
 import { generateShopOffer } from '@microwavedev/backpack-game-core/modules/shop';
 import {
@@ -56,6 +60,11 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
 
   const shaped = shapeAssetGachaPack(pack, { catalog, includeAssets: true, gachaEnabled: true });
   assert.equal(shaped.items[0].asset.assetId, 'skin.a');
+  assert.equal(createGachaAdminReleaseChecklist({
+    runtimePack: pack,
+    validation: { ok: true, errors: [], warnings: [] }
+  }).ok, false);
+  assert.equal(normalizeGachaAdminFixture({ packs: [{ id: 'fixture_pack' }] }).packs[0].id, 'fixture_pack');
   assert.deepEqual(Object.keys(gachaInterface), []);
 });
 

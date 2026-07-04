@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `modules/gacha/admin-validation`: pure gacha admin helpers for release
+  checklist evaluation, fixture normalization, plan-item generated asset-id
+  invariants, season-plan catalog projection, promotion metadata shaping, and
+  plan coverage summaries. Product games still own DB transactions, audit logs,
+  admin permissions, uploads, storage, route payloads, and product error
+  handling.
 - Added Geesome-inspired public layer exports:
   `modules/gacha`, `modules/gacha/validation`, `modules/shop`,
   `modules/loadout`, `modules/battle`, `modules/fusion`, `client`, and
