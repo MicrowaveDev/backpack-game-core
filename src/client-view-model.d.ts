@@ -87,6 +87,30 @@ export interface GridBaseRect {
 
 export type GridCellClassification = 'base-inv' | 'bag-slot' | 'bag-box' | 'bag-empty';
 
+export type ArtifactStatBonus = Record<string, unknown>;
+
+export interface ArtifactStatSource {
+  id?: string;
+  bonus?: ArtifactStatBonus;
+  [key: string]: unknown;
+}
+
+export interface ArtifactStatLabels {
+  [key: string]: string;
+}
+
+export interface ArtifactStatSuffixByKey {
+  [key: string]: string;
+}
+
+export interface ArtifactBonusEntry {
+  key: string;
+  label: string;
+  value: string;
+  numericValue: number;
+  positive: boolean;
+}
+
 export interface AssetPackSummaryLabels {
   invalid?: string;
   disabled?: string;
@@ -228,6 +252,9 @@ export interface AssetRollFeedbackSummary {
   text: string;
 }
 
+export const DEFAULT_ARTIFACT_STAT_KEYS: string[];
+export const DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY: ArtifactStatSuffixByKey;
+
 export function projectLoadoutItems(
   loadoutItems?: readonly LoadoutProjectionRow[],
   bagArtifactIds?: Iterable<string>,
@@ -257,6 +284,45 @@ export function classifyCell(
 export function occupiedCellKeys(
   items?: readonly Array<{ x?: number | string | null; y?: number | string | null; width?: number | string | null; height?: number | string | null; [key: string]: unknown }>
 ): Set<string>;
+
+export function sumArtifactBonuses(
+  items?: readonly Record<string, unknown>[],
+  artifacts?: readonly ArtifactStatSource[] | Map<string, ArtifactStatSource> | Record<string, ArtifactStatSource> | ((artifactId: string) => ArtifactStatSource | undefined | null),
+  options?: {
+    statKeys?: readonly string[];
+    getArtifactId?: (item: Record<string, unknown>) => string;
+  }
+): Record<string, number>;
+
+export function formatStatDelta(
+  value: unknown,
+  options?: {
+    suffix?: string;
+    includeSign?: boolean;
+    zero?: string;
+  }
+): string;
+
+export function formatArtifactBonusEntries(
+  source?: ArtifactStatSource | ArtifactStatBonus | null,
+  options?: {
+    labels?: ArtifactStatLabels;
+    statKeys?: readonly string[] | null;
+    suffixByKey?: ArtifactStatSuffixByKey;
+    includeZeroes?: boolean;
+  }
+): ArtifactBonusEntry[];
+
+export function formatLoadoutStatsText(input?: {
+  totals?: ArtifactStatBonus | null;
+  items?: readonly Record<string, unknown>[];
+  artifacts?: readonly ArtifactStatSource[] | Map<string, ArtifactStatSource> | Record<string, ArtifactStatSource> | ((artifactId: string) => ArtifactStatSource | undefined | null);
+  labels?: ArtifactStatLabels;
+  statKeys?: readonly string[];
+  suffixByKey?: ArtifactStatSuffixByKey;
+  separator?: string;
+  getArtifactId?: (item: Record<string, unknown>) => string;
+}): string;
 
 export function formatAssetPackRarityOdds(
   pack: AssetPackSummaryInput | null | undefined,

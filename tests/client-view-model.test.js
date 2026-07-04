@@ -6,12 +6,16 @@ import {
   bagRowEntryFor,
   classifyCell,
   formatAssetRollResultItemsText,
+  formatArtifactBonusEntries,
   formatAssetPackRarityOdds,
+  formatLoadoutStatsText,
+  formatStatDelta,
   formatWalletBundlePrice,
   occupiedCellKeys,
   prepareGridProps,
   projectLoadoutItems,
   resolveWalletBalance,
+  sumArtifactBonuses,
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
   summarizeAssetRollPacks
@@ -118,6 +122,58 @@ test('[client-view-model] reports occupied artifact footprint cells', () => {
   assert.ok(occupied.has('0:4'));
   assert.ok(occupied.has('1:4'));
   assert.equal(occupied.has('4:2'), false);
+});
+
+test('[client-view-model] sums and formats artifact stat bonuses', () => {
+  const statArtifacts = [
+    { id: 'needle', bonus: { damage: 2, armor: 0, speed: -1 } },
+    { id: 'plate', bonus: { armor: 3, stunChance: 5 } },
+    { id: 'empty', bonus: { damage: 'bad' } }
+  ];
+  const statKeys = ['damage', 'armor', 'speed', 'stunChance'];
+
+  const totals = sumArtifactBonuses([
+    { artifactId: 'needle' },
+    { artifactId: 'plate' },
+    { artifactId: 'missing' },
+    { artifactId: 'empty' }
+  ], statArtifacts, { statKeys });
+
+  assert.deepEqual(totals, {
+    damage: 2,
+    armor: 3,
+    speed: -1,
+    stunChance: 5
+  });
+  assert.equal(formatStatDelta(null), '');
+  assert.equal(formatStatDelta(Number.NaN), '');
+  assert.equal(formatStatDelta(0), '0');
+  assert.equal(formatStatDelta(3), '+3');
+  assert.equal(formatStatDelta(-1), '-1');
+  assert.equal(formatStatDelta(5, { suffix: '%' }), '+5%');
+
+  assert.deepEqual(formatArtifactBonusEntries({
+    bonus: { damage: 2, armor: -1, speed: 0, stunChance: 5 }
+  }, {
+    labels: { damage: 'Damage', armor: 'Armor', speed: 'Speed', stunChance: 'Stun' },
+    statKeys
+  }), [
+    { key: 'damage', label: 'Damage', value: '+2', numericValue: 2, positive: true },
+    { key: 'armor', label: 'Armor', value: '-1', numericValue: -1, positive: false },
+    { key: 'stunChance', label: 'Stun', value: '+5%', numericValue: 5, positive: true }
+  ]);
+  assert.equal(formatLoadoutStatsText({
+    totals,
+    labels: { damage: 'Damage', armor: 'Armor', speed: 'Speed', stunChance: 'Stun' },
+    statKeys
+  }), 'Damage +2 / Armor +3 / Speed -1 / Stun +5%');
+  assert.equal(formatLoadoutStatsText({
+    items: [{ artifactId: 'plate' }],
+    artifacts: new Map(statArtifacts.map((artifact) => [artifact.id, artifact])),
+    labels: { armor: 'Armor', stunChance: 'Stun' },
+    statKeys: ['armor', 'stunChance'],
+    suffixByKey: {}
+  }), 'Armor +3 / Stun +5');
 });
 
 test('[client-view-model] formats asset pack odds and availability labels', () => {

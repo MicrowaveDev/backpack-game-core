@@ -155,6 +155,9 @@ export function occupiedCellKeys(items = []) {
   return occupied;
 }
 
+export const DEFAULT_ARTIFACT_STAT_KEYS = ['damage', 'armor', 'speed', 'stunChance'];
+export const DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY = { stunChance: '%' };
+
 function identity(value) {
   return value || '';
 }
@@ -164,8 +167,105 @@ function numberOr(value, fallback = 0) {
   return Number.isFinite(numeric) ? numeric : fallback;
 }
 
+function artifactStatKeys(statKeys, fallback = DEFAULT_ARTIFACT_STAT_KEYS) {
+  return Array.isArray(statKeys) && statKeys.length ? statKeys : fallback;
+}
+
+function artifactLookupById(artifacts) {
+  if (typeof artifacts === 'function') return artifacts;
+  if (artifacts instanceof Map) return (id) => artifacts.get(id);
+  if (artifacts && typeof artifacts === 'object' && !Array.isArray(artifacts)) {
+    return (id) => artifacts[id];
+  }
+  const map = new Map((artifacts || []).filter(Boolean).map((artifact) => [artifact.id, artifact]));
+  return (id) => map.get(id);
+}
+
+function artifactBonusSource(source) {
+  if (!source || typeof source !== 'object') return {};
+  if (source.bonus && typeof source.bonus === 'object') return source.bonus;
+  return source;
+}
+
 function fillTemplate(template, values = {}) {
   return String(template || '').replace(/\{([^}]+)\}/g, (_, key) => values[key] ?? '');
+}
+
+export function sumArtifactBonuses(items = [], artifacts = [], {
+  statKeys = DEFAULT_ARTIFACT_STAT_KEYS,
+  getArtifactId = (item) => item?.artifactId
+} = {}) {
+  const keys = artifactStatKeys(statKeys);
+  const totals = Object.fromEntries(keys.map((key) => [key, 0]));
+  const getArtifact = artifactLookupById(artifacts);
+
+  for (const item of items || []) {
+    const artifact = getArtifact(getArtifactId(item));
+    const bonus = artifactBonusSource(artifact?.bonus);
+    for (const key of keys) {
+      totals[key] += numberOr(bonus[key]);
+    }
+  }
+
+  return totals;
+}
+
+export function formatStatDelta(value, {
+  suffix = '',
+  includeSign = true,
+  zero = '0'
+} = {}) {
+  if (value == null) return '';
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return '';
+  if (numeric === 0) return `${zero}${suffix}`;
+  const sign = includeSign && numeric > 0 ? '+' : '';
+  return `${sign}${numeric}${suffix}`;
+}
+
+export function formatArtifactBonusEntries(source, {
+  labels = {},
+  statKeys = null,
+  suffixByKey = DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY,
+  includeZeroes = false
+} = {}) {
+  const bonus = artifactBonusSource(source);
+  const keys = artifactStatKeys(statKeys, Object.keys(bonus));
+
+  return keys
+    .map((key) => {
+      const numericValue = Number(bonus[key]);
+      if (!Number.isFinite(numericValue)) return null;
+      if (!includeZeroes && numericValue === 0) return null;
+      return {
+        key,
+        label: labels[key] || key,
+        value: formatStatDelta(numericValue, { suffix: suffixByKey[key] || '' }),
+        numericValue,
+        positive: numericValue > 0
+      };
+    })
+    .filter(Boolean);
+}
+
+export function formatLoadoutStatsText({
+  totals = null,
+  items = [],
+  artifacts = [],
+  labels = {},
+  statKeys = DEFAULT_ARTIFACT_STAT_KEYS,
+  suffixByKey = DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY,
+  separator = ' / ',
+  getArtifactId = (item) => item?.artifactId
+} = {}) {
+  const resolvedTotals = totals || sumArtifactBonuses(items, artifacts, { statKeys, getArtifactId });
+  return formatArtifactBonusEntries(resolvedTotals, {
+    labels,
+    statKeys,
+    suffixByKey
+  })
+    .map((entry) => `${entry.label} ${entry.value}`)
+    .join(separator);
 }
 
 export function formatAssetPackRarityOdds(pack, {
