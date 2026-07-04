@@ -155,6 +155,44 @@ export function occupiedCellKeys(items = []) {
   return occupied;
 }
 
+export function buildOccupiedCellMap(items = [], {
+  valueForItem = (item) => item?.artifactId
+} = {}) {
+  const occupied = new Map();
+  for (const item of items || []) {
+    const width = Number(item?.width) || 1;
+    const height = Number(item?.height) || 1;
+    const x = Number(item?.x);
+    const y = Number(item?.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    const value = valueForItem(item);
+    for (let dx = 0; dx < width; dx += 1) {
+      for (let dy = 0; dy < height; dy += 1) {
+        occupied.set(`${x + dx}:${y + dy}`, value);
+      }
+    }
+  }
+  return occupied;
+}
+
+export function preferredArtifactOrientation(artifact) {
+  const width = Number(artifact?.width) || 0;
+  const height = Number(artifact?.height) || 0;
+  if (Array.isArray(artifact?.shape)) {
+    const shape = artifact.shape;
+    return {
+      width: Number(shape[0]?.length) || width,
+      height: Number(shape.length) || height
+    };
+  }
+  if (width !== height) {
+    const longSide = Math.max(width, height);
+    const shortSide = Math.min(width, height);
+    return { width: longSide, height: shortSide };
+  }
+  return { width, height };
+}
+
 export const DEFAULT_ARTIFACT_STAT_KEYS = ['damage', 'armor', 'speed', 'stunChance'];
 export const DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY = { stunChance: '%' };
 

@@ -10,9 +10,11 @@ import {
   formatAssetPackRarityOdds,
   formatLoadoutStatsText,
   formatStatDelta,
+  buildOccupiedCellMap,
   formatWalletBundlePrice,
   occupiedCellKeys,
   prepareGridProps,
+  preferredArtifactOrientation,
   projectLoadoutItems,
   resolveWalletBalance,
   sumArtifactBonuses,
@@ -122,6 +124,24 @@ test('[client-view-model] reports occupied artifact footprint cells', () => {
   assert.ok(occupied.has('0:4'));
   assert.ok(occupied.has('1:4'));
   assert.equal(occupied.has('4:2'), false);
+});
+
+test('[client-view-model] maps occupied cells to artifact values and derives preview orientation', () => {
+  const occupied = buildOccupiedCellMap([
+    { artifactId: 'static_spore_sac', x: 3, y: 2, width: 1, height: 2 },
+    { artifactId: 'thunder_gill', x: 0, y: 4, width: 2, height: 1 }
+  ]);
+
+  assert.equal(occupied.get('3:2'), 'static_spore_sac');
+  assert.equal(occupied.get('3:3'), 'static_spore_sac');
+  assert.equal(occupied.get('1:4'), 'thunder_gill');
+  assert.equal(occupied.has('4:2'), false);
+  assert.deepEqual(preferredArtifactOrientation({ width: 1, height: 2 }), { width: 2, height: 1 });
+  assert.deepEqual(preferredArtifactOrientation({
+    width: 4,
+    height: 1,
+    shape: [[1], [1], [1], [1]]
+  }), { width: 1, height: 4 });
 });
 
 test('[client-view-model] sums and formats artifact stat bonuses', () => {

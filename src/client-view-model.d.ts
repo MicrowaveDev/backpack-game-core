@@ -87,6 +87,11 @@ export interface GridBaseRect {
 
 export type GridCellClassification = 'base-inv' | 'bag-slot' | 'bag-box' | 'bag-empty';
 
+export interface ArtifactOrientation {
+  width: number;
+  height: number;
+}
+
 export type ArtifactStatBonus = Record<string, unknown>;
 
 export interface ArtifactStatSource {
@@ -284,6 +289,17 @@ export function classifyCell(
 export function occupiedCellKeys(
   items?: readonly Array<{ x?: number | string | null; y?: number | string | null; width?: number | string | null; height?: number | string | null; [key: string]: unknown }>
 ): Set<string>;
+
+export function buildOccupiedCellMap<T = unknown>(
+  items?: readonly Array<{ x?: number | string | null; y?: number | string | null; width?: number | string | null; height?: number | string | null; [key: string]: unknown }>,
+  options?: {
+    valueForItem?: (item: Record<string, unknown>) => T;
+  }
+): Map<string, T>;
+
+export function preferredArtifactOrientation(
+  artifact?: { width?: number | string | null; height?: number | string | null; shape?: readonly (readonly unknown[])[] | null; [key: string]: unknown } | null
+): ArtifactOrientation;
 
 export function sumArtifactBonuses(
   items?: readonly Record<string, unknown>[],
