@@ -32,8 +32,9 @@ catalogs in their own repos.
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots.
 - `profile-asset-state`: reusable profile asset ownership/equipment row
-  shaping, equip validation, purchase spend mutation shaping, and portrait
-  variant/list projection over injected catalog/policy snapshots.
+  shaping, equip validation, purchase spend mutation shaping, purchase/equip
+  result DTO shaping, grant summaries, and portrait variant/list projection over
+  injected catalog/policy snapshots.
 - `client-view-model`: browser-safe frontend view-model shapers such as flat
   loadout row projection, grid prop preparation, grid-cell classification,
   occupied-cell maps, preferred/canonical artifact preview orientation,

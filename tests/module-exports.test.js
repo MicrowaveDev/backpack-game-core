@@ -29,6 +29,9 @@ import {
 } from '@microwavedev/backpack-game-core/modules/wallet/accounting';
 import {
   createProfileAssetState,
+  shapeProfileAssetEquipResult,
+  shapeProfileAssetGrantSummaries,
+  shapeProfileAssetPurchaseResult,
   shapeProfileAssetTargetVariants,
   shapeProfileAssetVariant
 } from '@microwavedev/backpack-game-core/modules/assets';
@@ -189,6 +192,56 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     ingredientArtifactIds: ['a', 'b']
   }]);
   assert.equal(matches[0].resultArtifactId, 'ab');
+});
+
+test('[modules] asset facade exposes profile asset result DTO shapers', () => {
+  const asset = {
+    assetId: 'portrait.ruby.rare',
+    slot: 'portrait',
+    targetType: 'character',
+    targetId: 'ruby',
+    variantId: 'rare',
+    price: 100,
+    currencyCode: 'soft_coin',
+    rarity: 'rare',
+    path: '/portraits/ruby-rare.png'
+  };
+  const instance = {
+    id: 'asset_1',
+    asset_id: 'portrait.ruby.rare',
+    status: 'active'
+  };
+
+  assert.equal(createProfileAssetState({ instances: [instance] }).ownedAssetIds.has(asset.assetId), true);
+  assert.equal(shapeProfileAssetVariant({
+    variant: { id: 'rare' },
+    asset,
+    owned: true
+  }).assetId, asset.assetId);
+  assert.equal(shapeProfileAssetTargetVariants({
+    variants: [{ id: 'rare', assetId: asset.assetId }],
+    catalog: [asset]
+  })[0].rarity, 'rare');
+  assert.equal(shapeProfileAssetPurchaseResult({
+    asset,
+    instance,
+    transaction: { id: 'tx_1' }
+  }).transaction.id, 'tx_1');
+  assert.equal(shapeProfileAssetEquipResult({
+    asset,
+    instance,
+    equipment: {
+      slot: 'portrait',
+      targetType: 'character',
+      targetId: 'ruby',
+      assetId: asset.assetId,
+      assetInstanceId: 'asset_1'
+    }
+  }).targetKey, 'portrait:character:ruby');
+  assert.equal(shapeProfileAssetGrantSummaries({
+    instances: [instance],
+    catalog: [asset]
+  })[0].path, '/portraits/ruby-rare.png');
 });
 
 test('[modules] wallet facade exposes accounting helpers', () => {

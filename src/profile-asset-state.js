@@ -210,6 +210,153 @@ export function createProfileAssetPurchaseSpendMutation(asset, {
   };
 }
 
+export function shapeProfileAssetRecord(asset = null) {
+  if (!asset || typeof asset !== 'object') return null;
+  return {
+    ...asset,
+    assetId: asset.assetId ?? null,
+    slot: asset.slot ?? null,
+    targetType: asset.targetType ?? null,
+    targetId: asset.targetId ?? null,
+    variantId: asset.variantId ?? null,
+    price: asset.price ?? null,
+    currencyCode: asset.currencyCode ?? null,
+    acquisitionMode: asset.acquisitionMode ?? null,
+    packId: asset.packId ?? null,
+    rarity: asset.rarity ?? null,
+    path: asset.path ?? null,
+    name: asset.name ?? null
+  };
+}
+
+export function profileAssetCatalogLookup(catalog = [], assetId = null) {
+  if (!assetId) return null;
+  if (catalog instanceof Map) return catalog.get(assetId) || null;
+  return (catalog || []).find((asset) => asset?.assetId === assetId) || null;
+}
+
+function profileAssetSummaryFields(asset = null) {
+  return {
+    slot: asset?.slot ?? null,
+    targetType: asset?.targetType ?? null,
+    targetId: asset?.targetId ?? null,
+    variantId: asset?.variantId ?? null,
+    rarity: asset?.rarity ?? null,
+    packId: asset?.packId ?? null,
+    path: asset?.path ?? null,
+    name: asset?.name ?? null
+  };
+}
+
+export function shapeProfileAssetInstanceSummary({
+  instance = null,
+  asset = null,
+  catalog = []
+} = {}) {
+  const normalized = normalizeProfileAssetInstanceRow(instance);
+  if (!normalized) return null;
+  const shapedAsset = shapeProfileAssetRecord(asset || profileAssetCatalogLookup(catalog, normalized.assetId));
+  return {
+    ...normalized,
+    asset: shapedAsset,
+    ...profileAssetSummaryFields(shapedAsset)
+  };
+}
+
+export function shapeProfileAssetEquipmentSummary({
+  equipment = null,
+  asset = null,
+  catalog = []
+} = {}) {
+  const normalized = normalizeProfileAssetEquipmentRow(equipment);
+  if (!normalized) return null;
+  const shapedAsset = shapeProfileAssetRecord(asset || profileAssetCatalogLookup(catalog, normalized.assetId));
+  return {
+    ...normalized,
+    targetKey: profileAssetTargetKey(normalized),
+    asset: shapedAsset,
+    ...profileAssetSummaryFields(shapedAsset)
+  };
+}
+
+export function shapeProfileAssetPurchaseResult({
+  asset = null,
+  instance = null,
+  transaction = null,
+  alreadyOwned = false
+} = {}) {
+  const shapedAsset = shapeProfileAssetRecord(asset);
+  const instanceSummary = shapeProfileAssetInstanceSummary({
+    instance,
+    asset: shapedAsset
+  });
+  return {
+    assetId: shapedAsset?.assetId ?? instanceSummary?.assetId ?? null,
+    asset: shapedAsset,
+    instance: instanceSummary,
+    transaction: transaction || null,
+    alreadyOwned: Boolean(alreadyOwned),
+    owned: Boolean(instanceSummary) || profileAssetIsFree(shapedAsset),
+    status: alreadyOwned ? 'already_owned' : 'purchased'
+  };
+}
+
+export function shapeProfileAssetEquipResult({
+  asset = null,
+  equipment = null,
+  instance = null,
+  validation = null
+} = {}) {
+  const shapedAsset = shapeProfileAssetRecord(asset);
+  const usableInstance = instance || validation?.instance || null;
+  const instanceSummary = shapeProfileAssetInstanceSummary({
+    instance: usableInstance,
+    asset: shapedAsset
+  });
+  const fallbackEquipment = shapedAsset
+    ? {
+        slot: shapedAsset.slot,
+        targetType: shapedAsset.targetType,
+        targetId: shapedAsset.targetId,
+        assetId: shapedAsset.assetId,
+        assetInstanceId: validation?.assetInstanceId ?? instanceSummary?.id ?? null
+      }
+    : null;
+  const equipmentSummary = shapeProfileAssetEquipmentSummary({
+    equipment: equipment || fallbackEquipment,
+    asset: shapedAsset
+  });
+  const target = equipmentSummary || shapedAsset || {};
+  return {
+    assetId: shapedAsset?.assetId ?? equipmentSummary?.assetId ?? instanceSummary?.assetId ?? null,
+    slot: shapedAsset?.slot ?? equipmentSummary?.slot ?? null,
+    targetType: shapedAsset?.targetType ?? equipmentSummary?.targetType ?? null,
+    targetId: shapedAsset?.targetId ?? equipmentSummary?.targetId ?? null,
+    variantId: shapedAsset?.variantId ?? null,
+    path: shapedAsset?.path ?? null,
+    rarity: shapedAsset?.rarity ?? null,
+    packId: shapedAsset?.packId ?? null,
+    targetKey: validation?.targetKey || profileAssetTargetKey(target),
+    asset: shapedAsset,
+    equipment: equipmentSummary,
+    instance: instanceSummary
+  };
+}
+
+export function shapeProfileAssetGrantSummaries({
+  instances = [],
+  catalog = [],
+  assetForInstance = null
+} = {}) {
+  return (instances || [])
+    .map((instance) => shapeProfileAssetInstanceSummary({
+      instance,
+      asset: typeof assetForInstance === 'function' ? assetForInstance(instance) : null,
+      catalog
+    }))
+    .filter(Boolean);
+}
+
 export function shapeProfileAssetVariant({
   variant,
   asset,
@@ -233,12 +380,6 @@ export function shapeProfileAssetVariant({
     packId: asset.packId,
     rarity: asset.rarity
   };
-}
-
-function profileAssetCatalogLookup(catalog = [], assetId = null) {
-  if (!assetId) return null;
-  if (catalog instanceof Map) return catalog.get(assetId) || null;
-  return (catalog || []).find((asset) => asset?.assetId === assetId) || null;
 }
 
 function defaultVariantAssetId(variant = {}) {

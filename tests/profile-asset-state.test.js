@@ -7,9 +7,16 @@ import {
   normalizeProfileAssetEquipmentRow,
   normalizeProfileAssetInstanceRow,
   profileAssetAcquisitionSource,
+  profileAssetCatalogLookup,
   profileAssetInstanceDraftToRow,
   profileAssetIsOwned,
   profileAssetTargetKey,
+  shapeProfileAssetEquipResult,
+  shapeProfileAssetEquipmentSummary,
+  shapeProfileAssetGrantSummaries,
+  shapeProfileAssetInstanceSummary,
+  shapeProfileAssetPurchaseResult,
+  shapeProfileAssetRecord,
   shapeProfileAssetTargetVariants,
   shapeProfileAssetVariant,
   validateProfileAssetEquipment
@@ -169,6 +176,97 @@ test('[profile-asset-state] shapes purchase mutations and asset instance drafts'
   });
   assert.equal(draft.status, 'active');
   assert.equal(profileAssetInstanceDraftToRow(draft).metadata_json, '{"price":500}');
+});
+
+test('[profile-asset-state] shapes asset records, inventory summaries, and equipment DTOs', () => {
+  const catalog = [
+    { ...paidPortrait, path: '/portraits/axilin-1.png', name: { en: 'Axilin Rare' } }
+  ];
+  const instanceRow = {
+    id: 'asset_1',
+    player_id: 'player_1',
+    asset_id: paidPortrait.assetId,
+    acquisition_source: 'direct_purchase',
+    acquisition_source_id: 'wtx_1',
+    acquired_at: '2026-07-04T12:00:00.000Z',
+    metadata_json: '{"price":500}'
+  };
+  const equipmentRow = {
+    id: 'equip_1',
+    player_id: 'player_1',
+    slot: 'portrait',
+    target_type: 'character',
+    target_id: 'axilin',
+    asset_instance_id: 'asset_1',
+    asset_id: paidPortrait.assetId,
+    equipped_at: '2026-07-04T12:05:00.000Z'
+  };
+
+  assert.equal(profileAssetCatalogLookup(new Map(catalog.map((asset) => [asset.assetId, asset])), paidPortrait.assetId).rarity, 'rare');
+  assert.equal(shapeProfileAssetRecord(catalog[0]).path, '/portraits/axilin-1.png');
+
+  const summary = shapeProfileAssetInstanceSummary({ instance: instanceRow, catalog });
+  assert.equal(summary.asset.assetId, paidPortrait.assetId);
+  assert.equal(summary.slot, 'portrait');
+  assert.equal(summary.variantId, '1');
+  assert.deepEqual(summary.metadata, { price: 500 });
+
+  const equipment = shapeProfileAssetEquipmentSummary({ equipment: equipmentRow, catalog });
+  assert.equal(equipment.targetKey, 'portrait:character:axilin');
+  assert.equal(equipment.assetInstanceId, 'asset_1');
+  assert.equal(equipment.path, '/portraits/axilin-1.png');
+
+  assert.deepEqual(shapeProfileAssetGrantSummaries({
+    instances: [instanceRow, null],
+    catalog
+  }).map((item) => ({
+    id: item.id,
+    assetId: item.assetId,
+    rarity: item.rarity
+  })), [{
+    id: 'asset_1',
+    assetId: paidPortrait.assetId,
+    rarity: 'rare'
+  }]);
+});
+
+test('[profile-asset-state] shapes purchase and equip result DTOs', () => {
+  const instance = {
+    id: 'asset_1',
+    playerId: 'player_1',
+    assetId: paidPortrait.assetId,
+    status: 'active'
+  };
+  const purchase = shapeProfileAssetPurchaseResult({
+    asset: paidPortrait,
+    instance,
+    transaction: { id: 'wtx_1' }
+  });
+  assert.equal(purchase.assetId, paidPortrait.assetId);
+  assert.equal(purchase.status, 'purchased');
+  assert.equal(purchase.owned, true);
+  assert.equal(purchase.instance.rarity, 'rare');
+  assert.equal(purchase.transaction.id, 'wtx_1');
+
+  const alreadyOwned = shapeProfileAssetPurchaseResult({
+    asset: paidPortrait,
+    instance,
+    alreadyOwned: true
+  });
+  assert.equal(alreadyOwned.status, 'already_owned');
+  assert.equal(alreadyOwned.transaction, null);
+
+  const validation = validateProfileAssetEquipment({ asset: paidPortrait, instance });
+  const equip = shapeProfileAssetEquipResult({
+    asset: { ...paidPortrait, path: '/portraits/axilin-1.png' },
+    validation
+  });
+  assert.equal(equip.targetKey, 'portrait:character:axilin');
+  assert.equal(equip.assetId, paidPortrait.assetId);
+  assert.equal(equip.variantId, '1');
+  assert.equal(equip.path, '/portraits/axilin-1.png');
+  assert.equal(equip.instance.id, 'asset_1');
+  assert.equal(equip.equipment.assetInstanceId, 'asset_1');
 });
 
 test('[profile-asset-state] shapes portrait variants over injected policy state', () => {

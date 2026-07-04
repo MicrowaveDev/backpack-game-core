@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added profile asset record, instance/equipment summary, purchase result,
+  equip result, and grant summary DTO shapers to `profile-asset-state` /
+  `modules/assets`, so games can share inventory response contracts while
+  keeping persistence and catalogs local.
 - Added optional `{ success, data, error }` response-envelope unwrapping to the
   route-adapter `client`, so product apps can adopt the shared client without
   changing existing backend payload contracts.
