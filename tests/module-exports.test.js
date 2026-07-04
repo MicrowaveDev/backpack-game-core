@@ -40,6 +40,7 @@ import {
   pieceCells
 } from '@microwavedev/backpack-game-core/modules/loadout';
 import {
+  classifyCell,
   formatWalletBundlePrice,
   summarizeAssetRollFeedback,
   summarizeAssetRollPacks
@@ -115,6 +116,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);
   assert.deepEqual(summarizeAssetRollPacks(), []);
+  assert.equal(classifyCell([], 0, 0, { cols: 1, rows: 1 }), 'base-inv');
   assert.equal(formatWalletBundlePrice({ priceAmount: 100, priceCurrency: 'USD' }), '$1.00');
   assert.equal(summarizeAssetRollFeedback(), null);
 

@@ -108,6 +108,53 @@ export function prepareGridProps(loadoutItems = [], bagArtifactIds = [], getArti
   };
 }
 
+export function bagRowEntryFor(bagRows = [], cx, cy) {
+  const slotMatch = (bagRows || []).find(
+    (br) => br?.row === cy && br.enabledCells?.includes(cx)
+  );
+  if (slotMatch) return slotMatch;
+  const bboxMatch = (bagRows || []).find((br) => {
+    if (br?.row !== cy) return false;
+    const start = br.bboxStart ?? br.enabledCells?.[0] ?? -1;
+    const end = br.bboxEnd ?? ((br.enabledCells?.[br.enabledCells.length - 1] ?? -1) + 1);
+    return cx >= start && cx < end;
+  });
+  return bboxMatch || null;
+}
+
+export function classifyCell(bagRows = [], cx, cy, baseRect = null) {
+  const baseCols = Number(baseRect?.cols ?? baseRect?.columns ?? 0);
+  const baseRows = Number(baseRect?.rows ?? 0);
+  if (
+    baseRect
+    && cx >= 0 && cx < baseCols
+    && cy >= 0 && cy < baseRows
+  ) {
+    return 'base-inv';
+  }
+  const entry = bagRowEntryFor(bagRows, cx, cy);
+  if (!entry) return 'bag-empty';
+  if (entry.enabledCells?.includes(cx)) return 'bag-slot';
+  return 'bag-box';
+}
+
+export function occupiedCellKeys(items = []) {
+  const occupied = new Set();
+  for (const item of items || []) {
+    const width = Number(item?.width) || 1;
+    const height = Number(item?.height) || 1;
+    const x = Number(item?.x);
+    const y = Number(item?.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    for (let dx = 0; dx < width; dx += 1) {
+      for (let dy = 0; dy < height; dy += 1) {
+        occupied.add(`${x + dx}:${y + dy}`);
+      }
+    }
+  }
+  return occupied;
+}
+
 function identity(value) {
   return value || '';
 }

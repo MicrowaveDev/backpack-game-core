@@ -14,6 +14,9 @@ until package publishing starts.
 - Added wallet purchase-surface and asset roll-feedback view-model helpers to
   `client-view-model`, so games can share wallet bundle/status/support shaping
   and roll result/problem copy assembly while keeping labels and routes local.
+- Added grid-cell classification helpers to `client-view-model`, including
+  slot-first bag row lookup and occupied-footprint key generation for shared
+  backpack board rendering.
 - Added asset catalog acquisition-policy resolution to `asset-gacha` /
   `modules/gacha`, so games can share paid/free default mode and per-asset
   override handling while keeping env parsing and product catalog assembly

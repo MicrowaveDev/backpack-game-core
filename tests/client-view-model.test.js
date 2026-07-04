@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {
   assetPackAvailabilityLabel,
   assetPackIsActive,
+  bagRowEntryFor,
+  classifyCell,
   formatAssetRollResultItemsText,
   formatAssetPackRarityOdds,
   formatWalletBundlePrice,
+  occupiedCellKeys,
   prepareGridProps,
   projectLoadoutItems,
   resolveWalletBalance,
@@ -64,6 +67,57 @@ test('[client-view-model] prepares grid props with configurable dimensions', () 
   assert.deepEqual(result.items.map((item) => item.id), ['needle']);
   assert.ok(result.bagRows.some((bagRow) => bagRow.artifactId === 'starter_bag' && bagRow.row === 1));
   assert.equal(result.totalRows, 6);
+});
+
+function bagRow({ artifactId = 'moss_pouch', row: y, anchorX, cols, enabledXs, color = '#6b8f5e' }) {
+  return {
+    row: y,
+    artifactId,
+    color,
+    enabledCells: enabledXs,
+    bboxStart: anchorX,
+    bboxEnd: anchorX + cols
+  };
+}
+
+test('[client-view-model] classifies grid cells with slot-first bag lookup', () => {
+  const baseRect = { cols: 3, rows: 3 };
+  assert.equal(classifyCell([
+    bagRow({ row: 0, anchorX: 0, cols: 3, enabledXs: [0, 1, 2] })
+  ], 0, 0, baseRect), 'base-inv');
+
+  const rectangular = [bagRow({ row: 0, anchorX: 3, cols: 2, enabledXs: [3, 4] })];
+  assert.equal(classifyCell(rectangular, 3, 0, baseRect), 'bag-slot');
+  assert.equal(classifyCell(rectangular, 5, 0, baseRect), 'bag-empty');
+
+  const shaped = [
+    bagRow({ artifactId: 'spiral_cap', row: 0, anchorX: 3, cols: 3, enabledXs: [3, 4], color: '#b85a6e' }),
+    bagRow({ artifactId: 'spiral_cap', row: 1, anchorX: 3, cols: 3, enabledXs: [4, 5], color: '#b85a6e' })
+  ];
+  assert.equal(classifyCell(shaped, 5, 0, baseRect), 'bag-box');
+  assert.equal(classifyCell(shaped, 5, 1, baseRect), 'bag-slot');
+
+  const overlapping = [
+    bagRow({ artifactId: 'spiral_cap', row: 0, anchorX: 3, cols: 3, enabledXs: [3, 4], color: '#b85a6e' }),
+    bagRow({ artifactId: 'mycelium_vine', row: 0, anchorX: 5, cols: 1, enabledXs: [5], color: '#6e9bbf' })
+  ];
+  assert.equal(classifyCell(overlapping, 5, 0, baseRect), 'bag-slot');
+  assert.equal(bagRowEntryFor(overlapping, 5, 0).artifactId, 'mycelium_vine');
+  assert.equal(bagRowEntryFor(overlapping, 0, 5), null);
+});
+
+test('[client-view-model] reports occupied artifact footprint cells', () => {
+  const occupied = occupiedCellKeys([
+    { artifactId: 'static_spore_sac', x: 3, y: 2, width: 1, height: 2 },
+    { artifactId: 'thunder_gill', x: 0, y: 4, width: 2, height: 1 },
+    { artifactId: 'bad_position', x: null, y: 5, width: 2, height: 1 }
+  ]);
+
+  assert.ok(occupied.has('3:2'));
+  assert.ok(occupied.has('3:3'));
+  assert.ok(occupied.has('0:4'));
+  assert.ok(occupied.has('1:4'));
+  assert.equal(occupied.has('4:2'), false);
 });
 
 test('[client-view-model] formats asset pack odds and availability labels', () => {

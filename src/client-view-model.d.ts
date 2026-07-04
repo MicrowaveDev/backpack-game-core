@@ -68,6 +68,25 @@ export interface GridPropsOptions {
   minRows?: number;
 }
 
+export interface GridCellBagRow {
+  bagId?: string | number;
+  row: number;
+  color?: string;
+  artifactId?: string;
+  enabledCells?: number[];
+  bboxStart?: number;
+  bboxEnd?: number;
+  [key: string]: unknown;
+}
+
+export interface GridBaseRect {
+  cols?: number;
+  columns?: number;
+  rows?: number;
+}
+
+export type GridCellClassification = 'base-inv' | 'bag-slot' | 'bag-box' | 'bag-empty';
+
 export interface AssetPackSummaryLabels {
   invalid?: string;
   disabled?: string;
@@ -221,6 +240,23 @@ export function prepareGridProps(
   getArtifact?: ((artifactId: string) => unknown) | Map<string, unknown> | null,
   options?: GridPropsOptions
 ): GridPropsProjection;
+
+export function bagRowEntryFor(
+  bagRows: readonly GridCellBagRow[] | null | undefined,
+  cx: number,
+  cy: number
+): GridCellBagRow | null;
+
+export function classifyCell(
+  bagRows: readonly GridCellBagRow[] | null | undefined,
+  cx: number,
+  cy: number,
+  baseRect?: GridBaseRect | null
+): GridCellClassification;
+
+export function occupiedCellKeys(
+  items?: readonly Array<{ x?: number | string | null; y?: number | string | null; width?: number | string | null; height?: number | string | null; [key: string]: unknown }>
+): Set<string>;
 
 export function formatAssetPackRarityOdds(
   pack: AssetPackSummaryInput | null | undefined,
