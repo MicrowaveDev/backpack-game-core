@@ -9,6 +9,11 @@ export class BackpackGameClientError extends Error {
   }
 }
 
+function payloadField(payload, key) {
+  if (!key || !payload || typeof payload !== 'object' || Array.isArray(payload)) return undefined;
+  return payload[key];
+}
+
 function trimSlashes(value, side = 'both') {
   let result = String(value || '');
   if (side === 'left' || side === 'both') result = result.replace(/^\/+/, '');
@@ -101,6 +106,10 @@ export class BackpackGameClient {
     this.getAuthHeaders = options.getAuthHeaders || null;
     this.credentials = options.credentials;
     this.routes = options.routes || {};
+    this.unwrapDataEnvelope = Boolean(options.unwrapDataEnvelope);
+    this.envelopeSuccessKey = options.envelopeSuccessKey || 'success';
+    this.envelopeDataKey = options.envelopeDataKey || 'data';
+    this.envelopeErrorKey = options.envelopeErrorKey || 'error';
   }
 
   async authHeaders() {
@@ -145,7 +154,29 @@ export class BackpackGameClient {
       });
     }
 
-    return payload;
+    return this.resolvePayloadEnvelope(payload, response, url, options);
+  }
+
+  resolvePayloadEnvelope(payload, response = {}, url = '', options = {}) {
+    const unwrap = options.unwrapDataEnvelope ?? this.unwrapDataEnvelope;
+    if (!unwrap || !payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+
+    const successKey = options.envelopeSuccessKey || this.envelopeSuccessKey;
+    if (!Object.prototype.hasOwnProperty.call(payload, successKey)) return payload;
+
+    if (payloadField(payload, successKey) === false) {
+      const errorKey = options.envelopeErrorKey || this.envelopeErrorKey;
+      const message = payloadField(payload, errorKey) || payload?.message || 'Backpack request failed';
+      throw new BackpackGameClientError(message, {
+        status: response.status ?? 200,
+        statusText: response.statusText ?? '',
+        payload,
+        url
+      });
+    }
+
+    const dataKey = options.envelopeDataKey || this.envelopeDataKey;
+    return payloadField(payload, dataKey);
   }
 
   get(path, options = {}) {

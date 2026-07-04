@@ -74,3 +74,36 @@ test('[client] throws structured errors for failed responses', async () => {
     }
   );
 });
+
+test('[client] optionally unwraps success/data response envelopes', async () => {
+  const client = createBackpackGameClient({
+    unwrapDataEnvelope: true,
+    fetchImpl: async () => response({
+      success: true,
+      data: { balance: 25 }
+    })
+  });
+
+  assert.deepEqual(await client.get('/wallet'), { balance: 25 });
+});
+
+test('[client] treats success=false response envelopes as structured errors', async () => {
+  const client = createBackpackGameClient({
+    unwrapDataEnvelope: true,
+    fetchImpl: async () => response({
+      success: false,
+      error: 'wallet closed'
+    })
+  });
+
+  await assert.rejects(
+    client.get('/wallet'),
+    (error) => {
+      assert.equal(error instanceof BackpackGameClientError, true);
+      assert.equal(error.status, 200);
+      assert.equal(error.message, 'wallet closed');
+      assert.deepEqual(error.payload, { success: false, error: 'wallet closed' });
+      return true;
+    }
+  );
+});

@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added optional `{ success, data, error }` response-envelope unwrapping to the
+  route-adapter `client`, so product apps can adopt the shared client without
+  changing existing backend payload contracts.
 - Added headless wallet purchase and asset roll mutation view-state helpers to
   `client-view-model`, so product composables can share opening/success/failure
   state transitions while keeping API routes, checkout opening, refresh hooks,

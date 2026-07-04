@@ -42,7 +42,8 @@ catalogs in their own repos.
   and headless wallet/asset-roll mutation view-state helpers over
   product-provided copy and route adapters.
 - `client`: route-adapter HTTP client primitives for product-provided API
-  routes, fetch implementation, auth headers, and storage policy.
+  routes, fetch implementation, auth headers, storage policy, and optional
+  `{ success, data, error }` envelope unwrapping.
 
 ## Stable Layered Exports
 

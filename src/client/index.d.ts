@@ -27,6 +27,10 @@ export interface BackpackGameClientOptions {
   getAuthHeaders?: () => Record<string, string> | Promise<Record<string, string>>;
   credentials?: unknown;
   routes?: Record<string, BackpackClientRoute>;
+  unwrapDataEnvelope?: boolean;
+  envelopeSuccessKey?: string;
+  envelopeDataKey?: string;
+  envelopeErrorKey?: string;
 }
 
 export interface BackpackGameClientRequestOptions {
@@ -36,6 +40,10 @@ export interface BackpackGameClientRequestOptions {
   body?: unknown;
   signal?: unknown;
   credentials?: unknown;
+  unwrapDataEnvelope?: boolean;
+  envelopeSuccessKey?: string;
+  envelopeDataKey?: string;
+  envelopeErrorKey?: string;
 }
 
 export class BackpackGameClientError extends Error {
@@ -66,9 +74,19 @@ export class BackpackGameClient {
   headers: Record<string, string>;
   credentials?: unknown;
   routes: Record<string, BackpackClientRoute>;
+  unwrapDataEnvelope: boolean;
+  envelopeSuccessKey: string;
+  envelopeDataKey: string;
+  envelopeErrorKey: string;
   constructor(options?: BackpackGameClientOptions);
   authHeaders(): Promise<Record<string, string>>;
   request<T = unknown>(path: string, options?: BackpackGameClientRequestOptions): Promise<T>;
+  resolvePayloadEnvelope<T = unknown>(
+    payload: unknown,
+    response?: Partial<BackpackFetchResponse>,
+    url?: string,
+    options?: BackpackGameClientRequestOptions
+  ): T;
   get<T = unknown>(path: string, options?: BackpackGameClientRequestOptions): Promise<T>;
   post<T = unknown>(path: string, body?: unknown, options?: BackpackGameClientRequestOptions): Promise<T>;
   routePath(name: string, params?: Record<string, unknown>): string;
