@@ -568,9 +568,59 @@ export function summarizeWalletPurchaseSurface({
   };
 }
 
+export function walletPurchaseStatusFromIntent(intent, {
+  completedStatus = 'completed',
+  expiredStatuses = ['expired'],
+  failedStatuses = ['failed', 'cancelled', 'refunded', 'reversed', 'chargeback'],
+  checkoutExpiredStatuses = ['expired'],
+  checkoutFailedStatuses = ['failed']
+} = {}) {
+  const status = String(intent?.status || '').toLowerCase();
+  const checkoutStatus = String(intent?.checkoutStatus || '').toLowerCase();
+  if (status === String(completedStatus || '').toLowerCase()) return 'confirmed';
+  if (statusIn(expiredStatuses, status) || statusIn(checkoutExpiredStatuses, checkoutStatus)) return 'expired';
+  if (statusIn(failedStatuses, status) || statusIn(checkoutFailedStatuses, checkoutStatus)) return 'failed';
+  return '';
+}
+
+export function walletPurchaseStatusFromTelegramInvoice(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'paid') return 'confirmed';
+  if (normalized === 'pending') return 'pending';
+  if (normalized === 'expired') return 'expired';
+  if (['failed', 'cancelled'].includes(normalized)) return 'failed';
+  return 'failed';
+}
+
 function localizeUnknownName(value) {
   if (value && typeof value === 'object') return value.en || Object.values(value)[0] || '';
   return value || '';
+}
+
+function statusIn(statuses = [], value) {
+  return statuses.some((status) => value === String(status || '').toLowerCase());
+}
+
+function includesAny(value, patterns = []) {
+  return patterns.some((pattern) => value.includes(String(pattern || '').toLowerCase()));
+}
+
+export function assetRollStatusFromError(error, {
+  completePatterns = ['no unowned assets', 'no rollable assets'],
+  burnUnavailablePatterns = ['duplicate assets'],
+  insufficientPatterns = ['insufficient', 'not enough'],
+  disabledPatterns = ['disabled'],
+  unavailablePatterns = ['not active', 'inactive', 'expired'],
+  invalidPatterns = ['configuration is invalid']
+} = {}) {
+  const message = String(error?.message || error || '').toLowerCase();
+  if (includesAny(message, completePatterns)) return 'complete';
+  if (includesAny(message, burnUnavailablePatterns)) return 'burn_unavailable';
+  if (includesAny(message, insufficientPatterns)) return 'insufficient';
+  if (includesAny(message, disabledPatterns)) return 'disabled';
+  if (includesAny(message, unavailablePatterns)) return 'unavailable';
+  if (includesAny(message, invalidPatterns)) return 'invalid';
+  return 'failed';
 }
 
 export function formatAssetRollResultName(result, {

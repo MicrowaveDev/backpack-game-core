@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   assetPackAvailabilityLabel,
   assetPackIsActive,
+  assetRollStatusFromError,
   artifactPreviewOrientation,
   bagRowEntryFor,
   classifyCell,
@@ -21,7 +22,9 @@ import {
   sumArtifactBonuses,
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
-  summarizeAssetRollPacks
+  summarizeAssetRollPacks,
+  walletPurchaseStatusFromIntent,
+  walletPurchaseStatusFromTelegramInvoice
 } from '@microwavedev/backpack-game-core/client-view-model';
 
 const bagIds = new Set(['starter_bag', 'pouch']);
@@ -302,6 +305,29 @@ test('[client-view-model] summarizes wallet purchase surfaces', () => {
   ]);
   assert.equal(formatWalletBundlePrice(summary.bundles[0]), '$5.00');
   assert.equal(formatWalletBundlePrice(summary.bundles[1]), '50 XTR');
+});
+
+test('[client-view-model] normalizes wallet and asset-roll client statuses', () => {
+  assert.equal(walletPurchaseStatusFromIntent({ status: 'completed' }), 'confirmed');
+  assert.equal(walletPurchaseStatusFromIntent({ checkoutStatus: 'expired' }), 'expired');
+  assert.equal(walletPurchaseStatusFromIntent({ status: 'reversed' }), 'failed');
+  assert.equal(walletPurchaseStatusFromIntent({ status: 'open' }), '');
+  assert.equal(walletPurchaseStatusFromIntent({ status: 'done' }, { completedStatus: 'DONE' }), 'confirmed');
+
+  assert.equal(walletPurchaseStatusFromTelegramInvoice('paid'), 'confirmed');
+  assert.equal(walletPurchaseStatusFromTelegramInvoice('pending'), 'pending');
+  assert.equal(walletPurchaseStatusFromTelegramInvoice('expired'), 'expired');
+  assert.equal(walletPurchaseStatusFromTelegramInvoice('cancelled'), 'failed');
+  assert.equal(walletPurchaseStatusFromTelegramInvoice('unknown'), 'failed');
+
+  assert.equal(assetRollStatusFromError(new Error('No unowned assets left')), 'complete');
+  assert.equal(assetRollStatusFromError(new Error('No rollable assets in this pack')), 'complete');
+  assert.equal(assetRollStatusFromError(new Error('Duplicate assets are unavailable')), 'burn_unavailable');
+  assert.equal(assetRollStatusFromError(new Error('Not enough soft_coin')), 'insufficient');
+  assert.equal(assetRollStatusFromError(new Error('Gacha is disabled')), 'disabled');
+  assert.equal(assetRollStatusFromError(new Error('Pack is inactive')), 'unavailable');
+  assert.equal(assetRollStatusFromError(new Error('Configuration is invalid')), 'invalid');
+  assert.equal(assetRollStatusFromError(new Error('Unexpected failure')), 'failed');
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

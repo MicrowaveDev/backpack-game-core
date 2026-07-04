@@ -40,6 +40,7 @@ import {
   pieceCells
 } from '@microwavedev/backpack-game-core/modules/loadout';
 import {
+  assetRollStatusFromError,
   artifactPreviewOrientation,
   buildOccupiedCellMap,
   classifyCell,
@@ -47,7 +48,9 @@ import {
   preferredArtifactOrientation,
   formatWalletBundlePrice,
   summarizeAssetRollFeedback,
-  summarizeAssetRollPacks
+  summarizeAssetRollPacks,
+  walletPurchaseStatusFromIntent,
+  walletPurchaseStatusFromTelegramInvoice
 } from '@microwavedev/backpack-game-core/client-view-model';
 import {
   createSeededRng,
@@ -127,6 +130,9 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(formatStatDelta(2), '+2');
   assert.equal(formatWalletBundlePrice({ priceAmount: 100, priceCurrency: 'USD' }), '$1.00');
   assert.equal(summarizeAssetRollFeedback(), null);
+  assert.equal(walletPurchaseStatusFromIntent({ status: 'completed' }), 'confirmed');
+  assert.equal(walletPurchaseStatusFromTelegramInvoice('paid'), 'confirmed');
+  assert.equal(assetRollStatusFromError(new Error('No rollable assets left')), 'complete');
 
   const artifacts = new Map([
     ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 0 }],

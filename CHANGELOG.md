@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added wallet intent, Telegram invoice, and asset-roll error status
+  normalization helpers to `client-view-model`, so product UIs can reuse one
+  status contract while keeping provider routes and copy local.
 - Added artifact grid utility helpers to `client-view-model`: occupied-cell
   value maps, placement-preferred orientation, and canonical preview
   orientation for rectangular and shape-bearing artifacts.

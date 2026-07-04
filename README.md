@@ -37,8 +37,8 @@ catalogs in their own repos.
   loadout row projection, grid prop preparation, grid-cell classification,
   occupied-cell maps, preferred/canonical artifact preview orientation,
   artifact stat summary helpers, asset pack summary/label helpers, wallet
-  purchase-surface helpers, and asset roll-feedback helpers over
-  product-provided copy.
+  purchase-surface/status helpers, and asset roll-feedback/error-status helpers
+  over product-provided copy.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, and storage policy.
 

@@ -221,6 +221,17 @@ export interface WalletPurchaseSurfaceSummary {
   supportEntries: Array<{ label: string; url: string }>;
 }
 
+export type WalletPurchaseIntentStatus = '' | 'confirmed' | 'expired' | 'failed';
+export type TelegramInvoiceStatus = 'confirmed' | 'pending' | 'expired' | 'failed';
+export type AssetRollErrorStatus =
+  | 'complete'
+  | 'burn_unavailable'
+  | 'insufficient'
+  | 'disabled'
+  | 'unavailable'
+  | 'invalid'
+  | 'failed';
+
 export interface AssetRollResultItemInput {
   assetName?: unknown;
   assetId?: string | null;
@@ -430,6 +441,33 @@ export function summarizeWalletPurchaseSurface(input?: {
   support?: WalletSupportConfig;
   labels?: WalletPurchaseSurfaceLabels;
 }): WalletPurchaseSurfaceSummary;
+
+export function walletPurchaseStatusFromIntent(
+  intent?: { status?: unknown; checkoutStatus?: unknown; [key: string]: unknown } | null,
+  options?: {
+    completedStatus?: string;
+    expiredStatuses?: readonly string[];
+    failedStatuses?: readonly string[];
+    checkoutExpiredStatuses?: readonly string[];
+    checkoutFailedStatuses?: readonly string[];
+  }
+): WalletPurchaseIntentStatus;
+
+export function walletPurchaseStatusFromTelegramInvoice(
+  status?: unknown
+): TelegramInvoiceStatus;
+
+export function assetRollStatusFromError(
+  error?: unknown,
+  options?: {
+    completePatterns?: readonly string[];
+    burnUnavailablePatterns?: readonly string[];
+    insufficientPatterns?: readonly string[];
+    disabledPatterns?: readonly string[];
+    unavailablePatterns?: readonly string[];
+    invalidPatterns?: readonly string[];
+  }
+): AssetRollErrorStatus;
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,
