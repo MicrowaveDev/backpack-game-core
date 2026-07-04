@@ -22,6 +22,9 @@ import {
   preferredArtifactOrientation,
   projectLoadoutItems,
   resolveWalletBalance,
+  runShopBuyResultViewState,
+  runShopRefreshResultViewState,
+  runShopSellResultViewState,
   sumArtifactBonuses,
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
@@ -520,6 +523,71 @@ test('[client-view-model] shapes headless asset roll mutation view state', () =>
     globalErrorMessage: '',
     shouldRefresh: false
   });
+});
+
+test('[client-view-model] shapes run-shop response patches', () => {
+  const run = { id: 'run_1', player: { coins: 5, name: 'Runner' } };
+
+  const refresh = runShopRefreshResultViewState({
+    coins: 4,
+    refreshCount: 2,
+    shopOffer: ['needle']
+  }, { run });
+  assert.deepEqual(refresh.run.player, { coins: 4, name: 'Runner' });
+  assert.deepEqual(refresh.shopOffer, ['needle']);
+  assert.equal(refresh.refreshCount, 2);
+
+  const buy = runShopBuyResultViewState({
+    id: 'row_2',
+    coins: 2,
+    shopOffer: ['plate']
+  }, {
+    run,
+    artifactId: 'needle',
+    containerItems: [{ id: 'row_1', artifactId: 'bag' }],
+    freshPurchases: ['bag']
+  });
+  assert.deepEqual(buy.run.player, { coins: 2, name: 'Runner' });
+  assert.deepEqual(buy.shopOffer, ['plate']);
+  assert.deepEqual(buy.containerItems.map((item) => item.id), ['row_1', 'row_2']);
+  assert.deepEqual(buy.freshPurchases, ['bag', 'needle']);
+  assert.deepEqual(buy.boughtItem, { id: 'row_2', artifactId: 'needle' });
+
+  const sell = runShopSellResultViewState({
+    id: 'row_2',
+    artifactId: 'needle',
+    coins: 3
+  }, {
+    run,
+    builderItems: [
+      { id: 'row_2', artifactId: 'needle' },
+      { id: 'row_3', artifactId: 'needle' }
+    ],
+    containerItems: [{ id: 'row_4', artifactId: 'bag' }],
+    activeBags: [{ id: 'row_5', artifactId: 'starter_bag' }],
+    freshPurchases: ['needle', 'bag'],
+    target: { id: 'row_2', artifactId: 'needle' }
+  });
+  assert.deepEqual(sell.run.player, { coins: 3, name: 'Runner' });
+  assert.deepEqual(sell.builderItems.map((item) => item.id), ['row_3']);
+  assert.deepEqual(sell.containerItems.map((item) => item.id), ['row_4']);
+  assert.deepEqual(sell.activeBags.map((item) => item.id), ['row_5']);
+  assert.deepEqual(sell.freshPurchases, ['bag']);
+  assert.equal(sell.deletedRowId, 'row_2');
+  assert.equal(sell.deletedArtifactId, 'needle');
+
+  const fallbackSell = runShopSellResultViewState({
+    artifactId: 'needle',
+    coins: 4
+  }, {
+    run,
+    builderItems: [
+      { id: 'row_a', artifactId: 'needle' },
+      { id: 'row_b', artifactId: 'needle' }
+    ],
+    target: 'needle'
+  });
+  assert.deepEqual(fallbackSell.builderItems.map((item) => item.id), ['row_b']);
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

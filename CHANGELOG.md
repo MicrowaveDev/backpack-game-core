@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added run-shop response patch helpers to `client-view-model`, so product
+  composables can share buy/sell/refresh state projection while keeping API
+  calls, haptics, and artifact catalogs local.
 - Added headless wallet/gacha state helpers to `client-view-model` for wallet
   bundle loading, wallet checkout next-action decisions, and asset roll/burn
   mutation refresh decisions while games keep API calls and checkout side

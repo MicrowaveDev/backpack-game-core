@@ -823,6 +823,100 @@ export function assetRollMutationErrorViewState(error, options = {}) {
   };
 }
 
+function patchRunCoins(run, coins) {
+  if (!run || coins === undefined) return run || null;
+  return {
+    ...run,
+    player: {
+      ...(run.player || {}),
+      coins
+    }
+  };
+}
+
+function runShopOfferFrom(response) {
+  return Array.isArray(response?.shopOffer) ? response.shopOffer : [];
+}
+
+function runShopItemsFrom(items) {
+  return Array.isArray(items) ? items : [];
+}
+
+function pruneFirstRunItem(items = [], rowId = null, artifactId = null) {
+  const list = runShopItemsFrom(items);
+  const index = rowId
+    ? list.findIndex((item) => item?.id === rowId)
+    : list.findIndex((item) => item?.artifactId === artifactId);
+  if (index < 0) return list;
+  return [
+    ...list.slice(0, index),
+    ...list.slice(index + 1)
+  ];
+}
+
+export function runShopRefreshResultViewState(response, {
+  run = null
+} = {}) {
+  return {
+    run: patchRunCoins(run, response?.coins),
+    shopOffer: runShopOfferFrom(response),
+    refreshCount: numberOr(response?.refreshCount),
+    errorMessage: ''
+  };
+}
+
+export function runShopBuyResultViewState(response, {
+  run = null,
+  containerItems = [],
+  freshPurchases = [],
+  artifactId = null
+} = {}) {
+  const boughtArtifactId = response?.artifactId || artifactId;
+  const boughtItem = boughtArtifactId
+    ? { id: response?.id || null, artifactId: boughtArtifactId }
+    : null;
+  const currentContainerItems = runShopItemsFrom(containerItems);
+  const currentFreshPurchases = runShopItemsFrom(freshPurchases);
+  return {
+    run: patchRunCoins(run, response?.coins),
+    shopOffer: runShopOfferFrom(response),
+    containerItems: boughtItem ? [...currentContainerItems, boughtItem] : [...currentContainerItems],
+    freshPurchases: boughtArtifactId ? [...currentFreshPurchases, boughtArtifactId] : [...currentFreshPurchases],
+    boughtItem,
+    errorMessage: ''
+  };
+}
+
+export function runShopSellResultViewState(response, {
+  run = null,
+  builderItems = [],
+  containerItems = [],
+  activeBags = [],
+  freshPurchases = [],
+  target = null
+} = {}) {
+  const targetIsObject = target && typeof target === 'object';
+  const rowId = response?.id || (targetIsObject ? target.id : null) || null;
+  const artifactId = response?.artifactId || (targetIsObject ? target.artifactId : target) || null;
+  const currentFreshPurchases = runShopItemsFrom(freshPurchases);
+  const freshIndex = currentFreshPurchases.indexOf(artifactId);
+  return {
+    run: patchRunCoins(run, response?.coins),
+    deletedRowId: rowId,
+    deletedArtifactId: artifactId,
+    builderItems: pruneFirstRunItem(builderItems, rowId, artifactId),
+    containerItems: pruneFirstRunItem(containerItems, rowId, artifactId),
+    activeBags: pruneFirstRunItem(activeBags, rowId, artifactId),
+    freshPurchases: freshIndex >= 0
+      ? [
+          ...currentFreshPurchases.slice(0, freshIndex),
+          ...currentFreshPurchases.slice(freshIndex + 1)
+        ]
+      : [...currentFreshPurchases],
+    errorMessage: ''
+  };
+}
+
 export function formatAssetRollResultName(result, {
   localizeName = localizeUnknownName
 } = {}) {

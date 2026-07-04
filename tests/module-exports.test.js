@@ -56,6 +56,9 @@ import {
   formatStatDelta,
   preferredArtifactOrientation,
   formatWalletBundlePrice,
+  runShopBuyResultViewState,
+  runShopRefreshResultViewState,
+  runShopSellResultViewState,
   summarizeAssetRollFeedback,
   summarizeAssetRollPacks,
   walletBundlesLoadedViewState,
@@ -164,6 +167,14 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(assetRollPendingViewState().status, 'rolling');
   assert.equal(assetRollMutationResultViewState({ roll: { id: 'roll' }, rollResult: { assetId: 'skin.a' } }).shouldRefresh, true);
   assert.equal(assetRollErrorViewState(new Error('No rollable assets left')).status, 'complete');
+  assert.equal(runShopRefreshResultViewState({ coins: 1 }, { run: { player: { coins: 0 } } }).run.player.coins, 1);
+  assert.equal(runShopBuyResultViewState({ id: 'row_1' }, { artifactId: 'needle' }).boughtItem.artifactId, 'needle');
+  assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
+    builderItems: [
+      { id: 'row_1', artifactId: 'needle' },
+      { id: 'row_2', artifactId: 'needle' }
+    ]
+  }).builderItems.map((item) => item.id), ['row_2']);
 
   const artifacts = new Map([
     ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 0 }],

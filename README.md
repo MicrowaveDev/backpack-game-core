@@ -41,8 +41,9 @@ catalogs in their own repos.
   artifact stat summary helpers, asset pack summary/label helpers, wallet
   purchase-surface/status helpers, asset roll-feedback/error-status helpers,
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
-  view states, wallet checkout next-action decisions, and asset roll/burn
-  mutation refresh decisions over product-provided copy and route adapters.
+  view states, wallet checkout next-action decisions, asset roll/burn mutation
+  refresh decisions, and run-shop response patch helpers over product-provided
+  copy and route adapters.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, storage policy, and optional
   `{ success, data, error }` envelope unwrapping.

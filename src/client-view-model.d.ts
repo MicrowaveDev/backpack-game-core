@@ -281,6 +281,44 @@ export interface AssetRollMutationViewState extends AssetRollViewState {
   shouldRefresh: boolean;
 }
 
+export interface RunShopItemState {
+  id?: string | number | null;
+  artifactId?: string | null;
+  [key: string]: unknown;
+}
+
+export interface RunShopRunState {
+  player?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface RunShopRefreshViewState {
+  run: RunShopRunState | null;
+  shopOffer: unknown[];
+  refreshCount: number;
+  errorMessage: string;
+}
+
+export interface RunShopBuyViewState {
+  run: RunShopRunState | null;
+  shopOffer: unknown[];
+  containerItems: RunShopItemState[];
+  freshPurchases: unknown[];
+  boughtItem: RunShopItemState | null;
+  errorMessage: string;
+}
+
+export interface RunShopSellViewState {
+  run: RunShopRunState | null;
+  deletedRowId: unknown | null;
+  deletedArtifactId: unknown | null;
+  builderItems: RunShopItemState[];
+  containerItems: RunShopItemState[];
+  activeBags: RunShopItemState[];
+  freshPurchases: unknown[];
+  errorMessage: string;
+}
+
 export interface AssetRollResultItemInput {
   assetName?: unknown;
   assetId?: string | null;
@@ -610,6 +648,33 @@ export function assetRollMutationErrorViewState(
   error?: unknown,
   options?: Parameters<typeof assetRollErrorViewState>[1]
 ): AssetRollMutationViewState;
+
+export function runShopRefreshResultViewState(
+  response?: { coins?: unknown; refreshCount?: unknown; shopOffer?: unknown[]; [key: string]: unknown } | null,
+  options?: { run?: RunShopRunState | null }
+): RunShopRefreshViewState;
+
+export function runShopBuyResultViewState(
+  response?: { id?: string | number | null; artifactId?: string | null; coins?: unknown; shopOffer?: unknown[]; [key: string]: unknown } | null,
+  options?: {
+    run?: RunShopRunState | null;
+    containerItems?: readonly RunShopItemState[];
+    freshPurchases?: readonly unknown[];
+    artifactId?: string | null;
+  }
+): RunShopBuyViewState;
+
+export function runShopSellResultViewState(
+  response?: { id?: string | number | null; artifactId?: string | null; coins?: unknown; [key: string]: unknown } | null,
+  options?: {
+    run?: RunShopRunState | null;
+    builderItems?: readonly RunShopItemState[];
+    containerItems?: readonly RunShopItemState[];
+    activeBags?: readonly RunShopItemState[];
+    freshPurchases?: readonly unknown[];
+    target?: RunShopItemState | string | null;
+  }
+): RunShopSellViewState;
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,
