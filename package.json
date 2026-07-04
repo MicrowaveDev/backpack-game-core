@@ -49,6 +49,10 @@
       "types": "./src/wallet-accounting.d.ts",
       "import": "./src/wallet-accounting.js"
     },
+    "./profile-asset-state": {
+      "types": "./src/profile-asset-state.d.ts",
+      "import": "./src/profile-asset-state.js"
+    },
     "./client": {
       "types": "./src/client/index.d.ts",
       "import": "./src/client/index.js"
@@ -84,6 +88,14 @@
     "./modules/wallet/accounting": {
       "types": "./src/modules/wallet/accounting.d.ts",
       "import": "./src/modules/wallet/accounting.js"
+    },
+    "./modules/assets": {
+      "types": "./src/modules/assets/index.d.ts",
+      "import": "./src/modules/assets/index.js"
+    },
+    "./modules/assets/profile-state": {
+      "types": "./src/modules/assets/profile-state.d.ts",
+      "import": "./src/modules/assets/profile-state.js"
     },
     "./modules/shop": {
       "types": "./src/modules/shop/index.d.ts",

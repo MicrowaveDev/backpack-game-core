@@ -24,6 +24,13 @@ import {
 import {
   walletSettlementRequiresClawback
 } from '@microwavedev/backpack-game-core/modules/wallet/accounting';
+import {
+  createProfileAssetState,
+  shapeProfileAssetVariant
+} from '@microwavedev/backpack-game-core/modules/assets';
+import {
+  profileAssetTargetKey
+} from '@microwavedev/backpack-game-core/modules/assets/profile-state';
 import * as gachaInterface from '@microwavedev/backpack-game-core/modules/gacha/interface';
 import { generateShopOffer } from '@microwavedev/backpack-game-core/modules/shop';
 import {
@@ -142,4 +149,22 @@ test('[modules] wallet facade exposes accounting helpers', () => {
     currencyCode: 'soft_coin',
     walletAmount: 100
   }).idempotencyKey, 'wallet_purchase:intent_1');
+});
+
+test('[modules] assets facade exposes profile asset state helpers', () => {
+  const state = createProfileAssetState({
+    instances: [{ id: 'asset_1', asset_id: 'portrait.axilin.1', status: 'active' }]
+  });
+  assert.equal(state.ownedAssetIds.has('portrait.axilin.1'), true);
+  assert.equal(profileAssetTargetKey({
+    slot: 'portrait',
+    targetType: 'character',
+    targetId: 'axilin'
+  }), 'portrait:character:axilin');
+  assert.equal(shapeProfileAssetVariant({
+    variant: { id: '1' },
+    asset: { assetId: 'portrait.axilin.1', price: 500, currencyCode: 'soft_coin' },
+    owned: true,
+    policy: { acquisitionMode: 'direct', purchaseAvailable: true }
+  }).purchaseAvailable, true);
 });

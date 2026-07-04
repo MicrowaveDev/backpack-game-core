@@ -29,6 +29,9 @@ catalogs in their own repos.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots.
+- `profile-asset-state`: reusable profile asset ownership/equipment row
+  shaping, equip validation, purchase spend mutation shaping, and portrait
+  variant projection over injected catalog/policy snapshots.
 - `client-view-model`: browser-safe frontend view-model shapers such as flat
   loadout row projection and grid prop preparation.
 - `client`: route-adapter HTTP client primitives for product-provided API
@@ -43,6 +46,8 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/gacha/validation`
 - `@microwavedev/backpack-game-core/modules/wallet`
 - `@microwavedev/backpack-game-core/modules/wallet/accounting`
+- `@microwavedev/backpack-game-core/modules/assets`
+- `@microwavedev/backpack-game-core/modules/assets/profile-state`
 - `@microwavedev/backpack-game-core/modules/shop`
 - `@microwavedev/backpack-game-core/modules/loadout`
 - `@microwavedev/backpack-game-core/modules/battle`

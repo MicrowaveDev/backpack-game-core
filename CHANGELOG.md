@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `profile-asset-state` and `modules/assets`: pure profile asset helpers
+  for ownership/equipment row shaping, equip validation, purchase spend
+  mutation shaping, asset instance drafts, and portrait variant projection.
+  Product games still own runtime catalogs, SQL row lifecycle, support
+  grant/revoke/restore actions, paid rollback behavior, and compatibility
+  mirrors.
 - Added `wallet-accounting` and `modules/wallet`: pure profile-wallet helpers
   for delta validation, balance math, purchase grant/reversal mutation shaping,
   purchase status classification, and settlement invariants. Product games

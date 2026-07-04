@@ -44,6 +44,7 @@ export {
 } from './battle-simulation.js';
 
 export * from './wallet-accounting.js';
+export * from './profile-asset-state.js';
 export * from './asset-gacha.js';
 export * from './client-view-model.js';
 export * from './client/index.js';
