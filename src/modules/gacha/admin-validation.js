@@ -35,8 +35,31 @@ function parseMetadata(value, fallback = {}) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : fallback;
 }
 
+function parseSnapshotJson(value, fallback = null) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+  return value;
+}
+
 function rowValue(row, camelKey, snakeKey = camelKey) {
   return row?.[camelKey] ?? row?.[snakeKey];
+}
+
+function rowJsonValue(row, camelKey, snakeKey = camelKey, fallback = null) {
+  return parseSnapshotJson(rowValue(row, camelKey, snakeKey), fallback);
+}
+
+function rowNumberValue(row, camelKey, snakeKey = camelKey) {
+  const value = rowValue(row, camelKey, snakeKey);
+  if (value === undefined || value === null || value === '') return value;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : value;
 }
 
 function checklistIssue(code, message, severity = 'blocker', details = {}) {
@@ -196,6 +219,103 @@ export function gachaAdminAssetPolicyRecommendationsFromChecklist(releaseCheckli
   return (releaseChecklist?.warnings || [])
     .find((issue) => issue.code === 'asset_policy_mapping_recommended')
     ?.recommendations || [];
+}
+
+function gachaAdminPackItemSnapshot(item = {}) {
+  const snapshot = {
+    assetId: rowValue(item, 'assetId', 'asset_id'),
+    rarity: rowValue(item, 'rarity'),
+    dropWeight: rowNumberValue(item, 'dropWeight', 'drop_weight'),
+    metadata: rowJsonValue(item, 'metadata', 'metadata_json', {})
+  };
+  const copyLimit = rowNumberValue(item, 'copyLimit', 'copy_limit');
+  if (copyLimit !== undefined && copyLimit !== null && copyLimit !== '') snapshot.copyLimit = copyLimit;
+  return snapshot;
+}
+
+export function gachaAdminPackSnapshot(pack = {}) {
+  const items = Array.isArray(pack?.items) ? pack.items : [];
+  return {
+    id: rowValue(pack, 'id'),
+    seasonId: rowValue(pack, 'seasonId', 'season_id'),
+    collectionId: rowValue(pack, 'collectionId', 'collection_id'),
+    name: rowJsonValue(pack, 'name', 'name_json', {}),
+    status: rowValue(pack, 'status'),
+    startsAt: rowValue(pack, 'startsAt', 'starts_at') || null,
+    endsAt: rowValue(pack, 'endsAt', 'ends_at') || null,
+    rollPriceCurrencyCode: rowValue(pack, 'rollPriceCurrencyCode', 'roll_price_currency_code'),
+    rollPriceAmount: rowNumberValue(pack, 'rollPriceAmount', 'roll_price_amount'),
+    rollSize: rowNumberValue(pack, 'rollSize', 'roll_size'),
+    rarityWeights: rowJsonValue(pack, 'rarityWeights', 'rarity_weights_json', null),
+    slots: rowJsonValue(pack, 'slots', 'slots_json', null),
+    guarantees: rowJsonValue(pack, 'guarantees', 'guarantees_json', null),
+    pityRules: rowJsonValue(pack, 'pityRules', 'pity_rules_json', null),
+    duplicatePolicy: rowJsonValue(pack, 'duplicatePolicy', 'duplicate_policy_json', null),
+    burnRules: rowJsonValue(pack, 'burnRules', 'burn_rules_json', null),
+    metadata: rowJsonValue(pack, 'metadata', 'metadata_json', {}),
+    items: items
+      .map((item) => gachaAdminPackItemSnapshot(item))
+      .sort((a, b) => String(a.assetId || '').localeCompare(String(b.assetId || '')))
+  };
+}
+
+function diffValues(before, after) {
+  const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+  const changed = [];
+  for (const key of keys) {
+    const beforeValue = before?.[key];
+    const afterValue = after?.[key];
+    if (JSON.stringify(beforeValue) !== JSON.stringify(afterValue)) {
+      changed.push({ field: key, before: beforeValue ?? null, after: afterValue ?? null });
+    }
+  }
+  return changed;
+}
+
+export function buildGachaAdminPackDraftDiff({
+  basePack = null,
+  draftPack = null,
+  basePackId = null
+} = {}) {
+  const resolvedBasePackId = basePackId ||
+    draftPack?.metadata?.basePackId ||
+    draftPack?.metadata?.clonedFromPackId ||
+    null;
+  if (!resolvedBasePackId || resolvedBasePackId === draftPack?.id) return null;
+  if (!basePack) {
+    return {
+      basePackId: resolvedBasePackId,
+      missingBase: true,
+      changedFields: [],
+      addedItems: [],
+      removedItems: [],
+      changedItems: []
+    };
+  }
+
+  const baseSnapshot = gachaAdminPackSnapshot(basePack);
+  const draftSnapshot = gachaAdminPackSnapshot(draftPack || {});
+  const baseItems = new Map(baseSnapshot.items.map((item) => [item.assetId, item]));
+  const draftItems = new Map(draftSnapshot.items.map((item) => [item.assetId, item]));
+  const addedItems = [...draftItems.keys()].filter((assetId) => !baseItems.has(assetId));
+  const removedItems = [...baseItems.keys()].filter((assetId) => !draftItems.has(assetId));
+  const changedItems = [...draftItems.keys()]
+    .filter((assetId) => baseItems.has(assetId))
+    .map((assetId) => ({
+      assetId,
+      changes: diffValues(baseItems.get(assetId), draftItems.get(assetId))
+    }))
+    .filter((entry) => entry.changes.length);
+  const { items: _baseItems, ...baseFields } = baseSnapshot;
+  const { items: _draftItems, ...draftFields } = draftSnapshot;
+  return {
+    basePackId: resolvedBasePackId,
+    missingBase: false,
+    changedFields: diffValues(baseFields, draftFields),
+    addedItems,
+    removedItems,
+    changedItems
+  };
 }
 
 export function normalizeGachaAdminFixture(input = {}, {

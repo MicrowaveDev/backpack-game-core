@@ -89,6 +89,55 @@ export interface GachaAdminPlanCatalogAsset extends AssetGachaCatalogAsset {
   status: string;
 }
 
+export interface GachaAdminPackItemSnapshot {
+  assetId?: string;
+  rarity?: unknown;
+  dropWeight?: unknown;
+  copyLimit?: unknown;
+  metadata?: unknown;
+}
+
+export interface GachaAdminPackSnapshot {
+  id?: string;
+  seasonId?: string;
+  collectionId?: string;
+  name?: unknown;
+  status?: string;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  rollPriceCurrencyCode?: string;
+  rollPriceAmount?: unknown;
+  rollSize?: unknown;
+  rarityWeights?: unknown;
+  slots?: unknown;
+  guarantees?: unknown;
+  pityRules?: unknown;
+  duplicatePolicy?: unknown;
+  burnRules?: unknown;
+  metadata?: unknown;
+  items: GachaAdminPackItemSnapshot[];
+}
+
+export interface GachaAdminDraftFieldChange {
+  field: string;
+  before: unknown;
+  after: unknown;
+}
+
+export interface GachaAdminDraftItemChange {
+  assetId?: string;
+  changes: GachaAdminDraftFieldChange[];
+}
+
+export interface GachaAdminPackDraftDiff {
+  basePackId: string;
+  missingBase: boolean;
+  changedFields: GachaAdminDraftFieldChange[];
+  addedItems: string[];
+  removedItems: string[];
+  changedItems: GachaAdminDraftItemChange[];
+}
+
 export function createGachaAdminReleaseChecklist(options?: {
   runtimePack?: AssetGachaPack;
   validation?: AssetGachaValidationResult;
@@ -99,6 +148,14 @@ export function createGachaAdminReleaseChecklist(options?: {
 }): GachaAdminReleaseChecklist;
 
 export function gachaAdminAssetPolicyRecommendationsFromChecklist(releaseChecklist: GachaAdminReleaseChecklist): unknown[];
+
+export function gachaAdminPackSnapshot(pack?: AssetGachaPack | Record<string, unknown>): GachaAdminPackSnapshot;
+
+export function buildGachaAdminPackDraftDiff(options?: {
+  basePack?: AssetGachaPack | Record<string, unknown> | null;
+  draftPack?: AssetGachaPack | Record<string, unknown> | null;
+  basePackId?: string | null;
+}): GachaAdminPackDraftDiff | null;
 
 export function normalizeGachaAdminFixture(input?: GachaAdminFixture | { fixture?: GachaAdminFixture }, options?: {
   schemaVersion?: string;

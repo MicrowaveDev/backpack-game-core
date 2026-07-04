@@ -14,7 +14,9 @@ import {
   validateAssetGachaPack as validateAssetGachaPackOnly
 } from '@microwavedev/backpack-game-core/modules/gacha/validation';
 import {
+  buildGachaAdminPackDraftDiff,
   createGachaAdminReleaseChecklist,
+  gachaAdminPackSnapshot,
   normalizeGachaAdminFixture
 } from '@microwavedev/backpack-game-core/modules/gacha/admin-validation';
 import {
@@ -58,6 +60,7 @@ import {
   gameRunReadyResultViewState,
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
+  gachaAdminDraftDiffRows,
   preferredArtifactOrientation,
   preferredReplaySpeed,
   formatWalletBundlePrice,
@@ -141,6 +144,12 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
     validation: { ok: true, errors: [], warnings: [] }
   }).ok, false);
   assert.equal(normalizeGachaAdminFixture({ packs: [{ id: 'fixture_pack' }] }).packs[0].id, 'fixture_pack');
+  assert.equal(gachaAdminPackSnapshot({ id: 'pack', roll_price_amount: '5' }).rollPriceAmount, 5);
+  assert.equal(buildGachaAdminPackDraftDiff({
+    basePack: pack,
+    draftPack: { ...pack, id: 'draft', rollPriceAmount: 11 },
+    basePackId: 'starter'
+  }).changedFields.some((change) => change.field === 'rollPriceAmount'), true);
   assert.equal(simulateAssetGachaPackOdds(pack, {
     catalog,
     trials: 1,
@@ -180,6 +189,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(assetRollErrorViewState(new Error('No rollable assets left')).status, 'complete');
   assert.equal(runShopRefreshResultViewState({ coins: 1 }, { run: { player: { coins: 0 } } }).run.player.coins, 1);
   assert.equal(runShopBuyResultViewState({ id: 'row_1' }, { artifactId: 'needle' }).boughtItem.artifactId, 'needle');
+  assert.equal(gachaAdminDraftDiffRows({ addedItems: ['skin.a'] })[0].type, 'item_added');
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [
       { id: 'row_1', artifactId: 'needle' },

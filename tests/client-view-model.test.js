@@ -19,6 +19,7 @@ import {
   gameRunReadyResultViewState,
   gameRunRoundTransitionViewState,
   gameRunStartResultViewState,
+  gachaAdminDraftDiffRows,
   buildOccupiedCellMap,
   formatWalletBundlePrice,
   occupiedCellKeys,
@@ -761,6 +762,28 @@ test('[client-view-model] shapes replay playback state', () => {
   assert.equal(timeline.replayFinished, false);
   assert.deepEqual(timeline.visibleReplayEvents.map((event) => event.display.statusText), ['1:action', '0:start']);
   assert.deepEqual(timeline.activeReplayState, { left: { currentHealth: 10 } });
+});
+
+test('[client-view-model] flattens gacha admin draft diffs for table rows', () => {
+  assert.deepEqual(gachaAdminDraftDiffRows(null), []);
+  assert.deepEqual(gachaAdminDraftDiffRows({ missingBase: true }), []);
+  assert.deepEqual(gachaAdminDraftDiffRows({
+    changedFields: [{ field: 'rollPriceAmount', before: 100, after: 120 }],
+    addedItems: ['skin.c'],
+    removedItems: ['skin.b'],
+    changedItems: [{
+      assetId: 'skin.a',
+      changes: [
+        { field: 'dropWeight', before: 100, after: 80 },
+        { field: 'rarity', before: 'common', after: 'rare' }
+      ]
+    }]
+  }), [
+    { type: 'field', field: 'rollPriceAmount', before: 100, after: 120 },
+    { type: 'item_added', field: 'skin.c', before: null, after: 'skin.c' },
+    { type: 'item_removed', field: 'skin.b', before: 'skin.b', after: null },
+    { type: 'item_changed', field: 'skin.a', before: [100, 'common'], after: [80, 'rare'] }
+  ]);
 });
 
 test('[client-view-model] summarizes asset roll feedback', () => {

@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildGachaAdminPackDraftDiff,
   catalogWithGachaAdminPlanRows,
   createGachaAdminReleaseChecklist,
   gachaAdminAssetPolicyRecommendationsFromChecklist,
+  gachaAdminPackSnapshot,
   gachaAdminPlanAssetId,
   gachaAdminPlanCatalogAssetFromRow,
   gachaAdminPromotedPlanMetadata,
@@ -89,6 +91,78 @@ test('[gacha-admin-validation] warns when duplicate-enabled packs have no copy c
   });
 
   assert.ok(checklist.warnings.some((issue) => issue.code === 'duplicate_copy_cap_missing'));
+});
+
+test('[gacha-admin-validation] snapshots packs and builds live/draft diffs', () => {
+  const rowSnapshot = gachaAdminPackSnapshot({
+    id: 'row_pack',
+    season_id: 'season_1',
+    collection_id: 'portraits',
+    name_json: JSON.stringify({ en: 'Row pack' }),
+    roll_price_currency_code: 'soft_coin',
+    roll_price_amount: '25',
+    roll_size: '5',
+    metadata_json: JSON.stringify({ disclosure: { en: 'Odds shown.' } }),
+    items: [{
+      asset_id: 'skin.row',
+      rarity: 'rare',
+      drop_weight: '12',
+      copy_limit: '1',
+      metadata_json: JSON.stringify({ source: 'fixture' })
+    }]
+  });
+  assert.equal(rowSnapshot.seasonId, 'season_1');
+  assert.equal(rowSnapshot.name.en, 'Row pack');
+  assert.equal(rowSnapshot.rollPriceAmount, 25);
+  assert.deepEqual(rowSnapshot.items, [{
+    assetId: 'skin.row',
+    rarity: 'rare',
+    dropWeight: 12,
+    metadata: { source: 'fixture' },
+    copyLimit: 1
+  }]);
+
+  const diff = buildGachaAdminPackDraftDiff({
+    basePack: pack({
+      id: 'live_pack',
+      rollPriceCurrencyCode: 'soft_coin',
+      rollPriceAmount: 100,
+      items: [
+        { assetId: 'skin.a', rarity: 'common', dropWeight: 100, copyLimit: 1 },
+        { assetId: 'skin.b', rarity: 'rare', dropWeight: 10, copyLimit: 1 }
+      ]
+    }),
+    draftPack: pack({
+      id: 'draft_pack',
+      rollPriceCurrencyCode: 'premium_coin',
+      rollPriceAmount: 120,
+      items: [
+        { assetId: 'skin.a', rarity: 'common', dropWeight: 80, copyLimit: 1 },
+        { assetId: 'skin.c', rarity: 'epic', dropWeight: 5, copyLimit: 1 }
+      ]
+    }),
+    basePackId: 'live_pack'
+  });
+
+  assert.equal(diff.basePackId, 'live_pack');
+  assert.equal(diff.missingBase, false);
+  assert.ok(diff.changedFields.some((change) => change.field === 'rollPriceCurrencyCode' && change.after === 'premium_coin'));
+  assert.ok(diff.changedFields.some((change) => change.field === 'rollPriceAmount' && change.after === 120));
+  assert.deepEqual(diff.addedItems, ['skin.c']);
+  assert.deepEqual(diff.removedItems, ['skin.b']);
+  assert.deepEqual(diff.changedItems, [{
+    assetId: 'skin.a',
+    changes: [{ field: 'dropWeight', before: 100, after: 80 }]
+  }]);
+
+  assert.deepEqual(buildGachaAdminPackDraftDiff({ draftPack: { id: 'draft', metadata: { basePackId: 'missing' } } }), {
+    basePackId: 'missing',
+    missingBase: true,
+    changedFields: [],
+    addedItems: [],
+    removedItems: [],
+    changedItems: []
+  });
 });
 
 test('[gacha-admin-validation] normalizes fixtures and nested flat items', () => {

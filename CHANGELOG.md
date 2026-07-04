@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added gacha admin pack snapshot/live-draft diff helpers to
+  `modules/gacha/admin-validation` and draft-diff table row shaping to
+  `client-view-model`, so product admin panels can share pure diff DTOs while
+  keeping DB reads, auth, audit logs, upload/storage, and UI chrome local.
 - Added replay playback state helpers to `client-view-model`, so product
   composables can share speed selection, long-battle boost, autoplay delay,
   tick advancement, load/set-speed patches, and timeline shaping while keeping

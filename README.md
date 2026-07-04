@@ -42,9 +42,9 @@ catalogs in their own repos.
   purchase-surface/status helpers, asset roll-feedback/error-status helpers,
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
   view states, wallet checkout next-action decisions, asset roll/burn mutation
-  refresh decisions, run-shop response patch helpers, and game-run response
-  patch helpers, plus replay playback state helpers over product-provided copy
-  and route adapters.
+  refresh decisions, run-shop response patch helpers, game-run response patch
+  helpers, replay playback state helpers, and gacha admin draft-diff table row
+  shaping over product-provided copy and route adapters.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, storage policy, and optional
   `{ success, data, error }` envelope unwrapping.

@@ -423,6 +423,33 @@ export interface RunShopSellViewState {
   errorMessage: string;
 }
 
+export interface GachaAdminDraftFieldChange {
+  field: string;
+  before: unknown;
+  after: unknown;
+}
+
+export interface GachaAdminDraftItemChange {
+  assetId?: string;
+  changes: GachaAdminDraftFieldChange[];
+}
+
+export interface GachaAdminDraftDiff {
+  missingBase?: boolean;
+  changedFields?: GachaAdminDraftFieldChange[];
+  addedItems?: string[];
+  removedItems?: string[];
+  changedItems?: GachaAdminDraftItemChange[];
+  [key: string]: unknown;
+}
+
+export interface GachaAdminDraftDiffRow {
+  type: 'field' | 'item_added' | 'item_removed' | 'item_changed' | string;
+  field?: string;
+  before: unknown;
+  after: unknown;
+}
+
 export interface AssetRollResultItemInput {
   assetName?: unknown;
   assetId?: string | null;
@@ -857,6 +884,10 @@ export function runShopSellResultViewState(
     target?: RunShopItemState | string | null;
   }
 ): RunShopSellViewState;
+
+export function gachaAdminDraftDiffRows(
+  diff?: GachaAdminDraftDiff | null
+): GachaAdminDraftDiffRow[];
 
 export function formatAssetRollResultName(
   result: AssetRollResultInput | null | undefined,
