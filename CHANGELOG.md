@@ -9,8 +9,8 @@ until package publishing starts.
 ### Post-baseline additions
 
 - Added artifact grid utility helpers to `client-view-model`: occupied-cell
-  value maps and preferred artifact preview orientation for rectangular and
-  shape-bearing artifacts.
+  value maps, placement-preferred orientation, and canonical preview
+  orientation for rectangular and shape-bearing artifacts.
 - Added artifact stat client view-model helpers to `client-view-model`: stat
   total summing, signed delta formatting, bonus-entry DTO shaping, and loadout
   stat text composition over product-provided labels/stat order/suffixes.

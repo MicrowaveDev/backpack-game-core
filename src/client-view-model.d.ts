@@ -301,6 +301,11 @@ export function preferredArtifactOrientation(
   artifact?: { width?: number | string | null; height?: number | string | null; shape?: readonly (readonly unknown[])[] | null; [key: string]: unknown } | null
 ): ArtifactOrientation;
 
+export function artifactPreviewOrientation(
+  artifact?: { family?: string | null; width?: number | string | null; height?: number | string | null; shape?: readonly (readonly unknown[])[] | null; [key: string]: unknown } | null,
+  options?: { bagFamily?: string }
+): ArtifactOrientation;
+
 export function sumArtifactBonuses(
   items?: readonly Record<string, unknown>[],
   artifacts?: readonly ArtifactStatSource[] | Map<string, ArtifactStatSource> | Record<string, ArtifactStatSource> | ((artifactId: string) => ArtifactStatSource | undefined | null),

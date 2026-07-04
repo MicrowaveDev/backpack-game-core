@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   assetPackAvailabilityLabel,
   assetPackIsActive,
+  artifactPreviewOrientation,
   bagRowEntryFor,
   classifyCell,
   formatAssetRollResultItemsText,
@@ -137,6 +138,8 @@ test('[client-view-model] maps occupied cells to artifact values and derives pre
   assert.equal(occupied.get('1:4'), 'thunder_gill');
   assert.equal(occupied.has('4:2'), false);
   assert.deepEqual(preferredArtifactOrientation({ width: 1, height: 2 }), { width: 2, height: 1 });
+  assert.deepEqual(artifactPreviewOrientation({ family: 'damage', width: 1, height: 2 }), { width: 1, height: 2 });
+  assert.deepEqual(artifactPreviewOrientation({ family: 'bag', width: 1, height: 2 }), { width: 2, height: 1 });
   assert.deepEqual(preferredArtifactOrientation({
     width: 4,
     height: 1,

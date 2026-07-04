@@ -193,6 +193,26 @@ export function preferredArtifactOrientation(artifact) {
   return { width, height };
 }
 
+export function artifactPreviewOrientation(artifact, {
+  bagFamily = 'bag'
+} = {}) {
+  const width = Number(artifact?.width) || 1;
+  const height = Number(artifact?.height) || 1;
+  if (Array.isArray(artifact?.shape)) {
+    const shape = artifact.shape;
+    return {
+      width: Number(shape[0]?.length) || width,
+      height: Number(shape.length) || height
+    };
+  }
+  if (artifact?.family === bagFamily && width !== height) {
+    const longSide = Math.max(width, height);
+    const shortSide = Math.min(width, height);
+    return { width: longSide, height: shortSide };
+  }
+  return { width, height };
+}
+
 export const DEFAULT_ARTIFACT_STAT_KEYS = ['damage', 'armor', 'speed', 'stunChance'];
 export const DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY = { stunChance: '%' };
 

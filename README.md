@@ -35,9 +35,9 @@ catalogs in their own repos.
   variant projection over injected catalog/policy snapshots.
 - `client-view-model`: browser-safe frontend view-model shapers such as flat
   loadout row projection, grid prop preparation, grid-cell classification,
-  occupied-cell maps, preferred artifact preview orientation, artifact stat
-  summary helpers, asset pack summary/label helpers, wallet purchase-surface
-  helpers, and asset roll-feedback helpers over
+  occupied-cell maps, preferred/canonical artifact preview orientation,
+  artifact stat summary helpers, asset pack summary/label helpers, wallet
+  purchase-surface helpers, and asset roll-feedback helpers over
   product-provided copy.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, and storage policy.
