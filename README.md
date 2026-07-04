@@ -26,6 +26,27 @@ catalogs in their own repos.
   ability, tiebreak, attribution, and narration hooks.
 - `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
   injected catalogs, ownership snapshots, time, and RNG.
+- `client-view-model`: browser-safe frontend view-model shapers such as flat
+  loadout row projection and grid prop preparation.
+- `client`: route-adapter HTTP client primitives for product-provided API
+  routes, fetch implementation, auth headers, and storage policy.
+
+## Stable Layered Exports
+
+The package keeps the original root and direct helper subpaths for
+compatibility, and now also exposes Geesome-inspired module paths:
+
+- `@microwavedev/backpack-game-core/modules/gacha`
+- `@microwavedev/backpack-game-core/modules/gacha/validation`
+- `@microwavedev/backpack-game-core/modules/shop`
+- `@microwavedev/backpack-game-core/modules/loadout`
+- `@microwavedev/backpack-game-core/modules/battle`
+- `@microwavedev/backpack-game-core/modules/fusion`
+- `@microwavedev/backpack-game-core/client`
+- `@microwavedev/backpack-game-core/client-view-model`
+
+Consumers should import only the package root or these public subpaths. Do not
+import `src/*` or nested submodule paths from game code.
 
 ## Usage
 
@@ -34,6 +55,11 @@ import { getEffectiveShape, isCellInShape } from '@microwavedev/backpack-game-co
 
 const shape = getEffectiveShape({ width: 3, height: 2, shape: [[1, 1, 1], [0, 1, 0]] }, 1);
 console.log(isCellInShape(shape, 0, 0));
+```
+
+```js
+import { createLoadoutValidator } from '@microwavedev/backpack-game-core/modules/loadout';
+import { validateAssetGachaPack } from '@microwavedev/backpack-game-core/modules/gacha';
 ```
 
 ## Type Declarations

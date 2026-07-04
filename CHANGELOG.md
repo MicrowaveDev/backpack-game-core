@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added Geesome-inspired public layer exports:
+  `modules/gacha`, `modules/gacha/validation`, `modules/shop`,
+  `modules/loadout`, `modules/battle`, `modules/fusion`, `client`, and
+  `client-view-model`. These are additive facades over existing helpers plus a
+  route-adapter client and frontend loadout projection helpers, so consumers can
+  move off flat helper imports without deep-importing package internals.
 - Added `asset-gacha`: reusable asset acquisition and gacha pack policy helpers
   over injected catalogs, ownership snapshots, time, and RNG. The module covers
   pack validation, acquisition policy, candidate filtering, weighted roll

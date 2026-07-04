@@ -44,6 +44,42 @@
     "./asset-gacha": {
       "types": "./src/asset-gacha.d.ts",
       "import": "./src/asset-gacha.js"
+    },
+    "./client": {
+      "types": "./src/client/index.d.ts",
+      "import": "./src/client/index.js"
+    },
+    "./client-view-model": {
+      "types": "./src/client-view-model.d.ts",
+      "import": "./src/client-view-model.js"
+    },
+    "./modules/gacha": {
+      "types": "./src/modules/gacha/index.d.ts",
+      "import": "./src/modules/gacha/index.js"
+    },
+    "./modules/gacha/interface": {
+      "types": "./src/modules/gacha/interface.d.ts",
+      "import": "./src/modules/gacha/interface.js"
+    },
+    "./modules/gacha/validation": {
+      "types": "./src/modules/gacha/validation.d.ts",
+      "import": "./src/modules/gacha/validation.js"
+    },
+    "./modules/shop": {
+      "types": "./src/modules/shop/index.d.ts",
+      "import": "./src/modules/shop/index.js"
+    },
+    "./modules/loadout": {
+      "types": "./src/modules/loadout/index.d.ts",
+      "import": "./src/modules/loadout/index.js"
+    },
+    "./modules/battle": {
+      "types": "./src/modules/battle/index.d.ts",
+      "import": "./src/modules/battle/index.js"
+    },
+    "./modules/fusion": {
+      "types": "./src/modules/fusion/index.d.ts",
+      "import": "./src/modules/fusion/index.js"
     }
   },
   "files": [
