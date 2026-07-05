@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-driven loadout validation service and
+  `createLoadoutValidationServerModule`, so apps can register validation
+  through module lists while keeping grid constants, artifact lookup, prices,
+  family semantics, and stat caps local.
 - Added provider-driven gacha simulation service factories and
   `createAssetGachaSimulationServerModule`, so apps can register static/runtime
   pack odds simulation through core module lists while keeping DB/catalog/pack

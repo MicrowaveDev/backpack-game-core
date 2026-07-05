@@ -81,6 +81,21 @@ Product repos own the concrete objects behind those keys.
 These checks intentionally happen before future Mushroom or Meat services move
 into core, so product-specific assumptions fail near the module boundary.
 
+## Core Convenience Modules
+
+The stable server facade also exposes provider-driven module factories for
+low-risk shared services:
+
+- `createLoadoutValidationServerModule()`: registers
+  `loadoutValidationService` over injected artifact lookup, pricing, family,
+  placement, and stat policy providers.
+- `createAssetGachaSimulationServerModule()`: registers
+  `assetGachaSimulationService` over injected static/runtime pack, catalog,
+  odds, and visibility providers.
+
+Apps still decide which providers exist, which module order to use, and how
+routes call the registered services.
+
 ## Boundary Rules
 
 Core modules may expose service factories, route handler factories, validation,

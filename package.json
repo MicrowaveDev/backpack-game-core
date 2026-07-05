@@ -137,6 +137,10 @@
       "types": "./src/modules/loadout/index.d.ts",
       "import": "./src/modules/loadout/index.js"
     },
+    "./modules/loadout/validation-service": {
+      "types": "./src/modules/loadout/validation-service.d.ts",
+      "import": "./src/modules/loadout/validation-service.js"
+    },
     "./modules/battle": {
       "types": "./src/modules/battle/index.d.ts",
       "import": "./src/modules/battle/index.js"

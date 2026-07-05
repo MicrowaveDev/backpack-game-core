@@ -4,6 +4,7 @@ import {
   createAssetGachaSimulationServerModule,
   createBackpackServerContext,
   createBackpackServerModule,
+  createLoadoutValidationServerModule,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
 
@@ -176,4 +177,44 @@ test('[server] gacha simulation module registers provider-driven service', () =>
   assert.deepEqual(result.installed, ['core.gachaSimulation']);
   const service = result.get('assetGachaSimulationService');
   assert.equal(service.simulateAssetPackOdds('server_pack', { trials: 1, rng: () => 0 }).packId, 'server_pack');
+});
+
+test('[server] loadout validation module registers provider-driven service', () => {
+  const catalog = new Map([
+    ['starter_bag', { id: 'starter_bag', family: 'bag', width: 2, height: 2, price: 0, bonus: {} }],
+    ['cleaver', { id: 'cleaver', family: 'damage', width: 1, height: 1, price: 3, bonus: { damage: 2 } }]
+  ]);
+  const result = setupBackpackServerModules([
+    createLoadoutValidationServerModule({
+      providerKeys: {
+        getArtifact: 'service.loadout.getArtifact',
+        getArtifactPrice: 'service.loadout.getArtifactPrice',
+        isBag: 'service.loadout.isBag',
+        isContainerItem: 'service.loadout.isContainerItem',
+        contributesStats: 'service.loadout.contributesStats'
+      },
+      config: {
+        gridWidth: 3,
+        gridHeight: 3,
+        defaultCoinBudget: 5
+      }
+    })
+  ], {
+    services: {
+      'service.loadout.getArtifact': (artifactId) => catalog.get(artifactId),
+      'service.loadout.getArtifactPrice': (artifact) => artifact.price,
+      'service.loadout.isBag': (artifact) => artifact?.family === 'bag',
+      'service.loadout.isContainerItem': (item) => Number(item.x) < 0 || Number(item.y) < 0,
+      'service.loadout.contributesStats': (artifact, item, { isBag, isContainerItem }) => (
+        !!artifact && !isBag(artifact) && !isContainerItem(item)
+      )
+    }
+  });
+
+  assert.deepEqual(result.installed, ['core.loadoutValidation']);
+  const service = result.get('loadoutValidationService');
+  assert.equal(service.validateLoadoutItems([
+    { id: 'row_bag', artifactId: 'starter_bag', x: 0, y: 0, width: 2, height: 2, active: 1 },
+    { id: 'row_item', artifactId: 'cleaver', x: 0, y: 0, width: 1, height: 1 }
+  ]).totalCoins, 3);
 });

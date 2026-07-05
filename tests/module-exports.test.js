@@ -70,11 +70,15 @@ import {
 } from '@microwavedev/backpack-game-core/modules/run';
 import {
   createLoadoutValidator,
+  createLoadoutValidationService as createLoadoutValidationServiceFromLoadout,
   familyCaps as familyCapsFromLoadout,
   getEffectiveShape,
   isBag as isBagFromLoadout,
   pieceCells
 } from '@microwavedev/backpack-game-core/modules/loadout';
+import {
+  createLoadoutValidationService
+} from '@microwavedev/backpack-game-core/modules/loadout/validation-service';
 import {
   assetRollErrorViewState,
   assetRollMutationResultViewState,
@@ -131,6 +135,7 @@ import {
   createKeyedAsyncMutex,
   createBackpackServerContext,
   createBackpackServerModule,
+  createLoadoutValidationServerModule,
   createRunReadinessManager,
   idempotency,
   rateLimit,
@@ -316,6 +321,9 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(contributesStats({ family: 'damage' }, { x: 0, y: 0 }), true);
   assert.equal(familyCapsFromLoadout, familyCaps);
   assert.equal(isBagFromLoadout, isBag);
+  assert.equal(createLoadoutValidationServiceFromLoadout, createLoadoutValidationService);
+  assert.equal(typeof createLoadoutValidationService, 'function');
+  assert.equal(typeof createLoadoutValidationServerModule, 'function');
   assert.deepEqual(summarizeAssetRollPacks(), []);
   assert.equal(classifyCell([], 0, 0, { cols: 1, rows: 1 }), 'base-inv');
   assert.equal(buildOccupiedCellMap([{ artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }]).get('0:0'), 'needle');

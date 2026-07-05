@@ -79,6 +79,32 @@ export declare function createAssetGachaSimulationServerModule(
   options?: AssetGachaSimulationServerModuleOptions
 ): BackpackServerModule;
 
+export interface LoadoutValidationServerModuleOptions {
+  name?: string;
+  serviceKey?: string;
+  requires?: string[];
+  provides?: string[];
+  providerKeys?: {
+    getArtifactId?: string;
+    getArtifact?: string;
+    getArtifactPrice?: string;
+    getArtifactWidth?: string;
+    getArtifactHeight?: string;
+    getBagShape?: string;
+    getArtifactBonus?: string;
+    isBag?: string;
+    isContainerItem?: string;
+    contributesStats?: string;
+  };
+  providers?: Record<string, unknown>;
+  config?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export declare function createLoadoutValidationServerModule(
+  options?: LoadoutValidationServerModuleOptions
+): BackpackServerModule;
+
 export {
   createKeyedAsyncMutex,
   createRunReadinessManager

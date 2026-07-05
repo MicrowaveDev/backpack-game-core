@@ -37,6 +37,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   stat contribution checks.
 - `loadout-validation`: provider-driven flat-grid and bag-coverage validation
   over injected catalog, pricing, bag policy, and stat rules.
+- `modules/loadout/validation-service`: provider-driven loadout validation
+  service factory, plus a server module factory for app module lists.
 - `battle-simulation`: deterministic 1v1 battle loop with injected combatant,
   ability, tiebreak, attribution, and narration hooks.
 - `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
@@ -108,6 +110,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/shop`
 - `@microwavedev/backpack-game-core/modules/run`
 - `@microwavedev/backpack-game-core/modules/loadout`
+- `@microwavedev/backpack-game-core/modules/loadout/validation-service`
 - `@microwavedev/backpack-game-core/modules/battle`
 - `@microwavedev/backpack-game-core/modules/fusion`
 - `@microwavedev/backpack-game-core/artifact-capabilities`

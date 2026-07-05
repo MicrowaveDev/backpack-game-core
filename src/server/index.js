@@ -1,4 +1,8 @@
 import { createAssetGachaSimulationService } from '../modules/gacha/simulation-service.js';
+import {
+  createLoadoutValidationService,
+  LOADOUT_VALIDATION_PROVIDER_NAMES
+} from '../modules/loadout/validation-service.js';
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -84,6 +88,17 @@ function providerFromContext(ctx, providers, providerKeys, name) {
   return providers?.[name] || (providerKeys?.[name] ? ctx.get(providerKeys[name]) : null);
 }
 
+function providerOptionsFromContext(ctx, providers, providerKeys, names) {
+  return Object.fromEntries(
+    names
+      .map((providerName) => [
+        providerName,
+        providerFromContext(ctx, providers, providerKeys, providerName)
+      ])
+      .filter(([, provider]) => provider)
+  );
+}
+
 export function createAssetGachaSimulationServerModule({
   name = 'core.gachaSimulation',
   serviceKey = 'assetGachaSimulationService',
@@ -113,6 +128,40 @@ export function createAssetGachaSimulationServerModule({
         getRuntimeCatalog: providerFromContext(ctx, providers, providerKeys, 'getRuntimeCatalog'),
         shapeRuntimePackOdds: providerFromContext(ctx, providers, providerKeys, 'shapeRuntimePackOdds'),
         maxTrials: moduleConfig.maxTrials ?? serviceOptions.maxTrials
+      });
+      return {
+        services: {
+          [serviceKey]: service
+        }
+      };
+    }
+  });
+}
+
+export function createLoadoutValidationServerModule({
+  name = 'core.loadoutValidation',
+  serviceKey = 'loadoutValidationService',
+  requires = [],
+  provides = [serviceKey],
+  providerKeys = {},
+  providers = {},
+  config = {},
+  ...serviceOptions
+} = {}) {
+  const requiredProviderKeys = Object.entries(providerKeys)
+    .filter(([providerName, key]) => key && !providers?.[providerName] && !serviceOptions?.[providerName])
+    .map(([, key]) => key);
+  return createBackpackServerModule({
+    name,
+    requires: [...requires, ...requiredProviderKeys],
+    provides,
+    config,
+    setup(ctx) {
+      const moduleConfig = ctx.getConfig(name, {});
+      const service = createLoadoutValidationService({
+        ...serviceOptions,
+        ...moduleConfig,
+        ...providerOptionsFromContext(ctx, providers, providerKeys, LOADOUT_VALIDATION_PROVIDER_NAMES)
       });
       return {
         services: {
