@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added headless shop item row DTO shaping to `client-view-model`, so product
+  UIs can share offer lookup, price, affordability, preview footprint,
+  bag/character flags, and stat rows while keeping localized copy, shop markup,
+  roles, fusion hints, actions, and styles local.
 - Added headless artifact stat-row DTO shaping to `client-view-model`, so
   product UIs can share stat key/label/value/sign rows while keeping visual
   classes, icons, copy, and component markup local.

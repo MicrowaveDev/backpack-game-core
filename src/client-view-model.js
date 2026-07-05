@@ -370,6 +370,76 @@ export function formatLoadoutStatsText({
     .join(separator);
 }
 
+export function shapeShopItemRows({
+  offer = [],
+  artifacts = [],
+  getArtifact = null,
+  getArtifactId = (item) => (typeof item === 'string' ? item : item?.artifactId ?? item?.id),
+  getArtifactPrice = (artifact) => Number(artifact?.price || 0),
+  availableBudget = null,
+  balance = null,
+  orientationForArtifact = artifactPreviewOrientation,
+  formatArtifactBonus = null,
+  statDefinitions = null,
+  statLabels = {},
+  suffixByKey = DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY,
+  includeZeroStatRows = false
+} = {}) {
+  const lookupArtifact = getArtifact ? artifactLookupById(getArtifact) : artifactLookupById(artifacts);
+  const normalizedBudget = numberOr(availableBudget ?? balance);
+
+  return (offer || []).map((offerItem, index) => {
+    const artifactId = getArtifactId(offerItem);
+    const artifact = lookupArtifact(artifactId);
+    if (!artifact) {
+      return {
+        id: `${artifactId || 'missing'}:${index}`,
+        index,
+        artifactId,
+        artifact: null,
+        missing: true,
+        price: 0,
+        canAfford: false,
+        unavailable: true,
+        previewOrientation: { width: 1, height: 1 },
+        previewItem: [],
+        statRows: []
+      };
+    }
+
+    const price = Math.max(0, numberOr(getArtifactPrice(artifact, offerItem)));
+    const previewOrientation = orientationForArtifact(artifact, offerItem) || artifactPreviewOrientation(artifact);
+    const width = Math.max(1, numberOr(previewOrientation.width, 1));
+    const height = Math.max(1, numberOr(previewOrientation.height, 1));
+    const statRows = typeof formatArtifactBonus === 'function'
+      ? (formatArtifactBonus(artifact, offerItem) || [])
+      : shapeArtifactStatRows(artifact, {
+        definitions: statDefinitions,
+        labels: statLabels,
+        suffixByKey,
+        includeZeroes: includeZeroStatRows
+      });
+
+    return {
+      id: offerItem?.id || `${artifactId}:${index}`,
+      index,
+      artifactId,
+      artifact,
+      missing: false,
+      family: artifact.family || '',
+      isBag: artifact.family === 'bag',
+      characterItem: Boolean(artifact.characterItem),
+      slotCount: numberOr(artifact.slotCount),
+      price,
+      canAfford: price <= normalizedBudget,
+      unavailable: price > normalizedBudget,
+      previewOrientation: { width, height },
+      previewItem: [{ artifactId, x: 0, y: 0, width, height }],
+      statRows
+    };
+  });
+}
+
 export function formatAssetPackRarityOdds(pack, {
   rarityLabel = identity
 } = {}) {

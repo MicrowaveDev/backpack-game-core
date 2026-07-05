@@ -137,6 +137,30 @@ export interface ArtifactStatRow extends ArtifactStatDefinition {
   sign: 'positive' | 'negative' | 'zero';
 }
 
+export interface ShopItemRow {
+  id: string;
+  index: number;
+  artifactId: string;
+  artifact: ArtifactStatSource | null;
+  missing: boolean;
+  family?: string;
+  isBag?: boolean;
+  characterItem?: boolean;
+  slotCount?: number;
+  price: number;
+  canAfford: boolean;
+  unavailable: boolean;
+  previewOrientation: ArtifactOrientation;
+  previewItem: Array<{
+    artifactId: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>;
+  statRows: unknown[];
+}
+
 export interface AssetPackSummaryLabels {
   invalid?: string;
   disabled?: string;
@@ -710,6 +734,22 @@ export function formatLoadoutStatsText(input?: {
   separator?: string;
   getArtifactId?: (item: Record<string, unknown>) => string;
 }): string;
+
+export function shapeShopItemRows(input?: {
+  offer?: readonly unknown[];
+  artifacts?: readonly ArtifactStatSource[] | Map<string, ArtifactStatSource> | Record<string, ArtifactStatSource> | ((artifactId: string) => ArtifactStatSource | undefined | null);
+  getArtifact?: readonly ArtifactStatSource[] | Map<string, ArtifactStatSource> | Record<string, ArtifactStatSource> | ((artifactId: string) => ArtifactStatSource | undefined | null);
+  getArtifactId?: (item: unknown) => string;
+  getArtifactPrice?: (artifact: ArtifactStatSource, item?: unknown) => unknown;
+  availableBudget?: unknown;
+  balance?: unknown;
+  orientationForArtifact?: (artifact: ArtifactStatSource, item?: unknown) => ArtifactOrientation;
+  formatArtifactBonus?: (artifact: ArtifactStatSource, item?: unknown) => unknown[];
+  statDefinitions?: readonly ArtifactStatDefinition[] | null;
+  statLabels?: ArtifactStatLabels;
+  suffixByKey?: ArtifactStatSuffixByKey;
+  includeZeroStatRows?: boolean;
+}): ShopItemRow[];
 
 export function formatAssetPackRarityOdds(
   pack: AssetPackSummaryInput | null | undefined,

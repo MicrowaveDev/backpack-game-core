@@ -49,7 +49,7 @@ catalogs in their own repos.
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
   view states, wallet checkout next-action decisions, asset roll/burn mutation
   refresh decisions, run-shop response patch helpers, game-run response patch
-  helpers, replay playback state helpers, gacha admin draft-diff table row
+  helpers, shop item row helpers, replay playback state helpers, gacha admin draft-diff table row
   shaping, and gacha admin checklist/validation/season-plan row shaping over
   product-provided copy and route adapters, plus gacha admin odds preview row
   shaping for rarity/item tables and row helpers for fixture import previews

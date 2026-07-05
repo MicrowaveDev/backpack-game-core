@@ -50,6 +50,7 @@ import {
   runShopRefreshResultViewState,
   runShopSellResultViewState,
   shapeArtifactStatRows,
+  shapeShopItemRows,
   sumArtifactBonuses,
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
@@ -291,6 +292,85 @@ test('[client-view-model] sums and formats artifact stat bonuses', () => {
     statKeys: ['armor', 'stunChance'],
     suffixByKey: {}
   }), 'Armor +3 / Stun +5');
+});
+
+test('[client-view-model] shapes headless shop item rows', () => {
+  const rows = shapeShopItemRows({
+    offer: ['needle', 'bag', 'missing'],
+    availableBudget: 2,
+    artifacts: [
+      {
+        id: 'needle',
+        family: 'damage',
+        name: { en: 'Needle', ru: 'Игла' },
+        description: { en: 'Sharp.', ru: 'Острая.' },
+        price: 2,
+        width: 1,
+        height: 2,
+        characterItem: true,
+        bonus: { damage: 2 }
+      },
+      {
+        id: 'bag',
+        family: 'bag',
+        name: { en: 'Bag' },
+        price: 3,
+        slotCount: 4,
+        width: 2,
+        height: 2,
+        bonus: {}
+      }
+    ],
+    orientationForArtifact: (artifact) => ({ width: artifact.height, height: artifact.width }),
+    statLabels: { damage: 'Damage' }
+  });
+
+  assert.equal(rows.length, 3);
+  assert.deepEqual(rows[0], {
+    id: 'needle:0',
+    index: 0,
+    artifactId: 'needle',
+    artifact: {
+      id: 'needle',
+      family: 'damage',
+      name: { en: 'Needle', ru: 'Игла' },
+      description: { en: 'Sharp.', ru: 'Острая.' },
+      price: 2,
+      width: 1,
+      height: 2,
+      characterItem: true,
+      bonus: { damage: 2 }
+    },
+    missing: false,
+    family: 'damage',
+    isBag: false,
+    characterItem: true,
+    slotCount: 0,
+    price: 2,
+    canAfford: true,
+    unavailable: false,
+    previewOrientation: { width: 2, height: 1 },
+    previewItem: [{ artifactId: 'needle', x: 0, y: 0, width: 2, height: 1 }],
+    statRows: [
+      {
+        id: 'damage',
+        key: 'damage',
+        sourceKey: 'damage',
+        label: 'Damage',
+        text: '+2',
+        value: 2,
+        numericValue: 2,
+        positive: true,
+        sign: 'positive'
+      }
+    ]
+  });
+  assert.equal(rows[1].isBag, true);
+  assert.equal(rows[1].slotCount, 4);
+  assert.equal(rows[1].canAfford, false);
+  assert.equal(rows[1].unavailable, true);
+  assert.equal(rows[2].missing, true);
+  assert.equal(rows[2].canAfford, false);
 });
 
 test('[client-view-model] formats asset pack odds and availability labels', () => {
