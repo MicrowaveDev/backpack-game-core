@@ -422,6 +422,42 @@ export interface AssetRollPackSummary {
   duplicateText: string;
 }
 
+export interface AssetPackCardLabels {
+  copiesCompleteTemplate?: string;
+  completeTemplate?: string;
+  detailsDuplicateMultiTemplate?: string;
+  detailsDuplicateTemplate?: string;
+  detailsMultiTemplate?: string;
+  detailsTemplate?: string;
+  oddsTemplate?: string;
+  rollAction?: string;
+  burnActionTemplate?: string;
+}
+
+export interface AssetPackCardLine {
+  key: string;
+  type: string;
+  text: string;
+}
+
+export interface AssetPackCardAction {
+  key: string;
+  kind: 'roll' | 'burn' | string;
+  label: string;
+  packId?: string;
+  ruleId?: string | null;
+  payload: Record<string, unknown>;
+}
+
+export interface AssetPackCardRow extends AssetRollPackSummary {
+  index: number;
+  title: unknown;
+  detailText: string;
+  lines: AssetPackCardLine[];
+  actions: AssetPackCardAction[];
+  actionable: boolean;
+}
+
 export interface WalletBundleInput {
   id?: string;
   provider?: string;
@@ -1043,6 +1079,11 @@ export function summarizeAssetRollPacks(input?: {
   rarityLabel?: (rarity: unknown) => string;
   labels?: AssetPackSummaryLabels;
 }): AssetRollPackSummary[];
+
+export function shapeAssetPackCardRows(
+  packs?: readonly AssetRollPackSummary[],
+  options?: { labels?: AssetPackCardLabels }
+): AssetPackCardRow[];
 
 export function resolveWalletBalance(input?: {
   wallet?: { balances?: Record<string, unknown> } | null;

@@ -54,6 +54,7 @@ import {
   runShopSellResultViewState,
   shapeArtifactTileDisplay,
   shapeArtifactStatRows,
+  shapeAssetPackCardRows,
   shapeReplayEventRows,
   shapeShopItemRows,
   sumArtifactBonuses,
@@ -598,6 +599,27 @@ test('[client-view-model] summarizes roll pack state for asset UIs', () => {
   assert.equal(summaries[0].pityText, 'Epic+ pity in 1 opens');
   assert.equal(summaries[0].duplicateText, 'Duplicates: 3');
   assert.equal(summaries[0].burnRarity, 'Common');
+
+  const [card] = shapeAssetPackCardRows(summaries, {
+    labels: {
+      detailsDuplicateMultiTemplate: '{count} cards · opens {rollSize} · costs {price}',
+      oddsTemplate: 'Odds: {odds}',
+      rollAction: 'Open pack',
+      burnActionTemplate: 'Burn {count} {rarity}'
+    }
+  });
+  assert.equal(card.title, 'Starter Pack');
+  assert.deepEqual(card.lines.map((line) => [line.type, line.text]), [
+    ['detail', '2 cards · opens 2 · costs 50'],
+    ['duplicates', 'Duplicates: 3'],
+    ['odds', 'Odds: Common 75% · Rare 25%'],
+    ['guarantee', 'Guarantee: 1 Rare+'],
+    ['pity', 'Epic+ pity in 1 opens']
+  ]);
+  assert.deepEqual(card.actions.map((action) => [action.kind, action.label, action.payload]), [
+    ['roll', 'Open pack', { packId: 'starter_pack' }],
+    ['burn', 'Burn 5 Common', { packId: 'starter_pack', ruleId: 'burn_common' }]
+  ]);
 });
 
 test('[client-view-model] summarizes wallet purchase surfaces', () => {

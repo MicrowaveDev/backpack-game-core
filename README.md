@@ -46,7 +46,8 @@ catalogs in their own repos.
   occupied-cell maps, board cell/piece/bag-slot rows,
   preferred/canonical artifact preview orientation,
   artifact tile display contracts,
-  artifact stat summary and stat-row helpers, asset pack summary/label helpers, wallet
+  artifact stat summary and stat-row helpers, asset pack summary/label/card
+  helpers, wallet
   purchase-surface/status helpers, asset roll-feedback/error-status helpers,
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
   view states, wallet checkout next-action decisions, asset roll/burn mutation

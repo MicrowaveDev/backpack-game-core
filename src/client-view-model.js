@@ -1016,6 +1016,107 @@ export function summarizeAssetRollPacks({
     });
 }
 
+function assetPackCardDetailText(pack, labels = {}) {
+  if (pack?.availabilityLabel) return pack.availabilityLabel;
+  if (pack?.duplicateEnabled && pack?.copyComplete) {
+    return fillTemplate(labels.copiesCompleteTemplate || 'Copies complete: {count}', {
+      count: pack.total
+    });
+  }
+  if (pack?.complete) {
+    return fillTemplate(labels.completeTemplate || 'Complete: {count}', {
+      count: pack.total
+    });
+  }
+  if (pack?.duplicateEnabled && numberOr(pack.rollSize, 1) > 1) {
+    return fillTemplate(labels.detailsDuplicateMultiTemplate || '{count} items · {rollSize} per roll · {price}', {
+      count: pack.total,
+      rollSize: pack.nextRollItemCount,
+      price: pack.price
+    });
+  }
+  if (pack?.duplicateEnabled) {
+    return fillTemplate(labels.detailsDuplicateTemplate || '{count} items · {price}', {
+      count: pack.total,
+      price: pack.price
+    });
+  }
+  if (numberOr(pack?.rollSize, 1) > 1) {
+    return fillTemplate(labels.detailsMultiTemplate || '{left}/{count} left · {rollSize} per roll · {price}', {
+      count: pack.total,
+      left: pack.left,
+      rollSize: pack.nextRollItemCount,
+      price: pack.price
+    });
+  }
+  return fillTemplate(labels.detailsTemplate || '{left}/{count} left · {price}', {
+    count: pack?.total,
+    left: pack?.left,
+    price: pack?.price
+  });
+}
+
+export function shapeAssetPackCardRows(packs = [], {
+  labels = {}
+} = {}) {
+  return (packs || []).map((pack, index) => {
+    const detailText = assetPackCardDetailText(pack, labels);
+    const lines = [
+      detailText ? { key: 'detail', type: 'detail', text: detailText } : null,
+      pack.active && pack.duplicateText
+        ? { key: 'duplicates', type: 'duplicates', text: pack.duplicateText }
+        : null,
+      pack.canRoll && pack.odds
+        ? {
+            key: 'odds',
+            type: 'odds',
+            text: fillTemplate(labels.oddsTemplate || 'Odds: {odds}', { odds: pack.odds })
+          }
+        : null,
+      pack.canRoll && pack.guaranteeText
+        ? { key: 'guarantee', type: 'guarantee', text: pack.guaranteeText }
+        : null,
+      pack.canRoll && pack.pityText
+        ? { key: 'pity', type: 'pity', text: pack.pityText }
+        : null
+    ].filter(Boolean);
+    const actions = [
+      pack.canRoll
+        ? {
+            key: 'roll',
+            kind: 'roll',
+            label: labels.rollAction || 'Roll',
+            packId: pack.id,
+            payload: { packId: pack.id }
+          }
+        : null,
+      pack.canBurn
+        ? {
+            key: 'burn',
+            kind: 'burn',
+            label: fillTemplate(labels.burnActionTemplate || 'Burn {count} {rarity}', {
+              count: pack.burnCost,
+              rarity: pack.burnRarity
+            }),
+            packId: pack.id,
+            ruleId: pack.burnRuleId,
+            payload: { packId: pack.id, ruleId: pack.burnRuleId }
+          }
+        : null
+    ].filter(Boolean);
+
+    return {
+      ...pack,
+      index,
+      title: pack.name,
+      detailText,
+      lines,
+      actions,
+      actionable: actions.length > 0
+    };
+  });
+}
+
 export function resolveWalletBalance({
   wallet = null,
   player = null,
