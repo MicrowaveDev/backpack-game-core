@@ -3,6 +3,7 @@ function nonEmptyArray(value) {
 }
 
 export { AchievementBadge } from './components/AchievementBadge.js';
+export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
 
 export const AssetRollResultPanel = {

@@ -114,8 +114,10 @@ import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusi
 import {
   clearIdempotencyCache,
   clearRateLimitBuckets,
+  createKeyedAsyncMutex,
   createBackpackServerContext,
   createBackpackServerModule,
+  createRunReadinessManager,
   idempotency,
   rateLimit,
   setupBackpackServerModules
@@ -126,6 +128,7 @@ import {
 } from '@microwavedev/backpack-game-core/server/middleware';
 import {
   AchievementBadge,
+  ArtifactStatSummary,
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
@@ -139,6 +142,7 @@ import {
 } from '@microwavedev/backpack-game-core/vue';
 import {
   AchievementBadge as AchievementBadgeFromComponents,
+  ArtifactStatSummary as ArtifactStatSummaryFromComponents,
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
   BackpackGrid as BackpackGridFromComponents,
@@ -314,6 +318,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminFixtureOperationRows({ operations: [{ type: 'pack' }] })[0].afterCountText, '-');
   assert.equal(gachaAdminSimulationItemRows({ items: [{ assetId: 'skin.a', observedPerRoll: 0.25 }] })[0].observedPerRollText, '25.0%');
   assert.equal(AchievementBadge.name, 'AchievementBadge');
+  assert.equal(ArtifactStatSummary.name, 'ArtifactStatSummary');
   assert.equal(SeasonRankEmblem.name, 'SeasonRankEmblem');
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
   assert.equal(ArtifactTile.name, 'ArtifactTile');
@@ -325,6 +330,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(ShopItemList.name, 'ShopItemList');
   assert.equal(ShopItemRow.name, 'ShopItemRow');
   assert.equal(AchievementBadgeFromComponents, AchievementBadge);
+  assert.equal(ArtifactStatSummaryFromComponents, ArtifactStatSummary);
   assert.equal(SeasonRankEmblemFromComponents, SeasonRankEmblem);
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
@@ -442,6 +448,8 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof createBackpackServerModule, 'function');
   assert.equal(typeof createBackpackServerContext, 'function');
   assert.equal(typeof setupBackpackServerModules, 'function');
+  assert.equal(typeof createKeyedAsyncMutex, 'function');
+  assert.equal(typeof createRunReadinessManager, 'function');
   assert.equal(typeof idempotency, 'function');
   assert.equal(typeof clearIdempotencyCache, 'function');
   assert.equal(typeof rateLimit, 'function');

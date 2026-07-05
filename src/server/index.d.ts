@@ -50,6 +50,11 @@ export declare function setupBackpackServerModules(
 ): BackpackServerContext & { installed: string[] };
 
 export {
+  createKeyedAsyncMutex,
+  createRunReadinessManager
+} from './readiness.js';
+
+export {
   clearIdempotencyCache,
   idempotency
 } from './middleware/idempotency.js';

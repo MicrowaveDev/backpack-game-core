@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AchievementBadge,
+  ArtifactStatSummary,
   ArtifactTile,
   AssetRollResultPanel,
   BackpackGrid,
@@ -125,6 +126,54 @@ test('[vue] SeasonRankEmblem exposes neutral image emblem path hooks', () => {
     width: '96px',
     height: '96px'
   });
+});
+
+test('[vue] ArtifactStatSummary exposes neutral stat chip rendering contract', () => {
+  assert.equal(ArtifactStatSummary.name, 'ArtifactStatSummary');
+  assert.match(ArtifactStatSummary.template, /slot name="items"/);
+  assert.match(ArtifactStatSummary.template, /chipClasses/);
+  const context = {
+    rows: null,
+    source: null,
+    totals: { damage: 2, armor: 0, speed: -1 },
+    artifact: null,
+    definitions: [
+      { id: 'damage', sourceKey: 'damage', roleId: 'damage' },
+      { id: 'armor', sourceKey: 'armor', roleId: 'armor' },
+      { id: 'speed', sourceKey: 'speed' }
+    ],
+    labels: { damage: 'Damage', armor: 'Armor', speed: 'Speed' },
+    roleMap: { damage: { color: '#f33' }, armor: { color: '#39f' } },
+    includeZeroes: false,
+    variant: 'compact',
+    rootClass: 'artifact-stat-summary artifact-inventory-stats',
+    rootModifierBase: 'artifact-stat-summary'
+  };
+  const items = ArtifactStatSummary.computed.statSummaryItems.call({
+    ...context,
+    statSource: ArtifactStatSummary.computed.statSource.call(context)
+  });
+  assert.deepEqual(items.map((item) => ({
+    id: item.id,
+    label: item.label,
+    text: item.text,
+    sign: item.sign,
+    roleColor: item.role?.color || null
+  })), [
+    { id: 'damage', label: 'Damage', text: '+2', sign: 'positive', roleColor: '#f33' },
+    { id: 'speed', label: 'Speed', text: '-1', sign: 'negative', roleColor: null }
+  ]);
+  assert.deepEqual(ArtifactStatSummary.computed.summaryClass.call(context), [
+    'artifact-stat-summary artifact-inventory-stats',
+    'artifact-stat-summary--compact'
+  ]);
+  assert.deepEqual(ArtifactStatSummary.methods.chipClasses.call({
+    chipClass: 'chip',
+    plainChipClass: 'chip--plain'
+  }, items[0]), ['chip', 'chip--positive', { 'chip--plain': false }]);
+  assert.deepEqual(ArtifactStatSummary.methods.roleStyle.call({
+    roleColorStyleVar: '--role-color'
+  }, items[0]), { '--role-color': '#f33' });
 });
 
 test('[vue] ShopItemRow exposes neutral shop row rendering contract', () => {

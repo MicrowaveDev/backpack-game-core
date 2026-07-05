@@ -97,6 +97,8 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/fusion`
 - `@microwavedev/backpack-game-core/client`
 - `@microwavedev/backpack-game-core/client-view-model`
+- `@microwavedev/backpack-game-core/server`
+- `@microwavedev/backpack-game-core/server/middleware`
 - `@microwavedev/backpack-game-core/vue`
 - `@microwavedev/backpack-game-core/vue/components`
 

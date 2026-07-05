@@ -1,5 +1,6 @@
 export {
   AchievementBadge,
+  ArtifactStatSummary,
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
