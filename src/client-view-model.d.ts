@@ -1492,7 +1492,7 @@ export function summarizeAssetRollFeedback(input?: {
 }): AssetRollFeedbackSummary | null;
 
 export function shapeAssetRollResultPanel(
-  input?: AssetRollFeedbackSummary | {
+  input?: AssetRollFeedbackSummary | null | {
     status?: string;
     result?: AssetRollResultInput | null;
     errorMessage?: string;

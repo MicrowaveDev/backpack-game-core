@@ -1309,6 +1309,7 @@ test('[client-view-model] summarizes asset roll feedback', () => {
     text: 'Every skin is already owned.'
   });
   assert.equal(summarizeAssetRollFeedback({ status: 'success', labels }), null);
+  assert.equal(shapeAssetRollResultPanel(null), null);
   assert.deepEqual(shapeAssetRollResultPanel({
     status: 'success',
     result: { assetName: { en: 'Mooncap' }, assetId: 'skin.a', rarity: 'rare' },

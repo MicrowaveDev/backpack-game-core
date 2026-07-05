@@ -2195,6 +2195,7 @@ export function shapeAssetRollResultPanel(input = {}, {
   ariaLive = 'polite',
   testId = ''
 } = {}) {
+  if (!input) return null;
   const feedback = input &&
     Object.prototype.hasOwnProperty.call(input, 'status') &&
     Object.prototype.hasOwnProperty.call(input, 'title') &&
