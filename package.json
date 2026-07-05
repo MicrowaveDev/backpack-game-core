@@ -101,6 +101,10 @@
       "types": "./src/modules/shop/index.d.ts",
       "import": "./src/modules/shop/index.js"
     },
+    "./modules/run": {
+      "types": "./src/modules/run/index.d.ts",
+      "import": "./src/modules/run/index.js"
+    },
     "./modules/loadout": {
       "types": "./src/modules/loadout/index.d.ts",
       "import": "./src/modules/loadout/index.js"

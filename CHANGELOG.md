@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added run lifecycle planners to `modules/run`, so product services can share
+  run-start drafts, initial/next shop-state counters, starter loadout drafts,
+  ghost budget math, round result counters/rewards, and challenge group
+  completion decisions while keeping SQL, battle simulation, catalog lookup,
+  fusions, rewards execution, rating, season, achievements, and route errors
+  local.
 - Added asset-gacha roll and duplicate-burn settlement planners to
   `modules/gacha`, so product services can share candidate/result metadata,
   wallet spend payloads, grant drafts, evidence rows, burn-source metadata, and

@@ -52,6 +52,12 @@ import {
   generateShopOffer
 } from '@microwavedev/backpack-game-core/modules/shop';
 import {
+  createRunGhostBudgetPlan,
+  createRunGroupCompletionPlan,
+  createRunRoundResolutionPlan,
+  createRunStartPlan
+} from '@microwavedev/backpack-game-core/modules/run';
+import {
   createLoadoutValidator,
   getEffectiveShape,
   pieceCells
@@ -210,6 +216,31 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     purchasedRound: 1,
     currentRound: 2
   }).sellPrice, 2);
+  assert.equal(createRunStartPlan({
+    runId: 'run_1',
+    playerId: 'player_1',
+    runPlayerId: 'grp_1',
+    initialCoins: 5,
+    startingLives: 5
+  }).playerDraft.livesRemaining, 5);
+  assert.equal(createRunRoundResolutionPlan({
+    outcome: 'loss',
+    roundNumber: 1,
+    playerState: { lives_remaining: 5, coins: 5 },
+    roundIncome: [5, 5],
+    rewardTable: { loss: { spore: 1, mycelium: 5 } },
+    maxRounds: 9
+  }).player.livesRemaining, 4);
+  assert.equal(createRunGhostBudgetPlan({
+    playerSpent: 10,
+    roundNumber: 3,
+    roundIncome: [5, 5, 5],
+    ghostBudgetDiscount: 0
+  }).ghostBudget, 10);
+  assert.equal(createRunGroupCompletionPlan({
+    playerResults: [{ completedRounds: 9, livesRemaining: 5 }],
+    maxRounds: 9
+  }).endReason, 'max_rounds');
 
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);

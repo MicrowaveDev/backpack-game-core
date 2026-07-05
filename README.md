@@ -20,6 +20,9 @@ catalogs in their own repos.
 - `shop-offer`: deterministic offer generation over injected item pools, plus
   run-shop buy/refresh/sell state planners over injected offer/currency
   snapshots.
+- `run-lifecycle`: run start, initial/next shop state, starter loadout, ghost
+  budget, round result, and group-completion planners over injected config and
+  state snapshots.
 - `backpack-loadout`: provider-driven loadout generation over injected catalog,
   pricing, bag shape, weighting, and validation hooks.
 - `loadout-validation`: provider-driven flat-grid and bag-coverage validation
@@ -70,6 +73,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/assets`
 - `@microwavedev/backpack-game-core/modules/assets/profile-state`
 - `@microwavedev/backpack-game-core/modules/shop`
+- `@microwavedev/backpack-game-core/modules/run`
 - `@microwavedev/backpack-game-core/modules/loadout`
 - `@microwavedev/backpack-game-core/modules/battle`
 - `@microwavedev/backpack-game-core/modules/fusion`

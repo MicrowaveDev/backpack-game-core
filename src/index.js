@@ -38,6 +38,8 @@ export {
   generateBackpackLoadout
 } from './backpack-loadout.js';
 
+export * from './run-lifecycle.js';
+
 export {
   createLoadoutValidator
 } from './loadout-validation.js';
