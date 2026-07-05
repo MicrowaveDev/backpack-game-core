@@ -47,7 +47,8 @@ catalogs in their own repos.
   preferred/canonical artifact preview orientation,
   artifact tile display contracts,
   artifact stat summary and stat-row helpers, asset pack summary/label/card
-  helpers, wallet
+  helpers, gacha odds table-section helpers, asset roll-result panel helpers,
+  wallet
   purchase-surface/status helpers, asset roll-feedback/error-status helpers,
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading
   view states, wallet checkout next-action decisions, asset roll/burn mutation

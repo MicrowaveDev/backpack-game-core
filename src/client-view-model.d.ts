@@ -806,6 +806,35 @@ export interface GachaAdminOddsItemRow extends GachaAdminOddsItemInput {
   copyLimitText: unknown;
 }
 
+export interface GachaAdminOddsTableColumn {
+  key: string;
+  field: string;
+  label: string;
+}
+
+export type GachaAdminOddsTableRow = (GachaAdminOddsRarityRow | GachaAdminOddsItemRow) & {
+  rowKey: string;
+};
+
+export interface GachaAdminOddsTableLabels {
+  rarityTitle?: string;
+  itemTitle?: string;
+  rarity?: string;
+  expected?: string;
+  items?: string;
+  weight?: string;
+  asset?: string;
+  copyCap?: string;
+}
+
+export interface GachaAdminOddsTableSection {
+  key: string;
+  title: string;
+  visible: boolean;
+  columns: GachaAdminOddsTableColumn[];
+  rows: GachaAdminOddsTableRow[];
+}
+
 export interface GachaAdminFixtureOperationInput {
   type?: string;
   id?: string;
@@ -871,6 +900,15 @@ export interface AssetRollFeedbackSummary {
   status: string;
   title: string;
   text: string;
+}
+
+export interface AssetRollResultPanel extends AssetRollFeedbackSummary {
+  visible: boolean;
+  role: string;
+  ariaLive: string;
+  testId: string;
+  className: string;
+  lines: AssetPackCardLine[];
 }
 
 export const DEFAULT_ARTIFACT_STAT_KEYS: string[];
@@ -1406,6 +1444,15 @@ export function gachaAdminOddsItemRows(
   }
 ): GachaAdminOddsItemRow[];
 
+export function shapeGachaAdminOddsTableSections(
+  source?: GachaAdminOddsPreviewInput | null,
+  options?: {
+    itemLimit?: number;
+    formatPercent?: (value: number) => string;
+    labels?: GachaAdminOddsTableLabels;
+  }
+): GachaAdminOddsTableSection[];
+
 export function gachaAdminFixtureOperationRows(
   source?: { operations?: readonly GachaAdminFixtureOperationInput[] } | readonly GachaAdminFixtureOperationInput[] | null,
   options?: { limit?: number }
@@ -1443,3 +1490,20 @@ export function summarizeAssetRollFeedback(input?: {
   localizeName?: (value: unknown) => string;
   rarityLabel?: (rarity: unknown) => string;
 }): AssetRollFeedbackSummary | null;
+
+export function shapeAssetRollResultPanel(
+  input?: AssetRollFeedbackSummary | {
+    status?: string;
+    result?: AssetRollResultInput | null;
+    errorMessage?: string;
+    labels?: AssetRollFeedbackLabels;
+    localizeName?: (value: unknown) => string;
+    rarityLabel?: (rarity: unknown) => string;
+  },
+  options?: {
+    baseClass?: string;
+    role?: string;
+    ariaLive?: string;
+    testId?: string;
+  }
+): AssetRollResultPanel | null;

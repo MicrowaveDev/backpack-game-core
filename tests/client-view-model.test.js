@@ -55,6 +55,8 @@ import {
   shapeArtifactTileDisplay,
   shapeArtifactStatRows,
   shapeAssetPackCardRows,
+  shapeAssetRollResultPanel,
+  shapeGachaAdminOddsTableSections,
   shapeReplayEventRows,
   shapeShopItemRows,
   sumArtifactBonuses,
@@ -1195,6 +1197,27 @@ test('[client-view-model] shapes gacha admin odds preview rows', () => {
     }
   ]);
   assert.deepEqual(gachaAdminOddsRarityRows(null), []);
+
+  const sections = shapeGachaAdminOddsTableSections(preview, {
+    itemLimit: 1,
+    labels: {
+      rarityTitle: 'Rarity table',
+      itemTitle: 'Item table',
+      copyCap: 'Copies'
+    }
+  });
+  assert.deepEqual(sections.map((section) => [section.key, section.title, section.rows.length]), [
+    ['rarities', 'Rarity table', 2],
+    ['items', 'Item table', 1]
+  ]);
+  assert.deepEqual(sections[1].columns.map((column) => [column.key, column.label, column.field]), [
+    ['asset', 'Asset', 'assetId'],
+    ['rarity', 'Rarity', 'rarity'],
+    ['weight', 'Weight', 'dropWeightText'],
+    ['expected', 'Expected', 'expectedText'],
+    ['copy_cap', 'Copies', 'copyLimitText']
+  ]);
+  assert.equal(sections[1].rows[0].rowKey, 'skin.a');
 });
 
 test('[client-view-model] shapes gacha admin fixture and simulation preview rows', () => {
@@ -1286,4 +1309,25 @@ test('[client-view-model] summarizes asset roll feedback', () => {
     text: 'Every skin is already owned.'
   });
   assert.equal(summarizeAssetRollFeedback({ status: 'success', labels }), null);
+  assert.deepEqual(shapeAssetRollResultPanel({
+    status: 'success',
+    result: { assetName: { en: 'Mooncap' }, assetId: 'skin.a', rarity: 'rare' },
+    labels,
+    localizeName,
+    rarityLabel
+  }, {
+    baseClass: 'roll-panel',
+    testId: 'roll-result'
+  }), {
+    status: 'success',
+    title: 'New skin unlocked',
+    text: 'Mooncap · Rare',
+    visible: true,
+    role: 'status',
+    ariaLive: 'polite',
+    testId: 'roll-result',
+    className: 'roll-panel roll-panel--success',
+    lines: [{ key: 'text', type: 'text', text: 'Mooncap · Rare' }]
+  });
+  assert.equal(shapeAssetRollResultPanel({ status: 'success', labels }), null);
 });

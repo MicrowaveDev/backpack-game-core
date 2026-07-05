@@ -2028,6 +2028,55 @@ export function gachaAdminOddsItemRows(source = null, {
   }));
 }
 
+function gachaAdminOddsTableRows(rows, keyForRow) {
+  return rows.map((row, index) => ({
+    ...row,
+    rowKey: keyForRow(row, index) || String(index)
+  }));
+}
+
+export function shapeGachaAdminOddsTableSections(source = null, {
+  itemLimit = 8,
+  formatPercent = formatGachaAdminPercent,
+  labels = {}
+} = {}) {
+  const rarityRows = gachaAdminOddsTableRows(
+    gachaAdminOddsRarityRows(source, { formatPercent }),
+    (row, index) => row?.rarity || `rarity-${index}`
+  );
+  const itemRows = gachaAdminOddsTableRows(
+    gachaAdminOddsItemRows(source, { limit: itemLimit, formatPercent }),
+    (row, index) => row?.assetId || `item-${index}`
+  );
+  return [
+    {
+      key: 'rarities',
+      title: labels.rarityTitle || 'Rarity odds',
+      visible: rarityRows.length > 0,
+      columns: [
+        { key: 'rarity', field: 'rarity', label: labels.rarity || 'Rarity' },
+        { key: 'expected', field: 'expectedText', label: labels.expected || 'Expected' },
+        { key: 'count', field: 'count', label: labels.items || 'Items' },
+        { key: 'weight', field: 'dropWeightText', label: labels.weight || 'Weight' }
+      ],
+      rows: rarityRows
+    },
+    {
+      key: 'items',
+      title: labels.itemTitle || 'Item odds',
+      visible: itemRows.length > 0,
+      columns: [
+        { key: 'asset', field: 'assetId', label: labels.asset || 'Asset' },
+        { key: 'rarity', field: 'rarity', label: labels.rarity || 'Rarity' },
+        { key: 'weight', field: 'dropWeightText', label: labels.weight || 'Weight' },
+        { key: 'expected', field: 'expectedText', label: labels.expected || 'Expected' },
+        { key: 'copy_cap', field: 'copyLimitText', label: labels.copyCap || 'Copy Cap' }
+      ],
+      rows: itemRows
+    }
+  ].filter((section) => section.visible);
+}
+
 export function gachaAdminFixtureOperationRows(source = null, {
   limit = 8
 } = {}) {
@@ -2137,5 +2186,33 @@ export function summarizeAssetRollFeedback({
     status,
     title: labels.problemTitle || '',
     text: labels.errors?.[status] || errorMessage || ''
+  };
+}
+
+export function shapeAssetRollResultPanel(input = {}, {
+  baseClass = '',
+  role = 'status',
+  ariaLive = 'polite',
+  testId = ''
+} = {}) {
+  const feedback = input &&
+    Object.prototype.hasOwnProperty.call(input, 'status') &&
+    Object.prototype.hasOwnProperty.call(input, 'title') &&
+    Object.prototype.hasOwnProperty.call(input, 'text')
+    ? input
+    : summarizeAssetRollFeedback(input);
+  if (!feedback) return null;
+  const status = String(feedback.status || '');
+  return {
+    ...feedback,
+    visible: true,
+    role,
+    ariaLive,
+    testId,
+    className: [
+      baseClass,
+      baseClass && status ? `${baseClass}--${status}` : ''
+    ].filter(Boolean).join(' '),
+    lines: feedback.text ? [{ key: 'text', type: 'text', text: feedback.text }] : []
   };
 }

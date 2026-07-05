@@ -15,6 +15,10 @@ until package publishing starts.
 - Added headless asset pack card row shaping to `client-view-model`, so product
   UIs can share pack detail/status lines and roll/burn action DTOs while
   keeping translated templates, event handlers, markup, and styling local.
+- Added headless gacha odds table section and asset roll result panel shaping
+  to `client-view-model`, so product UIs can share table metadata and roll
+  feedback panel DTOs while keeping markup, theme, localization, and route
+  behavior local.
 - Added headless grid board render DTO shaping to `client-view-model`, so
   product UIs can share board cell flags, placed-piece grid positions, and
   bag-slot rows while keeping component markup, CSS classes, image paths,
