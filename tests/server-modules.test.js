@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  createAssetGachaSimulationServerModule,
   createBackpackServerContext,
   createBackpackServerModule,
   setupBackpackServerModules
@@ -146,4 +147,33 @@ test('[server] module setup protects existing providers unless override is expli
   });
 
   assert.equal(result.get('profileService').version, 2);
+});
+
+test('[server] gacha simulation module registers provider-driven service', () => {
+  const pack = {
+    id: 'server_pack',
+    active: true,
+    rollSize: 1,
+    items: [{ assetId: 'skin.common', rarity: 'common', dropWeight: 1 }]
+  };
+  const catalog = [{ assetId: 'skin.common', rarity: 'common' }];
+  const result = setupBackpackServerModules([
+    createAssetGachaSimulationServerModule({
+      providerKeys: {
+        getStaticPack: 'service.gacha.getStaticPack',
+        getStaticCatalog: 'service.gacha.getStaticCatalog',
+        getStaticPackOdds: 'service.gacha.getStaticPackOdds'
+      }
+    })
+  ], {
+    services: {
+      'service.gacha.getStaticPack': (packId) => packId === 'server_pack' ? pack : null,
+      'service.gacha.getStaticCatalog': () => catalog,
+      'service.gacha.getStaticPackOdds': () => ({ active: true })
+    }
+  });
+
+  assert.deepEqual(result.installed, ['core.gachaSimulation']);
+  const service = result.get('assetGachaSimulationService');
+  assert.equal(service.simulateAssetPackOdds('server_pack', { trials: 1, rng: () => 0 }).packId, 'server_pack');
 });

@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-driven gacha simulation service factories and
+  `createAssetGachaSimulationServerModule`, so apps can register static/runtime
+  pack odds simulation through core module lists while keeping DB/catalog/pack
+  lookup and admin visibility policy local.
 - Added `artifact-capabilities` and included it in `modules/loadout`, so games
   can share backpack family capability defaults, configurable bag-family
   detection, combat/stat contribution checks, and container-placement rules

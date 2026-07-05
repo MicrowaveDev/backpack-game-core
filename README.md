@@ -43,6 +43,9 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   injected catalogs, ownership snapshots, time, and RNG, including
   catalog-acquisition default/override resolution and roll/burn result DTO
   shaping plus roll/burn settlement planners.
+- `modules/gacha/simulation-service`: provider-driven service factories for
+  static/runtime pack odds simulation, plus a server module factory for app
+  module lists.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots, plus
@@ -95,6 +98,9 @@ compatibility, and now also exposes Geesome-inspired module paths:
 
 - `@microwavedev/backpack-game-core/modules/gacha`
 - `@microwavedev/backpack-game-core/modules/gacha/validation`
+- `@microwavedev/backpack-game-core/modules/gacha/simulation`
+- `@microwavedev/backpack-game-core/modules/gacha/simulation-service`
+- `@microwavedev/backpack-game-core/modules/gacha/admin-validation`
 - `@microwavedev/backpack-game-core/modules/wallet`
 - `@microwavedev/backpack-game-core/modules/wallet/accounting`
 - `@microwavedev/backpack-game-core/modules/assets`

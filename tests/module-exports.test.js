@@ -25,6 +25,9 @@ import {
   simulateAssetGachaPackOdds
 } from '@microwavedev/backpack-game-core/modules/gacha/simulation';
 import {
+  createAssetGachaSimulationService
+} from '@microwavedev/backpack-game-core/modules/gacha/simulation-service';
+import {
   applyWalletBalanceDelta,
   createWalletPurchaseCompletionPlan,
   createWalletPurchaseIntentDraft,
@@ -124,6 +127,7 @@ import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusi
 import {
   clearIdempotencyCache,
   clearRateLimitBuckets,
+  createAssetGachaSimulationServerModule,
   createKeyedAsyncMutex,
   createBackpackServerContext,
   createBackpackServerModule,
@@ -246,6 +250,7 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
     trials: 1,
     rng: () => 0
   }).candidateCount, 2);
+  assert.equal(typeof createAssetGachaSimulationService, 'function');
   assert.deepEqual(Object.keys(gachaInterface), []);
 });
 
@@ -476,6 +481,7 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof createBackpackServerModule, 'function');
   assert.equal(typeof createBackpackServerContext, 'function');
   assert.equal(typeof setupBackpackServerModules, 'function');
+  assert.equal(typeof createAssetGachaSimulationServerModule, 'function');
   assert.equal(typeof createKeyedAsyncMutex, 'function');
   assert.equal(typeof createRunReadinessManager, 'function');
   assert.equal(typeof idempotency, 'function');

@@ -57,6 +57,28 @@ export declare function setupBackpackServerModules(
   baseContext?: BackpackServerContext | Parameters<typeof createBackpackServerContext>[0]
 ): BackpackServerContext & { installed: string[] };
 
+export interface AssetGachaSimulationServerModuleOptions {
+  name?: string;
+  serviceKey?: string;
+  requires?: string[];
+  provides?: string[];
+  providerKeys?: {
+    getStaticPack?: string;
+    getStaticCatalog?: string;
+    getStaticPackOdds?: string;
+    getRuntimePack?: string;
+    getRuntimeCatalog?: string;
+    shapeRuntimePackOdds?: string;
+  };
+  providers?: Record<string, unknown>;
+  config?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export declare function createAssetGachaSimulationServerModule(
+  options?: AssetGachaSimulationServerModuleOptions
+): BackpackServerModule;
+
 export {
   createKeyedAsyncMutex,
   createRunReadinessManager

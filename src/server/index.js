@@ -1,3 +1,5 @@
+import { createAssetGachaSimulationService } from '../modules/gacha/simulation-service.js';
+
 function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -76,6 +78,49 @@ export function createBackpackServerContext({
       return value;
     }
   };
+}
+
+function providerFromContext(ctx, providers, providerKeys, name) {
+  return providers?.[name] || (providerKeys?.[name] ? ctx.get(providerKeys[name]) : null);
+}
+
+export function createAssetGachaSimulationServerModule({
+  name = 'core.gachaSimulation',
+  serviceKey = 'assetGachaSimulationService',
+  requires = [],
+  provides = [serviceKey],
+  providerKeys = {},
+  providers = {},
+  config = {},
+  ...serviceOptions
+} = {}) {
+  const requiredProviderKeys = Object.entries(providerKeys)
+    .filter(([providerName, key]) => key && !providers?.[providerName])
+    .map(([, key]) => key);
+  return createBackpackServerModule({
+    name,
+    requires: [...requires, ...requiredProviderKeys],
+    provides,
+    config,
+    setup(ctx) {
+      const moduleConfig = ctx.getConfig(name, {});
+      const service = createAssetGachaSimulationService({
+        ...serviceOptions,
+        getStaticPack: providerFromContext(ctx, providers, providerKeys, 'getStaticPack'),
+        getStaticCatalog: providerFromContext(ctx, providers, providerKeys, 'getStaticCatalog'),
+        getStaticPackOdds: providerFromContext(ctx, providers, providerKeys, 'getStaticPackOdds'),
+        getRuntimePack: providerFromContext(ctx, providers, providerKeys, 'getRuntimePack'),
+        getRuntimeCatalog: providerFromContext(ctx, providers, providerKeys, 'getRuntimeCatalog'),
+        shapeRuntimePackOdds: providerFromContext(ctx, providers, providerKeys, 'shapeRuntimePackOdds'),
+        maxTrials: moduleConfig.maxTrials ?? serviceOptions.maxTrials
+      });
+      return {
+        services: {
+          [serviceKey]: service
+        }
+      };
+    }
+  });
 }
 
 function requireDependencies(module, context) {
