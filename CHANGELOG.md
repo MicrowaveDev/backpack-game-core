@@ -12,6 +12,10 @@ until package publishing starts.
   product UIs can share board cell flags, placed-piece grid positions, and
   bag-slot rows while keeping component markup, CSS classes, image paths,
   drag/drop behavior, and product styling local.
+- Added headless replay event row shaping to `client-view-model`, so product
+  UIs can share battle-log filtering, active-row flags, row ordering, text
+  fallback, and row limiting while keeping narration copy, replay screen markup,
+  routes, and persistence local.
 - Added headless shop item row DTO shaping to `client-view-model`, so product
   UIs can share offer lookup, price, affordability, preview footprint,
   bag/character flags, and stat rows while keeping localized copy, shop markup,

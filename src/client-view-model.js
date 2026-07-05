@@ -1334,6 +1334,49 @@ export function replaySetSpeedViewState(speed, {
   };
 }
 
+export function shapeReplayEventRows(events = [], {
+  replayIndex = null,
+  throughIndex = replayIndex,
+  eventTypes = null,
+  limit = null,
+  limitFromEnd = false,
+  reverse = false,
+  formatEvent = (event) => event?.display || event,
+  textForEvent = (event, display) => display?.logText || event?.narration || '',
+  activeIndex = replayIndex
+} = {}) {
+  const source = runArrayFrom(events);
+  const maxIndex = throughIndex == null
+    ? source.length - 1
+    : Math.max(0, Math.min(numberOr(throughIndex), Math.max(0, source.length - 1)));
+  const allowedTypes = eventTypes instanceof Set
+    ? eventTypes
+    : Array.isArray(eventTypes) && eventTypes.length
+      ? new Set(eventTypes)
+      : null;
+  let rows = source
+    .slice(0, maxIndex + 1)
+    .map((event, eventIndex) => {
+      const replayEventIndex = numberOr(event?.replayIndex, eventIndex);
+      const display = event?.display !== undefined ? event.display : formatEvent(event, eventIndex);
+      return {
+        ...event,
+        replayIndex: replayEventIndex,
+        display,
+        text: textForEvent(event, display, eventIndex),
+        active: activeIndex != null && replayEventIndex === numberOr(activeIndex)
+      };
+    });
+
+  if (allowedTypes) rows = rows.filter((row) => allowedTypes.has(row.type));
+  const normalizedLimit = Math.max(0, numberOr(limit));
+  if (normalizedLimit > 0 && rows.length > normalizedLimit) {
+    rows = limitFromEnd ? rows.slice(-normalizedLimit) : rows.slice(0, normalizedLimit);
+  }
+  if (reverse) rows = [...rows].reverse();
+  return rows;
+}
+
 export function replayTimelineViewState({
   battle = null,
   replayIndex = 0,
@@ -1344,14 +1387,12 @@ export function replayTimelineViewState({
   const index = Math.max(0, Math.min(numberOr(replayIndex), Math.max(0, events.length - 1)));
   const activeEvent = events[index] || null;
   const activeDisplay = activeEvent ? formatEvent(activeEvent, index) : null;
-  const visibleEvents = events
-    .slice(0, index + 1)
-    .map((event, eventIndex) => ({
-      ...event,
-      replayIndex: eventIndex,
-      display: formatEvent(event, eventIndex)
-    }))
-    .reverse();
+  const visibleEvents = shapeReplayEventRows(events, {
+    throughIndex: index,
+    activeIndex: index,
+    formatEvent,
+    reverse: true
+  });
   const speech = activeDisplay?.speechSide && activeDisplay?.speechText
     ? {
         side: activeDisplay.speechSide,

@@ -487,6 +487,25 @@ export interface ReplayTimelineViewState {
   longBattleSpeedBoost: number;
 }
 
+export interface ReplayEventRowOptions {
+  replayIndex?: number | null;
+  throughIndex?: number | null;
+  eventTypes?: Set<string> | Array<string> | null;
+  limit?: number | null;
+  limitFromEnd?: boolean;
+  reverse?: boolean;
+  formatEvent?: (event: Record<string, unknown>, replayIndex: number) => unknown;
+  textForEvent?: (event: Record<string, unknown>, display: unknown, replayIndex: number) => string;
+  activeIndex?: number | null;
+}
+
+export interface ReplayEventRow extends Record<string, unknown> {
+  replayIndex: number;
+  display: unknown;
+  text: string;
+  active: boolean;
+}
+
 export interface ReplayAutoplayDelayViewState {
   selectedSpeed: number;
   boost: number;
@@ -1122,6 +1141,11 @@ export function replaySetSpeedViewState(
     allowedSpeeds?: readonly number[];
   }
 ): ReplaySetSpeedViewState;
+
+export function shapeReplayEventRows(
+  events?: readonly Record<string, unknown>[],
+  options?: ReplayEventRowOptions
+): ReplayEventRow[];
 
 export function replayTimelineViewState(input?: {
   battle?: { events?: readonly Record<string, unknown>[]; [key: string]: unknown } | null;

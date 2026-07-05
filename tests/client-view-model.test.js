@@ -53,6 +53,7 @@ import {
   runShopRefreshResultViewState,
   runShopSellResultViewState,
   shapeArtifactStatRows,
+  shapeReplayEventRows,
   shapeShopItemRows,
   sumArtifactBonuses,
   summarizeAssetRollFeedback,
@@ -943,13 +944,14 @@ test('[client-view-model] shapes replay playback state', () => {
 
   const battle = {
     events: [
-      { type: 'start', state: { left: { currentHealth: 10 } } },
-      { type: 'action', actorSide: 'left', state: { left: { currentHealth: 10 } } },
-      { type: 'battle_end', winnerSide: 'left', state: { left: { currentHealth: 10 } } }
+      { type: 'start', narration: 'Start', state: { left: { currentHealth: 10 } } },
+      { type: 'action', actorSide: 'left', narration: 'Hit', state: { left: { currentHealth: 10 } } },
+      { type: 'skip', actorSide: 'right', narration: 'Skip', state: { left: { currentHealth: 10 } } },
+      { type: 'battle_end', winnerSide: 'left', narration: 'End', state: { left: { currentHealth: 10 } } }
     ]
   };
-  assert.deepEqual(replayAdvanceTickViewState({ battle, replayIndex: 1 }), {
-    replayIndex: 2,
+  assert.deepEqual(replayAdvanceTickViewState({ battle, replayIndex: 2 }), {
+    replayIndex: 3,
     finished: true,
     shouldStop: false,
     shouldRestartTimer: false,
@@ -973,21 +975,35 @@ test('[client-view-model] shapes replay playback state', () => {
 
   const timeline = replayTimelineViewState({
     battle,
-    replayIndex: 1,
+    replayIndex: 2,
     formatEvent: (event, index) => ({
       statusText: `${index}:${event.type}`,
+      logText: `${index}:${event.narration}`,
       speechSide: event.actorSide,
       speechText: event.actorSide ? 'swing' : '',
       speechParts: event.actorSide ? ['swing'] : []
     })
   });
-  assert.equal(timeline.activeEvent.type, 'action');
-  assert.deepEqual(timeline.activeSpeech, { side: 'left', narration: 'swing', parts: ['swing'] });
-  assert.equal(timeline.battleStatusText, '1:action');
+  assert.equal(timeline.activeEvent.type, 'skip');
+  assert.deepEqual(timeline.activeSpeech, { side: 'right', narration: 'swing', parts: ['swing'] });
+  assert.equal(timeline.battleStatusText, '2:skip');
   assert.equal(timeline.replayFinished, false);
-  assert.deepEqual(timeline.visibleReplayEvents.map((event) => event.display.statusText), ['1:action', '0:start']);
+  assert.deepEqual(timeline.visibleReplayEvents.map((event) => event.display.statusText), ['2:skip', '1:action', '0:start']);
+  assert.deepEqual(timeline.visibleReplayEvents.map((event) => event.text), ['2:Skip', '1:Hit', '0:Start']);
+  assert.deepEqual(timeline.visibleReplayEvents.map((event) => event.active), [true, false, false]);
   assert.deepEqual(timeline.activeReplayState, { left: { currentHealth: 10 } });
-});
+
+  const logRows = shapeReplayEventRows(battle.events, {
+    eventTypes: ['action', 'skip', 'battle_end'],
+    limit: 2,
+    limitFromEnd: true,
+    textForEvent: (event) => event.narration
+  });
+  assert.deepEqual(logRows.map((event) => [event.type, event.text, event.replayIndex]), [
+    ['skip', 'Skip', 2],
+    ['battle_end', 'End', 3]
+  ]);
+	});
 
 test('[client-view-model] flattens gacha admin draft diffs for table rows', () => {
   assert.deepEqual(gachaAdminDraftDiffRows(null), []);
