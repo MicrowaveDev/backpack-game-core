@@ -9,10 +9,11 @@ until package publishing starts.
 ### Post-baseline additions
 
 - Added optional Vue 3 component subpaths (`./vue` and `./vue/components`)
-  with neutral `AssetRollResultPanel`, `GachaOddsTable`, `GachaPackCard`, and
-  `GachaPackCardList` primitives backed by existing DTO shapers, plus a
-  frontend contract doc and import-boundary tests to keep product routes,
-  assets, provider code, and server-only imports out of core frontend exports.
+  with neutral `ArtifactTile`, `AssetRollResultPanel`, `GachaOddsTable`,
+  `GachaPackCard`, and `GachaPackCardList` primitives backed by existing DTO
+  shapers, plus a frontend contract doc and import-boundary tests to keep
+  product routes, assets, provider code, and server-only imports out of core
+  frontend exports.
 - Added headless artifact tile display contracts to `client-view-model`, so
   product UIs can share tile dimensions, mask cells, role/shine class metadata,
   image fallback, rotated-image hints, and role glyph labels while keeping

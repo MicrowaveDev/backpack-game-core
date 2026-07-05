@@ -116,6 +116,121 @@ export const GachaOddsTable = {
   `
 };
 
+export const ArtifactTile = {
+  name: 'ArtifactTile',
+  props: {
+    tile: {
+      type: Object,
+      default: null
+    },
+    as: {
+      type: String,
+      default: 'div'
+    },
+    cellTag: {
+      type: String,
+      default: 'div'
+    },
+    imageTag: {
+      type: String,
+      default: 'span'
+    },
+    roleGlyphTag: {
+      type: String,
+      default: 'span'
+    },
+    roleGlyphInnerTag: {
+      type: String,
+      default: 'span'
+    },
+    rootClass: {
+      type: [String, Array, Object],
+      default: 'artifact-figure-grid'
+    },
+    roleGlyphExtraClass: {
+      type: [String, Array, Object],
+      default: ''
+    },
+    showImage: {
+      type: Boolean,
+      default: true
+    },
+    showRoleGlyph: {
+      type: Boolean,
+      default: true
+    }
+  },
+  computed: {
+    visible() {
+      return Boolean(this.tile);
+    },
+    renderedCells() {
+      return nonEmptyArray(this.tile?.cells);
+    },
+    rootClasses() {
+      return [this.rootClass, ...nonEmptyArray(this.tile?.cssClasses)].filter(Boolean);
+    },
+    imageClasses() {
+      return nonEmptyArray(this.tile?.imageClassNames);
+    },
+    roleGlyphClasses() {
+      return [
+        ...nonEmptyArray(this.tile?.roleGlyph?.classNames),
+        this.roleGlyphExtraClass
+      ].filter(Boolean);
+    },
+    roleGlyphLabel() {
+      return this.tile?.roleGlyph?.label || null;
+    }
+  },
+  template: `
+    <component
+      v-if="visible"
+      :is="as"
+      :class="rootClasses"
+      :style="tile.gridStyle || null"
+      :data-artifact-id="tile.dataset?.artifactId || tile.id || null"
+      :data-artifact-family="tile.dataset?.family || tile.family || null"
+      :data-artifact-role="tile.dataset?.role || tile.roleId || null"
+      :data-artifact-shine="tile.dataset?.shine || tile.shineId || null"
+      :data-artifact-width="tile.dataset?.width || tile.width || null"
+      :data-artifact-height="tile.dataset?.height || tile.height || null"
+    >
+      <slot name="cells" :tile="tile" :cells="renderedCells">
+        <component
+          v-for="cell in renderedCells"
+          :key="cell.key"
+          :is="cellTag"
+          :class="cell.className || cell.classNames || null"
+        />
+      </slot>
+      <slot name="image" :tile="tile" :classes="imageClasses">
+        <component
+          v-if="showImage"
+          :is="imageTag"
+          :class="imageClasses"
+          :style="tile.imageStyle || null"
+          aria-hidden="true"
+        />
+      </slot>
+      <slot name="role-glyph" :tile="tile" :classes="roleGlyphClasses" :label="roleGlyphLabel">
+        <component
+          v-if="showRoleGlyph && tile.roleGlyph"
+          :is="roleGlyphTag"
+          :class="roleGlyphClasses"
+          :aria-label="roleGlyphLabel"
+          :title="roleGlyphLabel"
+        >
+          <slot name="role-glyph-icon" :tile="tile">
+            <component :is="roleGlyphInnerTag" aria-hidden="true" />
+          </slot>
+        </component>
+      </slot>
+      <slot :tile="tile" :cells="renderedCells"></slot>
+    </component>
+  `
+};
+
 function actionEventName(action) {
   const kind = String(action?.kind || '');
   return ['roll', 'burn', 'select', 'buy', 'place', 'remove', 'open'].includes(kind)

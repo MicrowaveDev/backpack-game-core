@@ -1,5 +1,6 @@
 export {
   AssetRollResultPanel,
+  ArtifactTile,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ArtifactTile,
   AssetRollResultPanel,
   GachaOddsTable,
   GachaPackCard,
@@ -40,6 +41,41 @@ test('[vue] GachaOddsTable exposes neutral table rendering contract', () => {
     GachaOddsTable.methods.rowValue({ rarity: null }, { field: 'rarity' }),
     ''
   );
+});
+
+test('[vue] ArtifactTile exposes neutral artifact tile rendering contract', () => {
+  assert.equal(ArtifactTile.name, 'ArtifactTile');
+  assert.match(ArtifactTile.template, /data-artifact-id/);
+  assert.match(ArtifactTile.template, /slot name="role-glyph"/);
+  const tile = {
+    id: 'amber_fang',
+    family: 'damage',
+    width: 2,
+    height: 1,
+    cssClasses: ['artifact-role--damage', 'artifact-shine--bright'],
+    gridStyle: { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
+    cells: [
+      { key: '0:0', className: 'artifact-figure-cell' },
+      { key: '1:0', className: 'artifact-figure-cell' }
+    ],
+    imageClassNames: ['artifact-figure-bitmap', 'artifact-figure-bitmap--full'],
+    roleGlyph: {
+      label: 'Damage role',
+      classNames: ['artifact-role-glyph', 'artifact-role-glyph--damage']
+    }
+  };
+  assert.equal(ArtifactTile.computed.visible.call({ tile }), true);
+  assert.deepEqual(ArtifactTile.computed.renderedCells.call({ tile }), tile.cells);
+  assert.deepEqual(ArtifactTile.computed.rootClasses.call({
+    tile,
+    rootClass: 'artifact-figure-grid'
+  }), ['artifact-figure-grid', 'artifact-role--damage', 'artifact-shine--bright']);
+  assert.deepEqual(ArtifactTile.computed.imageClasses.call({ tile }), tile.imageClassNames);
+  assert.deepEqual(ArtifactTile.computed.roleGlyphClasses.call({
+    tile,
+    roleGlyphExtraClass: 'artifact-figure-role-glyph'
+  }), ['artifact-role-glyph', 'artifact-role-glyph--damage', 'artifact-figure-role-glyph']);
+  assert.equal(ArtifactTile.computed.roleGlyphLabel.call({ tile }), 'Damage role');
 });
 
 test('[vue] GachaPackCard exposes neutral pack action contract', () => {
