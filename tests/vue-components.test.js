@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ArtifactTile,
   AssetRollResultPanel,
+  BackpackGrid,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
@@ -47,7 +48,7 @@ test('[vue] GachaOddsTable exposes neutral table rendering contract', () => {
 
 test('[vue] ArtifactTile exposes neutral artifact tile rendering contract', () => {
   assert.equal(ArtifactTile.name, 'ArtifactTile');
-  assert.match(ArtifactTile.template, /data-artifact-id/);
+  assert.match(ArtifactTile.template, /tile\.gridStyle/);
   assert.match(ArtifactTile.template, /slot name="role-glyph"/);
   const tile = {
     id: 'amber_fang',
@@ -135,6 +136,47 @@ test('[vue] ShopItemList exposes neutral shop list rendering contract', () => {
     $emit: (event, payload) => emitted.push([event, payload])
   }, rows[0]);
   assert.deepEqual(emitted.map(([event]) => event), ['buy', 'select']);
+});
+
+test('[vue] BackpackGrid exposes neutral board rendering contract', () => {
+  assert.equal(BackpackGrid.name, 'BackpackGrid');
+  assert.match(BackpackGrid.template, /slot name="piece-content"/);
+  assert.match(BackpackGrid.template, /cell-drop-touch/);
+  const cells = [{ key: '0:0', interactive: true, dropTarget: true }];
+  const pieces = [{ key: 'piece:needle', artifactId: 'needle', canRotate: true }];
+  const overlays = [{ key: 'bag:1' }];
+  assert.deepEqual(BackpackGrid.computed.renderedCells.call({ cells }), cells);
+  assert.deepEqual(BackpackGrid.computed.renderedPieces.call({ pieces }), pieces);
+  assert.deepEqual(BackpackGrid.computed.renderedOverlays.call({ overlays }), overlays);
+  assert.equal(BackpackGrid.methods.cellComponent.call({
+    interactiveCells: false,
+    interactiveCellTag: 'button',
+    cellTag: 'span'
+  }, cells[0]), 'button');
+  assert.equal(BackpackGrid.methods.pieceActionComponent.call({
+    clickablePieces: true,
+    clickablePieceTag: 'button',
+    pieceActionTag: 'div'
+  }), 'button');
+  const emitted = [];
+  const context = {
+    interactiveCells: true,
+    clickablePieces: true,
+    droppable: true,
+    $emit: (event, payload) => emitted.push([event, payload])
+  };
+  BackpackGrid.methods.emitCellClick.call(context, cells[0]);
+  BackpackGrid.methods.emitCellDragOver.call(context, cells[0], { type: 'dragover' });
+  BackpackGrid.methods.emitCellDrop.call(context, cells[0], { type: 'drop' });
+  BackpackGrid.methods.emitPieceClick.call(context, pieces[0], { stopPropagation() {} });
+  BackpackGrid.methods.emitPieceRotate.call(context, pieces[0], { stopPropagation() {} });
+  assert.deepEqual(emitted.map(([event]) => event), [
+    'cell-click',
+    'cell-dragover',
+    'cell-drop',
+    'piece-click',
+    'piece-rotate'
+  ]);
 });
 
 test('[vue] GachaPackCard exposes neutral pack action contract', () => {

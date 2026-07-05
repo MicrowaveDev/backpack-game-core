@@ -114,6 +114,7 @@ import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusi
 import {
   AssetRollResultPanel,
   ArtifactTile,
+  BackpackGrid,
   GachaPackCard,
   GachaPackCardList,
   GachaOddsTable,
@@ -123,6 +124,7 @@ import {
 import {
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
+  BackpackGrid as BackpackGridFromComponents,
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents,
@@ -294,6 +296,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminSimulationItemRows({ items: [{ assetId: 'skin.a', observedPerRoll: 0.25 }] })[0].observedPerRollText, '25.0%');
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
   assert.equal(ArtifactTile.name, 'ArtifactTile');
+  assert.equal(BackpackGrid.name, 'BackpackGrid');
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
@@ -301,6 +304,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(ShopItemRow.name, 'ShopItemRow');
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
+  assert.equal(BackpackGridFromComponents, BackpackGrid);
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);

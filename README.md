@@ -60,7 +60,7 @@ catalogs in their own repos.
   shaping for rarity/item tables and row helpers for fixture import previews
   and roll simulations.
 - `vue`: neutral Vue 3 component primitives backed by `client-view-model` DTOs.
-  Components such as `ArtifactTile`, `AssetRollResultPanel`,
+  Components such as `ArtifactTile`, `AssetRollResultPanel`, `BackpackGrid`,
   `GachaOddsTable`, `GachaPackCard`, `GachaPackCardList`, `ShopItemList`, and
   `ShopItemRow` provide structural markup, neutral events/slots, and class
   hooks while product repos keep routes, copy, images, haptics, page layout,
