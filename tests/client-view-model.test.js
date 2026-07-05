@@ -49,6 +49,7 @@ import {
   runShopBuyResultViewState,
   runShopRefreshResultViewState,
   runShopSellResultViewState,
+  shapeArtifactStatRows,
   sumArtifactBonuses,
   summarizeAssetRollFeedback,
   summarizeWalletPurchaseSurface,
@@ -227,6 +228,56 @@ test('[client-view-model] sums and formats artifact stat bonuses', () => {
     { key: 'damage', label: 'Damage', value: '+2', numericValue: 2, positive: true },
     { key: 'armor', label: 'Armor', value: '-1', numericValue: -1, positive: false },
     { key: 'stunChance', label: 'Stun', value: '+5%', numericValue: 5, positive: true }
+  ]);
+  assert.deepEqual(shapeArtifactStatRows({
+    bonus: { damage: 2, armor: -1, speed: 0, stunChance: 5 }
+  }, {
+    definitions: [
+      { id: 'damage-chip', sourceKey: 'damage', roleId: 'damage' },
+      { id: 'armor-chip', sourceKey: 'armor', roleId: 'armor' },
+      { id: 'speed-chip', sourceKey: 'speed' },
+      { id: 'stun-chip', sourceKey: 'stunChance', roleId: 'stun', suffix: '%' }
+    ],
+    labels: { damage: 'Damage', armor: 'Armor', speed: 'Speed', stunChance: 'Stun' },
+    includeZeroes: false
+  }), [
+    {
+      id: 'damage-chip',
+      sourceKey: 'damage',
+      roleId: 'damage',
+      key: 'damage',
+      label: 'Damage',
+      text: '+2',
+      value: 2,
+      numericValue: 2,
+      positive: true,
+      sign: 'positive'
+    },
+    {
+      id: 'armor-chip',
+      sourceKey: 'armor',
+      roleId: 'armor',
+      key: 'armor',
+      label: 'Armor',
+      text: '-1',
+      value: -1,
+      numericValue: -1,
+      positive: false,
+      sign: 'negative'
+    },
+    {
+      id: 'stun-chip',
+      sourceKey: 'stunChance',
+      roleId: 'stun',
+      suffix: '%',
+      key: 'stunChance',
+      label: 'Stun',
+      text: '+5%',
+      value: 5,
+      numericValue: 5,
+      positive: true,
+      sign: 'positive'
+    }
   ]);
   assert.equal(formatLoadoutStatsText({
     totals,

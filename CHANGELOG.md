@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added headless artifact stat-row DTO shaping to `client-view-model`, so
+  product UIs can share stat key/label/value/sign rows while keeping visual
+  classes, icons, copy, and component markup local.
 - Added run lifecycle planners to `modules/run`, so product services can share
   run-start drafts, initial/next shop-state counters, starter loadout drafts,
   ghost budget math, round result counters/rewards, and challenge group

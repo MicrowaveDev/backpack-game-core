@@ -116,6 +116,27 @@ export interface ArtifactBonusEntry {
   positive: boolean;
 }
 
+export interface ArtifactStatDefinition {
+  id?: string;
+  key?: string;
+  sourceKey?: string;
+  roleId?: string | null;
+  suffix?: string;
+  [key: string]: unknown;
+}
+
+export interface ArtifactStatRow extends ArtifactStatDefinition {
+  id: string;
+  key: string;
+  sourceKey: string;
+  label: string;
+  text: string;
+  value: number;
+  numericValue: number;
+  positive: boolean;
+  sign: 'positive' | 'negative' | 'zero';
+}
+
 export interface AssetPackSummaryLabels {
   invalid?: string;
   disabled?: string;
@@ -667,6 +688,17 @@ export function formatArtifactBonusEntries(
     includeZeroes?: boolean;
   }
 ): ArtifactBonusEntry[];
+
+export function shapeArtifactStatRows(
+  source?: ArtifactStatSource | ArtifactStatBonus | null,
+  options?: {
+    definitions?: readonly ArtifactStatDefinition[] | null;
+    labels?: ArtifactStatLabels;
+    statKeys?: readonly string[] | null;
+    suffixByKey?: ArtifactStatSuffixByKey;
+    includeZeroes?: boolean;
+  }
+): ArtifactStatRow[];
 
 export function formatLoadoutStatsText(input?: {
   totals?: ArtifactStatBonus | null;

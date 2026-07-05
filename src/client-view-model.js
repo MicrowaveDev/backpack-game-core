@@ -306,6 +306,50 @@ export function formatArtifactBonusEntries(source, {
     .filter(Boolean);
 }
 
+export function shapeArtifactStatRows(source, {
+  definitions = null,
+  labels = {},
+  statKeys = null,
+  suffixByKey = DEFAULT_ARTIFACT_STAT_SUFFIX_BY_KEY,
+  includeZeroes = false
+} = {}) {
+  const normalizedDefinitions = Array.isArray(definitions) ? definitions.filter(Boolean) : [];
+  const keys = normalizedDefinitions.length
+    ? normalizedDefinitions.map((definition) => definition.sourceKey || definition.key || definition.id)
+    : statKeys;
+  const resolvedSuffixByKey = { ...suffixByKey };
+  const definitionsByKey = new Map();
+
+  for (const definition of normalizedDefinitions) {
+    const key = definition.sourceKey || definition.key || definition.id;
+    if (!key) continue;
+    definitionsByKey.set(key, definition);
+    if (definition.suffix != null) resolvedSuffixByKey[key] = definition.suffix;
+  }
+
+  return formatArtifactBonusEntries(source, {
+    labels,
+    statKeys: keys,
+    suffixByKey: resolvedSuffixByKey,
+    includeZeroes
+  }).map((entry) => {
+    const definition = definitionsByKey.get(entry.key) || {};
+    const value = entry.numericValue;
+    return {
+      ...definition,
+      id: definition.id || entry.key,
+      key: entry.key,
+      sourceKey: entry.key,
+      label: entry.label,
+      text: entry.value,
+      value,
+      numericValue: value,
+      positive: entry.positive,
+      sign: value > 0 ? 'positive' : value < 0 ? 'negative' : 'zero'
+    };
+  });
+}
+
 export function formatLoadoutStatsText({
   totals = null,
   items = [],
