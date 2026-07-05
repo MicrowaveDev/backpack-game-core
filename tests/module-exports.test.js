@@ -113,10 +113,14 @@ import {
 import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusion';
 import {
   AssetRollResultPanel,
+  GachaPackCard,
+  GachaPackCardList,
   GachaOddsTable
 } from '@microwavedev/backpack-game-core/vue';
 import {
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
+  GachaPackCard as GachaPackCardFromComponents,
+  GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents
 } from '@microwavedev/backpack-game-core/vue/components';
 
@@ -283,8 +287,12 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminFixtureOperationRows({ operations: [{ type: 'pack' }] })[0].afterCountText, '-');
   assert.equal(gachaAdminSimulationItemRows({ items: [{ assetId: 'skin.a', observedPerRoll: 0.25 }] })[0].observedPerRollText, '25.0%');
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
+  assert.equal(GachaPackCard.name, 'GachaPackCard');
+  assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
+  assert.equal(GachaPackCardFromComponents, GachaPackCard);
+  assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [

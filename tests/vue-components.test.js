@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AssetRollResultPanel,
-  GachaOddsTable
+  GachaOddsTable,
+  GachaPackCard,
+  GachaPackCardList
 } from '@microwavedev/backpack-game-core/vue/components';
 
 test('[vue] AssetRollResultPanel exposes neutral panel rendering contract', () => {
@@ -38,4 +40,39 @@ test('[vue] GachaOddsTable exposes neutral table rendering contract', () => {
     GachaOddsTable.methods.rowValue({ rarity: null }, { field: 'rarity' }),
     ''
   );
+});
+
+test('[vue] GachaPackCard exposes neutral pack action contract', () => {
+  assert.equal(GachaPackCard.name, 'GachaPackCard');
+  assert.match(GachaPackCard.template, /data-pack-id/);
+  assert.match(GachaPackCard.template, /name="action"/);
+  const pack = {
+    id: 'season_pack',
+    title: 'Season Pack',
+    lines: [{ key: 'detail', text: '2 left' }],
+    actions: [{ key: 'roll', kind: 'roll', label: 'Roll', payload: { packId: 'season_pack' } }]
+  };
+  assert.equal(GachaPackCard.computed.visible.call({ pack }), true);
+  assert.deepEqual(GachaPackCard.computed.renderedLines.call({ pack }), pack.lines);
+  assert.deepEqual(GachaPackCard.computed.renderedActions.call({ pack }), pack.actions);
+  assert.equal(GachaPackCard.methods.actionType.call({ actionTag: 'button', actionButtonType: 'button' }), 'button');
+  assert.equal(GachaPackCard.methods.actionType.call({ actionTag: 'a', actionButtonType: 'button' }), null);
+  const emitted = [];
+  GachaPackCard.methods.emitAction.call({
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, pack.actions[0]);
+  assert.deepEqual(emitted.map(([event]) => event), ['action', 'roll']);
+});
+
+test('[vue] GachaPackCardList exposes neutral list rendering contract', () => {
+  assert.equal(GachaPackCardList.name, 'GachaPackCardList');
+  assert.equal(GachaPackCardList.components.GachaPackCard, GachaPackCard);
+  assert.match(GachaPackCardList.template, /GachaPackCard/);
+  const packs = [{ id: 'pack_a' }, { id: 'pack_b' }];
+  assert.deepEqual(GachaPackCardList.computed.renderedPacks.call({ packs }), packs);
+  const emitted = [];
+  GachaPackCardList.methods.emitAction.call({
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, { key: 'burn', kind: 'burn', payload: { packId: 'pack_a' } });
+  assert.deepEqual(emitted.map(([event]) => event), ['action', 'burn']);
 });

@@ -1,4 +1,6 @@
 export {
   AssetRollResultPanel,
-  GachaOddsTable
+  GachaOddsTable,
+  GachaPackCard,
+  GachaPackCardList
 } from './components.js';

@@ -9,3 +9,5 @@ export interface VueComponentOption {
 
 export declare const AssetRollResultPanel: VueComponentOption;
 export declare const GachaOddsTable: VueComponentOption;
+export declare const GachaPackCard: VueComponentOption;
+export declare const GachaPackCardList: VueComponentOption;
