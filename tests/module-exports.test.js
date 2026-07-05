@@ -115,6 +115,7 @@ import {
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
+  BattleLog,
   GachaPackCard,
   GachaPackCardList,
   GachaOddsTable,
@@ -125,6 +126,7 @@ import {
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
   BackpackGrid as BackpackGridFromComponents,
+  BattleLog as BattleLogFromComponents,
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents,
@@ -297,6 +299,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
   assert.equal(ArtifactTile.name, 'ArtifactTile');
   assert.equal(BackpackGrid.name, 'BackpackGrid');
+  assert.equal(BattleLog.name, 'BattleLog');
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
@@ -305,6 +308,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
   assert.equal(BackpackGridFromComponents, BackpackGrid);
+  assert.equal(BattleLogFromComponents, BattleLog);
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);

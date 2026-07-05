@@ -2,6 +2,7 @@ export {
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
+  BattleLog,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,

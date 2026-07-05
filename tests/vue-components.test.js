@@ -4,6 +4,7 @@ import {
   ArtifactTile,
   AssetRollResultPanel,
   BackpackGrid,
+  BattleLog,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
@@ -177,6 +178,42 @@ test('[vue] BackpackGrid exposes neutral board rendering contract', () => {
     'piece-click',
     'piece-rotate'
   ]);
+});
+
+test('[vue] BattleLog exposes neutral replay row rendering contract', () => {
+  assert.equal(BattleLog.name, 'BattleLog');
+  assert.match(BattleLog.template, /slot name="row"/);
+  assert.match(BattleLog.template, /aria-current/);
+  const rows = [
+    { replayIndex: 2, text: 'Hit', active: true },
+    { replayIndex: 3, display: { logText: 'Win' } },
+    { replayIndex: 4, narration: 'Hidden', visible: false }
+  ];
+  assert.deepEqual(BattleLog.computed.renderedRows.call({ rows }), rows.slice(0, 2));
+  assert.equal(BattleLog.methods.rowComponent.call({
+    selectable: true,
+    selectableRowTag: 'button',
+    rowTag: 'span'
+  }, rows[0]), 'button');
+  assert.deepEqual(BattleLog.methods.rowClasses.call({
+    rowClass: 'log-entry',
+    activeClass: 'active'
+  }, rows[0]), ['log-entry', 'active']);
+  assert.equal(BattleLog.methods.rowText.call({ textField: 'text' }, rows[1]), 'Win');
+  assert.equal(BattleLog.methods.rowType.call({
+    rowComponent: BattleLog.methods.rowComponent,
+    selectable: true,
+    selectableRowTag: 'button',
+    rowTag: 'span'
+  }, rows[0]), 'button');
+  assert.equal(BattleLog.methods.rowKey.call({}, rows[0], 0), 2);
+  const emitted = [];
+  BattleLog.methods.emitSelect.call({
+    selectable: true,
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, rows[0], { type: 'click' });
+  assert.equal(emitted[0][0], 'select');
+  assert.equal(emitted[0][1].row, rows[0]);
 });
 
 test('[vue] GachaPackCard exposes neutral pack action contract', () => {

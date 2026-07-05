@@ -61,10 +61,10 @@ catalogs in their own repos.
   and roll simulations.
 - `vue`: neutral Vue 3 component primitives backed by `client-view-model` DTOs.
   Components such as `ArtifactTile`, `AssetRollResultPanel`, `BackpackGrid`,
-  `GachaOddsTable`, `GachaPackCard`, `GachaPackCardList`, `ShopItemList`, and
-  `ShopItemRow` provide structural markup, neutral events/slots, and class
-  hooks while product repos keep routes, copy, images, haptics, page layout,
-  and final themes local.
+  `BattleLog`, `GachaOddsTable`, `GachaPackCard`, `GachaPackCardList`,
+  `ShopItemList`, and `ShopItemRow` provide structural markup, neutral
+  events/slots, and class hooks while product repos keep routes, copy, images,
+  haptics, page layout, and final themes local.
 - `modules/gacha/admin-validation`: backend-safe gacha admin release checklist,
   fixture normalization, fixture operation summary, season-plan projection,
   draft-diff, and promotion metadata helpers over product-provided rows.
