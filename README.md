@@ -7,6 +7,13 @@ product-lore code. Product games should pass plain data objects into these
 helpers and keep persistence, asset ownership, wallet state, and game-specific
 catalogs in their own repos.
 
+## Release Discipline
+
+The current release channel is submodule-only: consumers pin a core Git commit
+through `vendor/backpack-game-core` and a local `file:` dependency. The full
+release policy, compatibility rules, and cross-consumer gate are documented in
+[`docs/release-discipline.md`](docs/release-discipline.md).
+
 ## Current Modules
 
 - `bag-shape`: shape masks, quarter-turn rotation, effective dimensions, and
