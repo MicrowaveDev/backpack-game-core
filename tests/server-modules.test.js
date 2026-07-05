@@ -5,6 +5,7 @@ import {
   createBackpackServerContext,
   createBackpackServerModule,
   createLoadoutValidationServerModule,
+  createRunReadinessServerModule,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
 
@@ -217,4 +218,33 @@ test('[server] loadout validation module registers provider-driven service', () 
     { id: 'row_bag', artifactId: 'starter_bag', x: 0, y: 0, width: 2, height: 2, active: 1 },
     { id: 'row_item', artifactId: 'cleaver', x: 0, y: 0, width: 1, height: 1 }
   ]).totalCoins, 3);
+});
+
+test('[server] run readiness module registers configurable manager', () => {
+  let clock = 1000;
+  const result = setupBackpackServerModules([
+    createRunReadinessServerModule({
+      providerKeys: {
+        now: 'service.clock.now'
+      },
+      config: {
+        requiredReadyCount: 2
+      }
+    })
+  ], {
+    services: {
+      'service.clock.now': () => clock
+    }
+  });
+
+  assert.deepEqual(result.installed, ['core.runReadiness']);
+  const manager = result.get('runReadinessManager');
+  manager.setReady('run_1', 'player_1');
+  manager.setReady('run_1', 'player_2');
+  assert.deepEqual(manager.readyStatus('run_1'), {
+    ready: true,
+    playerIds: ['player_1', 'player_2']
+  });
+  clock += 5000;
+  assert.deepEqual(manager.getIdleRunIds(4000), ['run_1']);
 });

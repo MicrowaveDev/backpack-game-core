@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createRunReadinessServerModule`, so apps can register the shared
+  readiness/idle/lock manager through module lists while keeping route wiring,
+  active-run checks, challenge resolution, and SSE delivery local.
 - Added provider-driven loadout validation service and
   `createLoadoutValidationServerModule`, so apps can register validation
   through module lists while keeping grid constants, artifact lookup, prices,

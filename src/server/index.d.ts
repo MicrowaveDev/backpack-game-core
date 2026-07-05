@@ -105,6 +105,31 @@ export declare function createLoadoutValidationServerModule(
   options?: LoadoutValidationServerModuleOptions
 ): BackpackServerModule;
 
+export interface RunReadinessServerModuleOptions {
+  name?: string;
+  serviceKey?: string;
+  requires?: string[];
+  provides?: string[];
+  providerKeys?: {
+    now?: string;
+  };
+  providers?: {
+    now?: () => number;
+    [key: string]: unknown;
+  };
+  config?: {
+    requiredReadyCount?: number;
+    [key: string]: unknown;
+  };
+  now?: () => number;
+  requiredReadyCount?: number;
+  [key: string]: unknown;
+}
+
+export declare function createRunReadinessServerModule(
+  options?: RunReadinessServerModuleOptions
+): BackpackServerModule;
+
 export {
   createKeyedAsyncMutex,
   createRunReadinessManager

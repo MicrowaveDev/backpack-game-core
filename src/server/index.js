@@ -3,6 +3,7 @@ import {
   createLoadoutValidationService,
   LOADOUT_VALIDATION_PROVIDER_NAMES
 } from '../modules/loadout/validation-service.js';
+import { createRunReadinessManager } from './readiness.js';
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -162,6 +163,41 @@ export function createLoadoutValidationServerModule({
         ...serviceOptions,
         ...moduleConfig,
         ...providerOptionsFromContext(ctx, providers, providerKeys, LOADOUT_VALIDATION_PROVIDER_NAMES)
+      });
+      return {
+        services: {
+          [serviceKey]: service
+        }
+      };
+    }
+  });
+}
+
+export function createRunReadinessServerModule({
+  name = 'core.runReadiness',
+  serviceKey = 'runReadinessManager',
+  requires = [],
+  provides = [serviceKey],
+  providerKeys = {},
+  providers = {},
+  config = {},
+  ...serviceOptions
+} = {}) {
+  const requiredProviderKeys = Object.entries(providerKeys)
+    .filter(([providerName, key]) => key && !providers?.[providerName] && !serviceOptions?.[providerName])
+    .map(([, key]) => key);
+  return createBackpackServerModule({
+    name,
+    requires: [...requires, ...requiredProviderKeys],
+    provides,
+    config,
+    setup(ctx) {
+      const moduleConfig = ctx.getConfig(name, {});
+      const now = providerFromContext(ctx, providers, providerKeys, 'now') || serviceOptions.now;
+      const service = createRunReadinessManager({
+        ...serviceOptions,
+        ...moduleConfig,
+        ...(now ? { now } : {})
       });
       return {
         services: {

@@ -89,7 +89,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   routes, fetch implementation, auth headers, storage policy, and optional
   `{ success, data, error }` envelope unwrapping.
 - `server`: product-neutral server module descriptors, dependency-checked
-  module setup, reusable run readiness/lock helpers, and shared middleware.
+  module setup, reusable run readiness/lock helpers, server module factories
+  for shared services, and shared middleware.
   The module contract is documented in
   [`docs/server-module-contract.md`](docs/server-module-contract.md).
 

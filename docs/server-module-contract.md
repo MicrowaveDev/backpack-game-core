@@ -89,6 +89,8 @@ low-risk shared services:
 - `createLoadoutValidationServerModule()`: registers
   `loadoutValidationService` over injected artifact lookup, pricing, family,
   placement, and stat policy providers.
+- `createRunReadinessServerModule()`: registers `runReadinessManager` over
+  injected clock/config for ready-state, idle-run detection, and per-run locks.
 - `createAssetGachaSimulationServerModule()`: registers
   `assetGachaSimulationService` over injected static/runtime pack, catalog,
   odds, and visibility providers.
