@@ -71,13 +71,19 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   `BattleLog`, `GachaOddsTable`, `GachaPackCard`, `GachaPackCardList`,
   `ShopItemList`, and `ShopItemRow` provide structural markup, neutral
   events/slots, and class hooks while product repos keep routes, copy, images,
-  haptics, page layout, and final themes local.
+  haptics, page layout, and final themes local. Browser-safe composables such
+  as `createReducedMotionTracker` share neutral UI state helpers while product
+  repos keep settings storage and CSS policy local.
 - `modules/gacha/admin-validation`: backend-safe gacha admin release checklist,
   fixture normalization, fixture operation summary, season-plan projection,
   draft-diff, and promotion metadata helpers over product-provided rows.
 - `client`: route-adapter HTTP client primitives for product-provided API
   routes, fetch implementation, auth headers, storage policy, and optional
   `{ success, data, error }` envelope unwrapping.
+- `server`: product-neutral server module descriptors, dependency-checked
+  module setup, reusable run readiness/lock helpers, and shared middleware.
+  The module contract is documented in
+  [`docs/server-module-contract.md`](docs/server-module-contract.md).
 
 ## Stable Layered Exports
 
@@ -101,6 +107,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/server/middleware`
 - `@microwavedev/backpack-game-core/vue`
 - `@microwavedev/backpack-game-core/vue/components`
+- `@microwavedev/backpack-game-core/vue/composables`
 
 Consumers should import only the package root or these public subpaths. Do not
 import `src/*` or nested submodule paths from game code.

@@ -129,10 +129,12 @@ import {
 import {
   AchievementBadge,
   ArtifactStatSummary,
+  bindReducedMotionTracker,
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
   BattleLog,
+  createReducedMotionTracker,
   GachaPackCard,
   GachaPackCardList,
   GachaOddsTable,
@@ -154,6 +156,10 @@ import {
   ShopItemList as ShopItemListFromComponents,
   ShopItemRow as ShopItemRowFromComponents
 } from '@microwavedev/backpack-game-core/vue/components';
+import {
+  bindReducedMotionTracker as bindReducedMotionTrackerFromComposables,
+  createReducedMotionTracker as createReducedMotionTrackerFromComposables
+} from '@microwavedev/backpack-game-core/vue/composables';
 
 const catalog = [
   { assetId: 'skin.a', rarity: 'common', acquisitionMode: 'gacha', packId: 'starter' },
@@ -329,6 +335,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
   assert.equal(ShopItemList.name, 'ShopItemList');
   assert.equal(ShopItemRow.name, 'ShopItemRow');
+  assert.equal(typeof createReducedMotionTracker, 'function');
+  assert.equal(typeof bindReducedMotionTracker, 'function');
   assert.equal(AchievementBadgeFromComponents, AchievementBadge);
   assert.equal(ArtifactStatSummaryFromComponents, ArtifactStatSummary);
   assert.equal(SeasonRankEmblemFromComponents, SeasonRankEmblem);
@@ -341,6 +349,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);
   assert.equal(ShopItemListFromComponents, ShopItemList);
   assert.equal(ShopItemRowFromComponents, ShopItemRow);
+  assert.equal(createReducedMotionTrackerFromComposables, createReducedMotionTracker);
+  assert.equal(bindReducedMotionTrackerFromComposables, bindReducedMotionTracker);
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [
       { id: 'row_1', artifactId: 'needle' },

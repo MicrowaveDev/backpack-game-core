@@ -77,6 +77,10 @@
       "types": "./src/vue/components.d.ts",
       "import": "./src/vue/components.js"
     },
+    "./vue/composables": {
+      "types": "./src/vue/composables.d.ts",
+      "import": "./src/vue/composables.js"
+    },
     "./modules/gacha": {
       "types": "./src/modules/gacha/index.d.ts",
       "import": "./src/modules/gacha/index.js"

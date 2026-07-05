@@ -2,14 +2,42 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function uniqueStrings(values, label) {
+  const seen = new Set();
+  const normalized = [];
+  for (const value of asArray(values)) {
+    if (typeof value !== 'string' || !value.trim()) {
+      throw new Error(`Backpack server module ${label} entries must be non-empty strings`);
+    }
+    if (seen.has(value)) {
+      throw new Error(`Backpack server module ${label} contains duplicate entry ${value}`);
+    }
+    seen.add(value);
+    normalized.push(value);
+  }
+  return normalized;
+}
+
+function moduleConfigFromContext(module, context) {
+  const moduleConfigs = context.config?.modules || {};
+  return {
+    ...module.config,
+    ...(moduleConfigs[module.configKey] || moduleConfigs[module.name] || {})
+  };
+}
+
 export function createBackpackServerModule(definition = {}) {
   if (!definition.name) throw new Error('Backpack server module requires a name');
+  if (typeof definition.name !== 'string') throw new Error('Backpack server module name must be a string');
   return {
     name: definition.name,
-    requires: asArray(definition.requires),
-    provides: asArray(definition.provides),
+    requires: uniqueStrings(definition.requires, 'requires'),
+    provides: uniqueStrings(definition.provides, 'provides'),
     configSchema: definition.configSchema || null,
+    configKey: definition.configKey || definition.name,
     config: definition.config || {},
+    allowOverride: definition.allowOverride === true,
+    validateConfig: typeof definition.validateConfig === 'function' ? definition.validateConfig : null,
     setup: typeof definition.setup === 'function' ? definition.setup : () => ({})
   };
 }
@@ -28,6 +56,7 @@ export function createBackpackServerContext({
   return {
     adapters,
     config,
+    moduleConfigs: {},
     services: { ...services },
     routes: { ...routes },
     jobs: [...jobs],
@@ -36,7 +65,13 @@ export function createBackpackServerContext({
     get(key) {
       return registry.get(key);
     },
-    provide(key, value) {
+    getConfig(key, fallback = undefined) {
+      return this.moduleConfigs[key] ?? this.config?.modules?.[key] ?? fallback;
+    },
+    provide(key, value, { override = false } = {}) {
+      if (!override && registry.has(key)) {
+        throw new Error(`Backpack server context already provides ${key}`);
+      }
       registry.set(key, value);
       return value;
     }
@@ -54,19 +89,59 @@ function mergeNamed(target, values = {}) {
   for (const [key, value] of Object.entries(values || {})) target[key] = value;
 }
 
+function assertCanProvide(module, context, keys) {
+  if (module.allowOverride) return;
+  for (const key of keys) {
+    if (context.registry.has(key)) {
+      throw new Error(`Backpack server module ${module.name} cannot override existing provider ${key}`);
+    }
+  }
+}
+
+function validateModuleConfig(module, context) {
+  const resolvedConfig = moduleConfigFromContext(module, context);
+  context.moduleConfigs[module.name] = resolvedConfig;
+  context.provide(`config.${module.name}`, resolvedConfig, { override: true });
+  if (module.configKey !== module.name) {
+    context.provide(`config.${module.configKey}`, resolvedConfig, { override: true });
+  }
+  if (module.validateConfig) {
+    const validation = module.validateConfig(resolvedConfig, context);
+    if (validation === false) {
+      throw new Error(`Backpack server module ${module.name} config validation failed`);
+    }
+  }
+  return resolvedConfig;
+}
+
 export function setupBackpackServerModules(modules = [], baseContext = {}) {
   const context = baseContext.registry ? baseContext : createBackpackServerContext(baseContext);
   const installed = [];
+  const installedNames = new Set();
 
   for (const rawModule of modules) {
     const module = createBackpackServerModule(rawModule);
+    if (installedNames.has(module.name)) {
+      throw new Error(`Backpack server module ${module.name} is registered more than once`);
+    }
+    installedNames.add(module.name);
     requireDependencies(module, context);
+    validateModuleConfig(module, context);
+    assertCanProvide(module, context, module.provides);
     const result = module.setup(context) || {};
+    assertCanProvide(module, context, [
+      ...Object.keys(result.services || {}),
+      ...Object.keys(result.routes || {})
+    ]);
 
     mergeNamed(context.services, result.services);
     mergeNamed(context.routes, result.routes);
-    for (const [key, value] of Object.entries(result.services || {})) context.provide(key, value);
-    for (const [key, value] of Object.entries(result.routes || {})) context.provide(key, value);
+    for (const [key, value] of Object.entries(result.services || {})) {
+      context.provide(key, value, { override: module.allowOverride });
+    }
+    for (const [key, value] of Object.entries(result.routes || {})) {
+      context.provide(key, value, { override: module.allowOverride });
+    }
     context.jobs.push(...asArray(result.jobs));
     context.healthChecks.push(...asArray(result.healthChecks));
 

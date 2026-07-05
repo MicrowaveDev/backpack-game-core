@@ -8,9 +8,12 @@ themes, routes, copy, haptics, images, payment UX, and policy.
 
 - `@microwavedev/backpack-game-core/vue`
 - `@microwavedev/backpack-game-core/vue/components`
+- `@microwavedev/backpack-game-core/vue/composables`
 
 The root package export stays framework-neutral. Vue components are plain Vue 3
-option objects so the core package does not require a build step.
+option objects so the core package does not require a build step. Browser-safe
+composables may be plain JavaScript helpers when they do not need Vue runtime
+imports.
 
 ## Peer Dependency
 
@@ -28,6 +31,15 @@ Vue installed.
 - Product repos own final CSS, responsive page layout, route callbacks,
   localization, image resolvers, Telegram wrappers, haptics, and policy.
 
+## Composable Rules
+
+- Composables must accept browser globals such as `window` through options or
+  detect them safely for SSR/test contexts.
+- Composables may expose subscription/getter APIs or Vue-compatible helpers,
+  but they must not import product stores directly.
+- Product repos own settings persistence, CSS class attachment, telemetry,
+  haptics, and route-specific side effects.
+
 ## Forbidden Imports
 
 Core client/Vue exports must not import product repos, product assets, Express,
@@ -39,7 +51,7 @@ modules from browser-safe entry points.
 Each shared frontend slice should include:
 
 - core package export/type tests;
-- core component smoke or render tests;
+- core component/composable smoke or render tests;
 - Mushroom adoption evidence, including screenshots when visual behavior
   changes;
 - Meat import/build/test evidence against the same core commit.

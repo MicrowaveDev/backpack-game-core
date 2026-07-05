@@ -12,3 +12,8 @@ export {
   ShopItemList,
   ShopItemRow
 } from './components.js';
+
+export {
+  bindReducedMotionTracker,
+  createReducedMotionTracker
+} from './composables.js';
