@@ -29,6 +29,7 @@ import {
 } from '@microwavedev/backpack-game-core/modules/gacha/simulation-service';
 import {
   applyWalletBalanceDelta,
+  createProviderSettlementAdapterRegistry,
   createWalletPurchaseCompletionPlan,
   createWalletPurchaseIntentDraft,
   createWalletPurchaseGrantMutation
@@ -326,6 +327,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createLoadoutValidationService, 'function');
   assert.equal(typeof createLoadoutValidationServerModule, 'function');
   assert.equal(typeof createRunReadinessServerModule, 'function');
+  assert.equal(typeof createProviderSettlementAdapterRegistry, 'function');
   assert.deepEqual(summarizeAssetRollPacks(), []);
   assert.equal(classifyCell([], 0, 0, { cols: 1, rows: 1 }), 'base-inv');
   assert.equal(buildOccupiedCellMap([{ artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }]).get('0:0'), 'needle');

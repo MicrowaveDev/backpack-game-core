@@ -51,7 +51,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots, plus
-  provider-neutral purchase intent, checkout, and completion planners.
+  provider-neutral purchase intent, checkout, completion planners, and generic
+  settlement input parsing/adapter registry helpers.
 - `profile-asset-state`: reusable profile asset ownership/equipment row
   shaping, equip validation, purchase spend mutation shaping, purchase/equip
   result DTO shaping, grant summaries, and portrait variant/list projection over
@@ -106,6 +107,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/gacha/admin-validation`
 - `@microwavedev/backpack-game-core/modules/wallet`
 - `@microwavedev/backpack-game-core/modules/wallet/accounting`
+- `@microwavedev/backpack-game-core/modules/wallet/settlement-adapters`
 - `@microwavedev/backpack-game-core/modules/assets`
 - `@microwavedev/backpack-game-core/modules/assets/profile-state`
 - `@microwavedev/backpack-game-core/modules/shop`

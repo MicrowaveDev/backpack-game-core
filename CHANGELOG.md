@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-neutral settlement input adapter registry helpers under
+  `modules/wallet/settlement-adapters`, so apps can share CSV/JSON parsing,
+  scoped field lookup, and record mapping while keeping provider-specific field
+  maps, credentials, callbacks, reconciliation storage, and ops runbooks local.
 - Added `createRunReadinessServerModule`, so apps can register the shared
   readiness/idle/lock manager through module lists while keeping route wiring,
   active-run checks, challenge resolution, and SSE delivery local.

@@ -117,6 +117,10 @@
       "types": "./src/modules/wallet/accounting.d.ts",
       "import": "./src/modules/wallet/accounting.js"
     },
+    "./modules/wallet/settlement-adapters": {
+      "types": "./src/modules/wallet/settlement-adapters.d.ts",
+      "import": "./src/modules/wallet/settlement-adapters.js"
+    },
     "./modules/assets": {
       "types": "./src/modules/assets/index.d.ts",
       "import": "./src/modules/assets/index.js"
