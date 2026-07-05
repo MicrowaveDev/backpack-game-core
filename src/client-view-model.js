@@ -175,6 +175,128 @@ export function buildOccupiedCellMap(items = [], {
   return occupied;
 }
 
+function collectionHas(collection, value) {
+  if (value == null || value === '' || !collection) return false;
+  if (typeof collection.has === 'function') return collection.has(value);
+  if (Array.isArray(collection)) return collection.includes(value);
+  return false;
+}
+
+function normalizePreviewCellSet(placementPreview) {
+  if (!placementPreview) return null;
+  if (placementPreview.cellSet instanceof Set) return placementPreview.cellSet;
+  if (Array.isArray(placementPreview.cells)) return new Set(placementPreview.cells);
+  return null;
+}
+
+export function shapeGridBoardCells({
+  columns = 0,
+  rows = 0,
+  bagRows = [],
+  items = [],
+  baseRect = null,
+  inventoryVariant = true,
+  placementPreview = null,
+  hoverCellIndex = -1,
+  interactiveCells = false,
+  droppable = false
+} = {}) {
+  const resolvedColumns = Math.max(0, numberOr(columns));
+  const resolvedRows = Math.max(0, numberOr(rows));
+  const occupied = occupiedCellKeys(items);
+  const previewCellSet = normalizePreviewCellSet(placementPreview);
+  const cells = [];
+
+  for (let index = 0; index < resolvedColumns * resolvedRows; index += 1) {
+    const x = index % resolvedColumns;
+    const y = Math.floor(index / resolvedColumns);
+    const classification = classifyCell(bagRows, x, y, inventoryVariant ? baseRect : null);
+    const bagRow = bagRowEntryFor(bagRows, x, y);
+    const inPreview = Boolean(previewCellSet?.has(`${x}:${y}`));
+    const baseInventory = classification === 'base-inv';
+    const bagSlot = !baseInventory && classification === 'bag-slot';
+    const bagBox = !bagSlot && classification === 'bag-box';
+    const bagEmpty = Boolean(inventoryVariant && !baseInventory && !bagSlot && !bagBox);
+
+    cells.push({
+      key: `${x}:${y}`,
+      index,
+      x,
+      y,
+      kind: classification,
+      bagRow,
+      bagArtifactId: bagRow?.artifactId || null,
+      bagColor: bagSlot ? bagRow?.color || '' : '',
+      occupied: occupied.has(`${x}:${y}`),
+      interactive: Boolean(interactiveCells),
+      dropTarget: Boolean(droppable && hoverCellIndex === index),
+      baseInventory,
+      bagSlot,
+      bagBox,
+      bagEmpty,
+      preview: inPreview,
+      previewValid: Boolean(inPreview && placementPreview?.valid),
+      previewInvalid: Boolean(inPreview && !placementPreview?.valid),
+      previewFamily: inPreview ? placementPreview?.family || 'none' : ''
+    });
+  }
+
+  return cells;
+}
+
+export function shapeGridBoardPieces(items = [], {
+  highlightedRowIds = null,
+  keyForItem = (item) => `${item?.artifactId || 'item'}:${item?.id ?? item?.rowId ?? ''}:${item?.x ?? 0}:${item?.y ?? 0}`
+} = {}) {
+  return (items || []).map((item, index) => {
+    const x = numberOr(item?.x);
+    const y = numberOr(item?.y);
+    const width = Math.max(1, numberOr(item?.width, 1));
+    const height = Math.max(1, numberOr(item?.height, 1));
+    const rowId = item?.id ?? item?.rowId ?? '';
+    return {
+      ...item,
+      key: keyForItem(item, index),
+      index,
+      rowId,
+      x,
+      y,
+      width,
+      height,
+      gridColumnStart: x + 1,
+      gridRowStart: y + 1,
+      gridColumnSpan: width,
+      gridRowSpan: height,
+      gridColumn: `${x + 1} / span ${width}`,
+      gridRow: `${y + 1} / span ${height}`,
+      highlighted: collectionHas(highlightedRowIds, rowId),
+      dataset: {
+        artifactId: item?.artifactId || '',
+        rowId,
+        x,
+        y,
+        width,
+        height
+      }
+    };
+  });
+}
+
+export function shapeGridBagSlotCells(bagRows = []) {
+  return (bagRows || []).flatMap((row) => (row?.enabledCells || []).map((cellX) => ({
+    key: `bag:${row.bagId || row.artifactId || 'bag'}:${cellX}:${row.row}`,
+    bagId: row.bagId,
+    artifactId: row.artifactId,
+    color: row.color || '',
+    rotation: numberOr(row.rotation),
+    x: cellX,
+    y: numberOr(row.row),
+    gridColumnStart: cellX + 1,
+    gridRowStart: numberOr(row.row) + 1,
+    bagRow: row
+  })));
+}
+
 export function preferredArtifactOrientation(artifact) {
   const width = Number(artifact?.width) || 0;
   const height = Number(artifact?.height) || 0;

@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added headless grid board render DTO shaping to `client-view-model`, so
+  product UIs can share board cell flags, placed-piece grid positions, and
+  bag-slot rows while keeping component markup, CSS classes, image paths,
+  drag/drop behavior, and product styling local.
 - Added headless shop item row DTO shaping to `client-view-model`, so product
   UIs can share offer lookup, price, affordability, preview footprint,
   bag/character flags, and stat rows while keeping localized copy, shop markup,

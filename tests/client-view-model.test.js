@@ -36,6 +36,9 @@ import {
   preferredArtifactOrientation,
   projectLoadoutItems,
   resolveWalletBalance,
+  shapeGridBagSlotCells,
+  shapeGridBoardCells,
+  shapeGridBoardPieces,
   LONG_BATTLE_SPEED_BOOST_2X_INDEX,
   LONG_BATTLE_SPEED_BOOST_3X_INDEX,
   LONG_BATTLE_SPEED_BOOST_4X_INDEX,
@@ -190,6 +193,88 @@ test('[client-view-model] maps occupied cells to artifact values and derives pre
     height: 1,
     shape: [[1], [1], [1], [1]]
   }), { width: 1, height: 4 });
+});
+
+test('[client-view-model] shapes headless grid board cells, bag slots, and pieces', () => {
+  const bagRows = [
+    bagRow({ artifactId: 'starter_bag', row: 0, anchorX: 0, cols: 3, enabledXs: [0, 1, 2] }),
+    bagRow({ artifactId: 'hook_bag', row: 0, anchorX: 3, cols: 3, enabledXs: [3, 4], color: '#aa5500' }),
+    bagRow({ artifactId: 'hook_bag', row: 1, anchorX: 3, cols: 3, enabledXs: [4, 5], color: '#aa5500' })
+  ];
+  const items = [
+    { id: 'placed-1', artifactId: 'needle', x: 3, y: 0, width: 1, height: 1 },
+    { rowId: 'placed-2', artifactId: 'blade', x: 4, y: 1, width: 2, height: 1 }
+  ];
+
+  const cells = shapeGridBoardCells({
+    columns: 6,
+    rows: 2,
+    bagRows,
+    items,
+    baseRect: { cols: 3, rows: 3 },
+    placementPreview: { cells: ['4:1', '5:1'], valid: false, family: 'damage' },
+    hoverCellIndex: 4,
+    droppable: true,
+    interactiveCells: true
+  });
+
+  assert.equal(cells.length, 12);
+  assert.deepEqual(cells.find((cell) => cell.key === '0:0'), {
+    key: '0:0',
+    index: 0,
+    x: 0,
+    y: 0,
+    kind: 'base-inv',
+    bagRow: bagRows[0],
+    bagArtifactId: 'starter_bag',
+    bagColor: '',
+    occupied: false,
+    interactive: true,
+    dropTarget: false,
+    baseInventory: true,
+    bagSlot: false,
+    bagBox: false,
+    bagEmpty: false,
+    preview: false,
+    previewValid: false,
+    previewInvalid: false,
+    previewFamily: ''
+  });
+  const disabledBagCell = cells.find((cell) => cell.key === '5:0');
+  assert.equal(disabledBagCell.kind, 'bag-box');
+  assert.equal(disabledBagCell.bagBox, true);
+  assert.equal(disabledBagCell.bagArtifactId, 'hook_bag');
+  const occupiedPreview = cells.find((cell) => cell.key === '4:1');
+  assert.equal(occupiedPreview.occupied, true);
+  assert.equal(occupiedPreview.preview, true);
+  assert.equal(occupiedPreview.previewInvalid, true);
+  assert.equal(occupiedPreview.previewFamily, 'damage');
+  assert.equal(cells.find((cell) => cell.index === 4).dropTarget, true);
+
+  const slots = shapeGridBagSlotCells(bagRows);
+  assert.deepEqual(slots.map((slot) => [slot.artifactId, slot.x, slot.y]), [
+    ['starter_bag', 0, 0],
+    ['starter_bag', 1, 0],
+    ['starter_bag', 2, 0],
+    ['hook_bag', 3, 0],
+    ['hook_bag', 4, 0],
+    ['hook_bag', 4, 1],
+    ['hook_bag', 5, 1]
+  ]);
+
+  const pieces = shapeGridBoardPieces(items, { highlightedRowIds: new Set(['placed-2']) });
+  assert.equal(pieces[0].key, 'needle:placed-1:3:0');
+  assert.deepEqual(pieces[0].dataset, {
+    artifactId: 'needle',
+    rowId: 'placed-1',
+    x: 3,
+    y: 0,
+    width: 1,
+    height: 1
+  });
+  assert.equal(pieces[1].gridColumn, '5 / span 2');
+  assert.equal(pieces[1].gridRow, '2 / span 1');
+  assert.equal(pieces[1].highlighted, true);
 });
 
 test('[client-view-model] sums and formats artifact stat bonuses', () => {

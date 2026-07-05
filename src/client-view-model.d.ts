@@ -87,6 +87,94 @@ export interface GridBaseRect {
 
 export type GridCellClassification = 'base-inv' | 'bag-slot' | 'bag-box' | 'bag-empty';
 
+export interface GridPlacementPreview {
+  cells?: string[];
+  cellSet?: Set<string>;
+  valid?: boolean;
+  family?: string;
+  [key: string]: unknown;
+}
+
+export interface GridBoardCell {
+  key: string;
+  index: number;
+  x: number;
+  y: number;
+  kind: GridCellClassification;
+  bagRow: GridCellBagRow | null;
+  bagArtifactId: string | null;
+  bagColor: string;
+  occupied: boolean;
+  interactive: boolean;
+  dropTarget: boolean;
+  baseInventory: boolean;
+  bagSlot: boolean;
+  bagBox: boolean;
+  bagEmpty: boolean;
+  preview: boolean;
+  previewValid: boolean;
+  previewInvalid: boolean;
+  previewFamily: string;
+}
+
+export interface GridBoardCellOptions {
+  columns?: number;
+  rows?: number;
+  bagRows?: readonly GridCellBagRow[];
+  items?: readonly Array<{ x?: number | string | null; y?: number | string | null; width?: number | string | null; height?: number | string | null; [key: string]: unknown }>;
+  baseRect?: GridBaseRect | null;
+  inventoryVariant?: boolean;
+  placementPreview?: GridPlacementPreview | null;
+  hoverCellIndex?: number;
+  interactiveCells?: boolean;
+  droppable?: boolean;
+}
+
+export interface GridBoardPiece {
+  key: string;
+  index: number;
+  rowId: string | number;
+  artifactId?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  gridColumnStart: number;
+  gridRowStart: number;
+  gridColumnSpan: number;
+  gridRowSpan: number;
+  gridColumn: string;
+  gridRow: string;
+  highlighted: boolean;
+  dataset: {
+    artifactId: string;
+    rowId: string | number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  [key: string]: unknown;
+}
+
+export interface GridBoardPieceOptions {
+  highlightedRowIds?: Set<string | number> | Array<string | number> | null;
+  keyForItem?: (item: Record<string, unknown>, index: number) => string;
+}
+
+export interface GridBagSlotCell {
+  key: string;
+  bagId?: string | number;
+  artifactId?: string;
+  color: string;
+  rotation: number;
+  x: number;
+  y: number;
+  gridColumnStart: number;
+  gridRowStart: number;
+  bagRow: GridCellBagRow;
+}
+
 export interface ArtifactOrientation {
   width: number;
   height: number;
@@ -675,6 +763,17 @@ export function buildOccupiedCellMap<T = unknown>(
     valueForItem?: (item: Record<string, unknown>) => T;
   }
 ): Map<string, T>;
+
+export function shapeGridBoardCells(options?: GridBoardCellOptions): GridBoardCell[];
+
+export function shapeGridBoardPieces(
+  items?: readonly Record<string, unknown>[],
+  options?: GridBoardPieceOptions
+): GridBoardPiece[];
+
+export function shapeGridBagSlotCells(
+  bagRows?: readonly GridCellBagRow[]
+): GridBagSlotCell[];
 
 export function preferredArtifactOrientation(
   artifact?: { width?: number | string | null; height?: number | string | null; shape?: readonly (readonly unknown[])[] | null; [key: string]: unknown } | null
