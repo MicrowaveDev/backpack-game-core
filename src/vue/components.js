@@ -231,6 +231,297 @@ export const ArtifactTile = {
   `
 };
 
+export const ShopItemRow = {
+  name: 'ShopItemRow',
+  props: {
+    row: {
+      type: Object,
+      default: null
+    },
+    as: {
+      type: String,
+      default: 'div'
+    },
+    headerTag: {
+      type: String,
+      default: 'div'
+    },
+    nameTag: {
+      type: String,
+      default: 'strong'
+    },
+    priceTag: {
+      type: String,
+      default: 'span'
+    },
+    visualTag: {
+      type: String,
+      default: 'div'
+    },
+    descriptionTag: {
+      type: String,
+      default: 'p'
+    },
+    tagsTag: {
+      type: String,
+      default: 'div'
+    },
+    tagTag: {
+      type: String,
+      default: 'span'
+    },
+    itemClass: {
+      type: [String, Array, Object],
+      default: 'shop-item'
+    },
+    rowClass: {
+      type: [String, Array, Object],
+      default: ''
+    },
+    headerClass: {
+      type: [String, Array, Object],
+      default: 'shop-item-header'
+    },
+    nameClass: {
+      type: [String, Array, Object],
+      default: 'shop-item-name'
+    },
+    priceClass: {
+      type: [String, Array, Object],
+      default: 'shop-item-price'
+    },
+    visualClass: {
+      type: [String, Array, Object],
+      default: 'shop-item-visual'
+    },
+    descriptionClass: {
+      type: [String, Array, Object],
+      default: 'shop-item-description'
+    },
+    tagsClass: {
+      type: [String, Array, Object],
+      default: 'shop-item-tags'
+    },
+    tagClass: {
+      type: [String, Array, Object],
+      default: 'artifact-stat-chip'
+    },
+    characterTagClass: {
+      type: [String, Array, Object],
+      default: 'artifact-stat-chip--character'
+    },
+    bagTagClass: {
+      type: [String, Array, Object],
+      default: 'artifact-stat-chip--bag'
+    },
+    positiveTagClass: {
+      type: [String, Array, Object],
+      default: 'artifact-stat-chip--pos'
+    },
+    negativeTagClass: {
+      type: [String, Array, Object],
+      default: 'artifact-stat-chip--neg'
+    },
+    pricePrefix: {
+      type: String,
+      default: ''
+    },
+    characterItemLabel: {
+      type: String,
+      default: 'Character'
+    },
+    bagSlotsLabel: {
+      type: String,
+      default: 'slots'
+    },
+    itemAttrs: {
+      type: Object,
+      default: () => ({})
+    }
+  },
+  emits: ['buy', 'select'],
+  computed: {
+    visible() {
+      return Boolean(this.row);
+    },
+    itemClasses() {
+      return [this.itemClass, this.rowClass].filter(Boolean);
+    },
+    renderedStats() {
+      return nonEmptyArray(this.row?.statRows);
+    },
+    previewWidth() {
+      return this.row?.previewOrientation?.width || 1;
+    },
+    previewHeight() {
+      return this.row?.previewOrientation?.height || 1;
+    }
+  },
+  methods: {
+    emitBuy() {
+      if (!this.row) return;
+      this.$emit('buy', this.row);
+      this.$emit('select', this.row);
+    },
+    statText(stat) {
+      if (!stat) return '';
+      return stat.text ?? stat.value ?? '';
+    },
+    statClass(stat) {
+      return [
+        this.tagClass,
+        stat?.positive ? this.positiveTagClass : this.negativeTagClass
+      ].filter(Boolean);
+    }
+  },
+  template: `
+    <component
+      v-if="visible"
+      :is="as"
+      :class="itemClasses"
+      :data-artifact-draggable="row.canAfford ? 'true' : 'false'"
+      :data-artifact-id="row.artifactId || null"
+      :data-artifact-width="previewWidth"
+      :data-artifact-height="previewHeight"
+      v-bind="itemAttrs"
+      @click="emitBuy"
+    >
+      <slot name="header" :row="row">
+        <component :is="headerTag" :class="headerClass || null">
+          <component :is="nameTag" :class="nameClass || null">{{ row.name || row.artifactId }}</component>
+          <component :is="priceTag" :class="priceClass || null">{{ pricePrefix }}{{ row.price }}</component>
+        </component>
+      </slot>
+      <slot name="visual" :row="row" :orientation="row.previewOrientation" :items="row.previewItem">
+        <component :is="visualTag" :class="visualClass || null"></component>
+      </slot>
+      <slot name="description" :row="row">
+        <component
+          v-if="row.description"
+          :is="descriptionTag"
+          :class="descriptionClass || null"
+        >{{ row.description }}</component>
+      </slot>
+      <slot name="tags" :row="row" :stats="renderedStats">
+        <component :is="tagsTag" :class="tagsClass || null">
+          <component
+            v-if="row.characterItem"
+            :is="tagTag"
+            :class="[tagClass, characterTagClass]"
+          >{{ characterItemLabel }}</component>
+          <component
+            v-if="row.isBag"
+            :is="tagTag"
+            :class="[tagClass, bagTagClass]"
+          >{{ row.slotCount }} {{ bagSlotsLabel }}</component>
+          <component
+            v-for="stat in renderedStats"
+            :key="stat.key"
+            :is="tagTag"
+            :class="statClass(stat)"
+          >{{ stat.label }} {{ statText(stat) }}</component>
+        </component>
+      </slot>
+      <slot :row="row"></slot>
+    </component>
+  `
+};
+
+export const ShopItemList = {
+  name: 'ShopItemList',
+  components: {
+    ShopItemRow
+  },
+  props: {
+    rows: {
+      type: Array,
+      default: () => []
+    },
+    as: {
+      type: String,
+      default: 'div'
+    },
+    rowTag: {
+      type: String,
+      default: 'div'
+    },
+    listClass: {
+      type: [String, Array, Object],
+      default: 'artifact-shop-items'
+    },
+    itemClass: {
+      type: [String, Array, Object],
+      default: 'shop-item'
+    },
+    rowClass: {
+      type: [String, Array, Object, Function],
+      default: ''
+    },
+    itemAttrs: {
+      type: Function,
+      default: null
+    },
+    pricePrefix: {
+      type: String,
+      default: ''
+    },
+    characterItemLabel: {
+      type: String,
+      default: 'Character'
+    },
+    bagSlotsLabel: {
+      type: String,
+      default: 'slots'
+    }
+  },
+  emits: ['buy', 'select'],
+  computed: {
+    renderedRows() {
+      return nonEmptyArray(this.rows);
+    }
+  },
+  methods: {
+    classFor(row) {
+      return typeof this.rowClass === 'function' ? this.rowClass(row) : this.rowClass;
+    },
+    attrsFor(row) {
+      return typeof this.itemAttrs === 'function' ? (this.itemAttrs(row) || {}) : {};
+    },
+    emitBuy(row) {
+      if (!row) return;
+      this.$emit('buy', row);
+      this.$emit('select', row);
+    }
+  },
+  template: `
+    <component
+      v-if="renderedRows.length"
+      :is="as"
+      :class="listClass || null"
+    >
+      <ShopItemRow
+        v-for="row in renderedRows"
+        :key="row.id || row.artifactId || row.index"
+        :row="row"
+        :as="rowTag"
+        :item-class="itemClass"
+        :row-class="classFor(row)"
+        :item-attrs="attrsFor(row)"
+        :price-prefix="pricePrefix"
+        :character-item-label="characterItemLabel"
+        :bag-slots-label="bagSlotsLabel"
+        @buy="emitBuy"
+      >
+        <template #visual="slotProps">
+          <slot name="visual" v-bind="slotProps">
+            <component :is="'div'" class="shop-item-visual"></component>
+          </slot>
+        </template>
+      </ShopItemRow>
+    </component>
+  `
+};
+
 function actionEventName(action) {
   const kind = String(action?.kind || '');
   return ['roll', 'burn', 'select', 'buy', 'place', 'remove', 'open'].includes(kind)

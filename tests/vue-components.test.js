@@ -5,7 +5,9 @@ import {
   AssetRollResultPanel,
   GachaOddsTable,
   GachaPackCard,
-  GachaPackCardList
+  GachaPackCardList,
+  ShopItemList,
+  ShopItemRow
 } from '@microwavedev/backpack-game-core/vue/components';
 
 test('[vue] AssetRollResultPanel exposes neutral panel rendering contract', () => {
@@ -76,6 +78,63 @@ test('[vue] ArtifactTile exposes neutral artifact tile rendering contract', () =
     roleGlyphExtraClass: 'artifact-figure-role-glyph'
   }), ['artifact-role-glyph', 'artifact-role-glyph--damage', 'artifact-figure-role-glyph']);
   assert.equal(ArtifactTile.computed.roleGlyphLabel.call({ tile }), 'Damage role');
+});
+
+test('[vue] ShopItemRow exposes neutral shop row rendering contract', () => {
+  assert.equal(ShopItemRow.name, 'ShopItemRow');
+  assert.match(ShopItemRow.template, /data-artifact-draggable/);
+  assert.match(ShopItemRow.template, /slot name="visual"/);
+  const row = {
+    id: 'needle:0',
+    artifactId: 'needle',
+    name: 'Needle',
+    description: 'Sharp.',
+    price: 2,
+    canAfford: true,
+    previewOrientation: { width: 1, height: 2 },
+    characterItem: true,
+    isBag: false,
+    statRows: [{ key: 'damage', label: 'Damage', text: '+2', positive: true }]
+  };
+  assert.equal(ShopItemRow.computed.visible.call({ row }), true);
+  assert.deepEqual(ShopItemRow.computed.itemClasses.call({
+    itemClass: 'shop-item',
+    rowClass: { 'shop-item--role-damage': true }
+  }), ['shop-item', { 'shop-item--role-damage': true }]);
+  assert.deepEqual(ShopItemRow.computed.renderedStats.call({ row }), row.statRows);
+  assert.equal(ShopItemRow.computed.previewWidth.call({ row }), 1);
+  assert.equal(ShopItemRow.computed.previewHeight.call({ row }), 2);
+  assert.equal(ShopItemRow.methods.statText({ text: '+2', value: 2 }), '+2');
+  assert.deepEqual(ShopItemRow.methods.statClass.call({
+    tagClass: 'chip',
+    positiveTagClass: 'pos',
+    negativeTagClass: 'neg'
+  }, row.statRows[0]), ['chip', 'pos']);
+  const emitted = [];
+  ShopItemRow.methods.emitBuy.call({
+    row,
+    $emit: (event, payload) => emitted.push([event, payload])
+  });
+  assert.deepEqual(emitted.map(([event]) => event), ['buy', 'select']);
+});
+
+test('[vue] ShopItemList exposes neutral shop list rendering contract', () => {
+  assert.equal(ShopItemList.name, 'ShopItemList');
+  assert.equal(ShopItemList.components.ShopItemRow, ShopItemRow);
+  assert.match(ShopItemList.template, /ShopItemRow/);
+  const rows = [{ id: 'needle:0', artifactId: 'needle' }];
+  assert.deepEqual(ShopItemList.computed.renderedRows.call({ rows }), rows);
+  assert.deepEqual(ShopItemList.methods.classFor.call({
+    rowClass: (row) => ({ [`row-${row.artifactId}`]: true })
+  }, rows[0]), { 'row-needle': true });
+  assert.deepEqual(ShopItemList.methods.attrsFor.call({
+    itemAttrs: (row) => ({ title: row.artifactId })
+  }, rows[0]), { title: 'needle' });
+  const emitted = [];
+  ShopItemList.methods.emitBuy.call({
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, rows[0]);
+  assert.deepEqual(emitted.map(([event]) => event), ['buy', 'select']);
 });
 
 test('[vue] GachaPackCard exposes neutral pack action contract', () => {

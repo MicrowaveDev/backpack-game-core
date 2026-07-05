@@ -116,14 +116,18 @@ import {
   ArtifactTile,
   GachaPackCard,
   GachaPackCardList,
-  GachaOddsTable
+  GachaOddsTable,
+  ShopItemList,
+  ShopItemRow
 } from '@microwavedev/backpack-game-core/vue';
 import {
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
-  GachaOddsTable as GachaOddsTableFromComponents
+  GachaOddsTable as GachaOddsTableFromComponents,
+  ShopItemList as ShopItemListFromComponents,
+  ShopItemRow as ShopItemRowFromComponents
 } from '@microwavedev/backpack-game-core/vue/components';
 
 const catalog = [
@@ -293,11 +297,15 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
+  assert.equal(ShopItemList.name, 'ShopItemList');
+  assert.equal(ShopItemRow.name, 'ShopItemRow');
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);
+  assert.equal(ShopItemListFromComponents, ShopItemList);
+  assert.equal(ShopItemRowFromComponents, ShopItemRow);
   assert.deepEqual(runShopSellResultViewState({ id: 'row_1', artifactId: 'needle' }, {
     builderItems: [
       { id: 'row_1', artifactId: 'needle' },

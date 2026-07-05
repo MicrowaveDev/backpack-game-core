@@ -3,7 +3,9 @@ export {
   ArtifactTile,
   GachaOddsTable,
   GachaPackCard,
-  GachaPackCardList
+  GachaPackCardList,
+  ShopItemList,
+  ShopItemRow
 } from './components.js';
 
 export type {
