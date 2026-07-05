@@ -61,6 +61,14 @@
       "types": "./src/client-view-model.d.ts",
       "import": "./src/client-view-model.js"
     },
+    "./server": {
+      "types": "./src/server/index.d.ts",
+      "import": "./src/server/index.js"
+    },
+    "./server/middleware": {
+      "types": "./src/server/middleware/index.d.ts",
+      "import": "./src/server/middleware/index.js"
+    },
     "./vue": {
       "types": "./src/vue/index.d.ts",
       "import": "./src/vue/index.js"

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  AchievementBadge,
   ArtifactTile,
   AssetRollResultPanel,
   BackpackGrid,
@@ -8,6 +9,7 @@ import {
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
+  SeasonRankEmblem,
   ShopItemList,
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue/components';
@@ -80,6 +82,49 @@ test('[vue] ArtifactTile exposes neutral artifact tile rendering contract', () =
     roleGlyphExtraClass: 'artifact-figure-role-glyph'
   }), ['artifact-role-glyph', 'artifact-role-glyph--damage', 'artifact-figure-role-glyph']);
   assert.equal(ArtifactTile.computed.roleGlyphLabel.call({ tile }), 'Damage role');
+});
+
+test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {
+  assert.equal(AchievementBadge.name, 'AchievementBadge');
+  assert.match(AchievementBadge.template, /imageClass/);
+  const context = {
+    achievement: { id: 'first-win' },
+    idField: 'id',
+    imageBasePath: '/achievements',
+    extension: 'png',
+    rootClass: 'achievement-badge',
+    size: 'small'
+  };
+  assert.equal(AchievementBadge.computed.imageId.call(context), 'first-win');
+  assert.equal(AchievementBadge.computed.pngSrc.call({
+    ...context,
+    imageId: AchievementBadge.computed.imageId.call(context)
+  }), '/achievements/first-win.png');
+  assert.deepEqual(AchievementBadge.computed.badgeClass.call(context), [
+    'achievement-badge',
+    'achievement-badge--small'
+  ]);
+});
+
+test('[vue] SeasonRankEmblem exposes neutral image emblem path hooks', () => {
+  assert.equal(SeasonRankEmblem.name, 'SeasonRankEmblem');
+  assert.match(SeasonRankEmblem.template, /emblemClass/);
+  const context = {
+    rankId: 'gold',
+    imageBasePath: '/season-ranks',
+    extension: 'png',
+    rootClass: 'season-rank-emblem',
+    size: 96
+  };
+  assert.equal(SeasonRankEmblem.computed.pngSrc.call(context), '/season-ranks/gold.png');
+  assert.deepEqual(SeasonRankEmblem.computed.emblemClass.call(context), [
+    'season-rank-emblem',
+    'season-rank-emblem--gold'
+  ]);
+  assert.deepEqual(SeasonRankEmblem.computed.emblemStyle.call(context), {
+    width: '96px',
+    height: '96px'
+  });
 });
 
 test('[vue] ShopItemRow exposes neutral shop row rendering contract', () => {

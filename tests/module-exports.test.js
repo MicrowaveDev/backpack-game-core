@@ -112,6 +112,20 @@ import {
 } from '@microwavedev/backpack-game-core/modules/battle';
 import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusion';
 import {
+  clearIdempotencyCache,
+  clearRateLimitBuckets,
+  createBackpackServerContext,
+  createBackpackServerModule,
+  idempotency,
+  rateLimit,
+  setupBackpackServerModules
+} from '@microwavedev/backpack-game-core/server';
+import {
+  idempotency as idempotencyFromMiddleware,
+  rateLimit as rateLimitFromMiddleware
+} from '@microwavedev/backpack-game-core/server/middleware';
+import {
+  AchievementBadge,
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
@@ -119,10 +133,12 @@ import {
   GachaPackCard,
   GachaPackCardList,
   GachaOddsTable,
+  SeasonRankEmblem,
   ShopItemList,
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue';
 import {
+  AchievementBadge as AchievementBadgeFromComponents,
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
   BackpackGrid as BackpackGridFromComponents,
@@ -130,6 +146,7 @@ import {
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents,
+  SeasonRankEmblem as SeasonRankEmblemFromComponents,
   ShopItemList as ShopItemListFromComponents,
   ShopItemRow as ShopItemRowFromComponents
 } from '@microwavedev/backpack-game-core/vue/components';
@@ -296,6 +313,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminOddsItemRows({ items: [{ assetId: 'skin.a', probability: 0.25 }] })[0].copyLimitText, '-');
   assert.equal(gachaAdminFixtureOperationRows({ operations: [{ type: 'pack' }] })[0].afterCountText, '-');
   assert.equal(gachaAdminSimulationItemRows({ items: [{ assetId: 'skin.a', observedPerRoll: 0.25 }] })[0].observedPerRollText, '25.0%');
+  assert.equal(AchievementBadge.name, 'AchievementBadge');
+  assert.equal(SeasonRankEmblem.name, 'SeasonRankEmblem');
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
   assert.equal(ArtifactTile.name, 'ArtifactTile');
   assert.equal(BackpackGrid.name, 'BackpackGrid');
@@ -305,6 +324,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
   assert.equal(ShopItemList.name, 'ShopItemList');
   assert.equal(ShopItemRow.name, 'ShopItemRow');
+  assert.equal(AchievementBadgeFromComponents, AchievementBadge);
+  assert.equal(SeasonRankEmblemFromComponents, SeasonRankEmblem);
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
   assert.equal(BackpackGridFromComponents, BackpackGrid);
@@ -415,6 +436,18 @@ test('[modules] asset facade exposes profile asset result DTO shapers', () => {
     instances: [instance],
     catalog: [asset]
   })[0].path, '/portraits/ruby-rare.png');
+});
+
+test('[server] server facade exposes module and middleware helpers', () => {
+  assert.equal(typeof createBackpackServerModule, 'function');
+  assert.equal(typeof createBackpackServerContext, 'function');
+  assert.equal(typeof setupBackpackServerModules, 'function');
+  assert.equal(typeof idempotency, 'function');
+  assert.equal(typeof clearIdempotencyCache, 'function');
+  assert.equal(typeof rateLimit, 'function');
+  assert.equal(typeof clearRateLimitBuckets, 'function');
+  assert.equal(idempotencyFromMiddleware, idempotency);
+  assert.equal(rateLimitFromMiddleware, rateLimit);
 });
 
 test('[modules] wallet facade exposes accounting helpers', () => {

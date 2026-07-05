@@ -2,6 +2,9 @@ function nonEmptyArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+export { AchievementBadge } from './components/AchievementBadge.js';
+export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
+
 export const AssetRollResultPanel = {
   name: 'AssetRollResultPanel',
   props: {

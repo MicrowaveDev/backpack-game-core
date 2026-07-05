@@ -8,10 +8,12 @@ export interface VueComponentOption {
 }
 
 export declare const AssetRollResultPanel: VueComponentOption;
+export declare const AchievementBadge: VueComponentOption;
 export declare const GachaOddsTable: VueComponentOption;
 export declare const ArtifactTile: VueComponentOption;
 export declare const BackpackGrid: VueComponentOption;
 export declare const BattleLog: VueComponentOption;
+export declare const SeasonRankEmblem: VueComponentOption;
 export declare const ShopItemRow: VueComponentOption;
 export declare const ShopItemList: VueComponentOption;
 export declare const GachaPackCard: VueComponentOption;
