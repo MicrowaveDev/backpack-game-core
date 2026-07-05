@@ -276,6 +276,71 @@ export interface AssetGachaBurnResult {
   items: AssetGachaResultItem[];
 }
 
+export interface AssetGachaRollSettlementItem extends AssetGachaSelectedItem {
+  duplicateCopy: boolean;
+  guaranteeId?: string | null;
+  guaranteeSource?: string | null;
+  guaranteeMinRarity?: AssetGachaRarity | null;
+  guaranteeReplacedAssetId?: string | null;
+}
+
+export interface AssetGachaRollSettlementPlan {
+  type: 'asset_gacha_roll_settlement';
+  packId: string | null;
+  currencyCode?: string;
+  priceAmount: number;
+  rollSize: number;
+  effectiveRollSize: number;
+  rarityTableVersion: string;
+  duplicatePolicy: AssetGachaDuplicatePolicy;
+  candidatePoolHash: string;
+  resultAssetIds: string[];
+  duplicateAssetIds: string[];
+  guaranteesApplied: unknown[];
+  pityBefore: unknown[];
+  pityAfter: unknown[];
+  selectedItems: AssetGachaRollSettlementItem[];
+  walletSpend: {
+    currencyCode?: string;
+    amount: number;
+    reason: 'asset_pack_roll';
+    sourceType: 'asset_pack';
+    sourceId: string | null;
+    metadata: Record<string, unknown>;
+  };
+  guaranteeState: Record<string, unknown>;
+  rollMetadata: Record<string, unknown>;
+}
+
+export interface AssetGachaGrantDraft {
+  assetId: string;
+  acquisitionSource: string;
+  acquisitionSourceId: string | null;
+  allowDuplicate: boolean;
+  metadata: Record<string, unknown>;
+}
+
+export interface AssetGachaBurnSourceRow {
+  id: string;
+  assetId: string;
+  acquiredAt: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface AssetGachaBurnSettlementPlan {
+  type: 'asset_gacha_burn_settlement';
+  packId: string | null;
+  ruleId: string | null;
+  rule: AssetGachaBurnRule | null;
+  sourceRows: AssetGachaBurnSourceRow[];
+  sourceAssetInstanceIds: string[];
+  sourceAssetIds: string[];
+  targetItems: AssetGachaRollSettlementItem[];
+  resultAssetIds: string[];
+  duplicateAssetIds: string[];
+  exchangeMetadata: Record<string, unknown>;
+}
+
 export interface AssetCatalogAcquisitionPolicy {
   acquisitionMode: string;
   packId: string | null;
@@ -315,6 +380,12 @@ export function assetGachaBurnableDuplicateRows(
   activeAssetRows: readonly AssetGachaInstanceRow[],
   rule: AssetGachaBurnRule,
   equippedInstanceIds?: Set<string>
+): AssetGachaInstanceRow[];
+export function selectAssetGachaBurnSourceRows(
+  pack: AssetGachaPack,
+  activeAssetRows: readonly AssetGachaInstanceRow[],
+  rule: AssetGachaBurnRule,
+  options?: { equippedInstanceIds?: Iterable<string> | Set<string> }
 ): AssetGachaInstanceRow[];
 export function shapeAssetGachaPack(pack: AssetGachaPack, options?: AssetGachaOptions & {
   ownedAssetIds?: Iterable<string>;
@@ -367,6 +438,29 @@ export function resolveAssetGachaRollCandidates(pack: AssetGachaPack, options?: 
   catalog?: readonly AssetGachaCatalogAsset[];
 }): AssetGachaCandidate[];
 export function hashAssetGachaCandidatePool(candidates: readonly AssetGachaCandidate[]): string;
+export function createAssetGachaRollSettlementPlan(input?: {
+  pack?: AssetGachaPack;
+  candidates?: readonly AssetGachaCandidate[];
+  selectedItems?: readonly AssetGachaSelectedItem[] & { guaranteeApplications?: unknown[] };
+  ownedAssetIds?: Iterable<string>;
+  duplicatePolicy?: AssetGachaDuplicatePolicy;
+  pityBefore?: unknown[];
+  pityAfter?: unknown[] | null;
+  candidatePoolHash?: string | null;
+  rarityTableVersion?: string | null;
+  gachaEnabled?: boolean | null;
+  directBuyPolicy?: string | null;
+  activePackIds?: readonly string[] | null;
+  randomSource?: string | null;
+}): AssetGachaRollSettlementPlan;
+export function createAssetGachaRollGrantDrafts(
+  plan: AssetGachaRollSettlementPlan,
+  options?: { rollId?: string | null; transactionId?: string | null }
+): AssetGachaGrantDraft[];
+export function shapeAssetGachaRollSettlementItems(
+  plan: AssetGachaRollSettlementPlan,
+  options?: { grantedItems?: readonly ({ id?: string | null; instance?: { id?: string | null } } & Record<string, unknown>)[] }
+): { resultItems: AssetGachaResultItem[]; evidenceItems: Record<string, unknown>[]; resultInstanceIds: Array<string | null> };
 export function selectAssetGachaBurnTargets(pack: AssetGachaPack, rule: AssetGachaBurnRule, options: AssetGachaOptions & {
   rng: Rng;
   ownedAssetIds?: Iterable<string>;
@@ -374,6 +468,27 @@ export function selectAssetGachaBurnTargets(pack: AssetGachaPack, rule: AssetGac
   copyCounts?: Map<string, number> | Record<string, number> | null;
   catalog?: readonly AssetGachaCatalogAsset[];
 }): AssetGachaSelectedItem[];
+export function createAssetGachaBurnSettlementPlan(input?: {
+  pack?: AssetGachaPack;
+  rule?: AssetGachaBurnRule;
+  sourceRows?: readonly AssetGachaInstanceRow[];
+  targetItems?: readonly AssetGachaSelectedItem[];
+  ownedAssetIdsAfterBurn?: Iterable<string>;
+  randomSource?: string | null;
+}): AssetGachaBurnSettlementPlan;
+export function createAssetGachaBurnSourceMetadata(
+  row: AssetGachaInstanceRow,
+  plan: AssetGachaBurnSettlementPlan,
+  options?: { exchangeId?: string | null; now?: string | null }
+): Record<string, unknown>;
+export function createAssetGachaBurnGrantDrafts(
+  plan: AssetGachaBurnSettlementPlan,
+  options?: { exchangeId?: string | null }
+): AssetGachaGrantDraft[];
+export function shapeAssetGachaBurnSettlementItems(
+  plan: AssetGachaBurnSettlementPlan,
+  options?: { grantedItems?: readonly ({ id?: string | null; instance?: { id?: string | null } } & Record<string, unknown>)[] }
+): { resultItems: AssetGachaResultItem[]; resultInstanceIds: Array<string | null> };
 export function evaluateAssetAcquisitionPolicy(asset: AssetGachaCatalogAsset | null | undefined, options?: {
   gachaEnabled?: boolean;
   directBuyPolicy?: string;

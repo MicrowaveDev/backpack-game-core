@@ -4,7 +4,10 @@ import {
   applyWalletBalanceDelta,
   canRecordWalletPurchaseStatus,
   classifyWalletPurchaseStatus,
+  createWalletPurchaseCheckoutMetadataPatch,
+  createWalletPurchaseCompletionPlan,
   createWalletPurchaseGrantMutation,
+  createWalletPurchaseIntentDraft,
   createWalletPurchaseReversalMutation,
   createWalletTransactionDraft,
   normalizeWalletCurrencyCode,
@@ -12,6 +15,8 @@ import {
   normalizeWalletSpendAmount,
   validateWalletDelta,
   walletPurchaseIntentSnapshot,
+  shapeWalletPurchaseCheckout,
+  walletPurchaseCheckoutIsResolved,
   walletPurchasePriceMatches,
   walletSettlementMatchesPurchaseStatus,
   walletSettlementRequiresClawback,
@@ -98,7 +103,13 @@ test('[wallet-accounting] shapes transaction drafts and purchase mutations over 
     walletAmount: 100,
     priceAmount: 100,
     priceCurrency: 'USD',
-    status: 'completed'
+    status: 'completed',
+    checkoutStatus: null,
+    checkoutClaimedAt: null,
+    idempotencyKey: null,
+    createdAt: null,
+    updatedAt: null,
+    completedAt: null
   });
 
   assert.deepEqual(createWalletPurchaseGrantMutation(snakeRow, {
@@ -139,6 +150,112 @@ test('[wallet-accounting] shapes transaction drafts and purchase mutations over 
       payload: { eventId: 'refund_1' }
     }
   });
+});
+
+test('[wallet-accounting] plans purchase intent drafts and checkout DTOs', () => {
+  const draft = createWalletPurchaseIntentDraft({
+    id: 'intent_2',
+    playerId: 'player_2',
+    bundle: {
+      id: 'coins_small',
+      provider: 'telegram_stars',
+      currencyCode: 'soft_coin',
+      walletAmount: 100,
+      priceAmount: 1,
+      priceCurrency: 'xtr'
+    },
+    providerInvoiceId: 'invoice_2',
+    idempotencyKey: 'idem-2',
+    metadata: { bundleId: 'coins_small' },
+    createdAt: '2026-07-05T00:00:00.000Z'
+  });
+
+  assert.equal(draft.status, 'pending');
+  assert.equal(draft.priceCurrency, 'XTR');
+  assert.equal(draft.metadata.bundleId, 'coins_small');
+
+  const checkout = shapeWalletPurchaseCheckout(draft);
+  assert.equal(checkout.type, 'telegram_invoice');
+  assert.equal(checkout.payload, 'intent_2');
+  assert.equal(checkout.prices[0].amount, 1);
+  assert.equal(walletPurchaseCheckoutIsResolved({ ...draft, checkout: { invoiceReady: true } }), true);
+
+  const patch = createWalletPurchaseCheckoutMetadataPatch(draft, {
+    invoiceReady: true,
+    providerInvoiceId: 'provider-invoice-2',
+    invoiceLink: 'https://t.me/invoice/test'
+  });
+  assert.equal(patch.providerInvoiceId, 'provider-invoice-2');
+  assert.equal(patch.checkoutStatus, 'ready');
+  assert.equal(patch.metadata.checkout.invoiceReady, true);
+
+  const cryptoCheckout = shapeWalletPurchaseCheckout({
+    ...draft,
+    provider: 'btcpay',
+    priceCurrency: 'USD',
+    priceAmount: 500,
+    metadata: {
+      checkout: {
+        invoiceReady: true,
+        checkoutUrl: 'https://btcpay.example/i/1'
+      }
+    }
+  });
+  assert.equal(cryptoCheckout.type, 'crypto_invoice');
+  assert.equal(cryptoCheckout.checkoutUrl, 'https://btcpay.example/i/1');
+});
+
+test('[wallet-accounting] plans purchase completion grants without provider SDKs', () => {
+  const pendingIntent = {
+    id: 'intent_3',
+    player_id: 'player_3',
+    provider: 'btcpay',
+    provider_invoice_id: 'invoice_3',
+    currency_code: 'soft_coin',
+    wallet_amount: 550,
+    price_amount: 500,
+    price_currency: 'USD',
+    status: 'pending',
+    metadata_json: JSON.stringify({ bundleId: 'coins_medium' })
+  };
+  const plan = createWalletPurchaseCompletionPlan(pendingIntent, {
+    provider: 'btcpay',
+    providerPaymentId: 'payment_3',
+    priceAmount: 500,
+    priceCurrency: 'usd',
+    metadata: { deliveryId: 'event_3' }
+  });
+
+  assert.equal(plan.action, 'complete');
+  assert.equal(plan.ok, true);
+  assert.equal(plan.metadata.completion.deliveryId, 'event_3');
+  assert.deepEqual(plan.grantMutation, {
+    playerId: 'player_3',
+    currencyCode: 'soft_coin',
+    amount: 550,
+    reason: 'wallet_purchase',
+    sourceType: 'wallet_purchase_intent',
+    sourceId: 'intent_3',
+    idempotencyKey: 'wallet_purchase:intent_3',
+    metadata: {
+      provider: 'btcpay',
+      providerInvoiceId: 'invoice_3',
+      providerPaymentId: 'payment_3'
+    }
+  });
+
+  assert.equal(createWalletPurchaseCompletionPlan({
+    ...pendingIntent,
+    status: 'completed'
+  }).action, 'already_completed');
+  assert.equal(createWalletPurchaseCompletionPlan({
+    ...pendingIntent,
+    status: 'expired'
+  }).action, 'not_pending');
+  assert.equal(createWalletPurchaseCompletionPlan(pendingIntent, {
+    priceAmount: 501,
+    priceCurrency: 'USD'
+  }).action, 'price_mismatch');
 });
 
 test('[wallet-accounting] classifies purchase statuses and settlement invariants', () => {

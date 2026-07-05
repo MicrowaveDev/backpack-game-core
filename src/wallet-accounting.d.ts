@@ -85,6 +85,12 @@ export interface WalletPurchaseIntentSnapshot {
   priceAmount: number;
   priceCurrency: string | null;
   status: string;
+  checkoutStatus: string | null;
+  checkoutClaimedAt: string | null;
+  idempotencyKey: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  completedAt: string | null;
 }
 
 export interface WalletMutationParams {
@@ -142,7 +148,64 @@ export function walletPurchasePriceMatches(input?: {
   receivedAmount?: unknown;
   receivedCurrency?: unknown;
 }): WalletPurchasePriceMatch;
+export function walletPurchaseIntentMetadata(intent?: Record<string, unknown>): Record<string, unknown>;
 export function walletPurchaseIntentSnapshot(intent?: Record<string, unknown>): WalletPurchaseIntentSnapshot;
+export function createWalletPurchaseIntentDraft(input?: {
+  id?: string | null;
+  playerId?: string | null;
+  bundle?: {
+    id?: string;
+    provider?: string;
+    currencyCode?: unknown;
+    walletAmount?: unknown;
+    priceAmount?: unknown;
+    priceCurrency?: unknown;
+  };
+  providerInvoiceId?: string | null;
+  idempotencyKey?: string | null;
+  metadata?: Record<string, unknown>;
+  status?: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}): WalletPurchaseIntentSnapshot & {
+  metadata: Record<string, unknown>;
+  providerPaymentId: null;
+};
+export function shapeWalletPurchaseCheckout(
+  intent?: Record<string, unknown>,
+  options?: { coinLabel?: string }
+): Record<string, unknown>;
+export function walletPurchaseCheckoutIsResolved(intent?: Record<string, unknown>): boolean;
+export function createWalletPurchaseCheckoutMetadataPatch(
+  intent?: Record<string, unknown>,
+  checkout?: Record<string, unknown>
+): {
+  providerInvoiceId: string | null;
+  metadata: Record<string, unknown>;
+  checkoutStatus: 'ready';
+  checkoutClaimToken: null;
+  checkoutClaimedAt: null;
+};
+export function createWalletPurchaseCompletionPlan(
+  intent?: Record<string, unknown>,
+  options?: {
+    provider?: string | null;
+    providerPaymentId?: string | null;
+    priceAmount?: unknown;
+    priceCurrency?: unknown;
+    metadata?: Record<string, unknown>;
+  }
+): {
+  action: string;
+  ok: boolean;
+  intent: WalletPurchaseIntentSnapshot;
+  providerPaymentId?: string | null;
+  metadata?: Record<string, unknown>;
+  grantMutation?: WalletMutationParams;
+  priceCheck?: WalletPurchasePriceMatch;
+  reason?: string;
+  transaction?: null;
+};
 export function createWalletPurchaseGrantMutation(
   intent?: Record<string, unknown>,
   options?: { provider?: string | null; providerPaymentId?: string | null; metadata?: Record<string, unknown> }

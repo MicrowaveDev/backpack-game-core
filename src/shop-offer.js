@@ -58,3 +58,116 @@ export function generateShopOffer({
 
   return { offer, hasBag };
 }
+
+function normalizeRunCoins(coins) {
+  const value = Number(coins ?? 0);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function normalizePositivePrice(price) {
+  const value = Number(price ?? 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+export function createRunShopPurchasePlan({
+  coins = 0,
+  offer = [],
+  artifactId,
+  price = 0
+} = {}) {
+  const currentOffer = Array.isArray(offer) ? [...offer] : [];
+  const itemIndex = currentOffer.indexOf(artifactId);
+  const itemPrice = normalizePositivePrice(price);
+  const currentCoins = normalizeRunCoins(coins);
+  if (itemIndex < 0) {
+    return {
+      ok: false,
+      reason: 'item_not_in_offer',
+      artifactId,
+      price: itemPrice,
+      coinsBefore: currentCoins,
+      coinsAfter: currentCoins,
+      shopOffer: currentOffer
+    };
+  }
+  if (currentCoins < itemPrice) {
+    return {
+      ok: false,
+      reason: 'insufficient_run_currency',
+      artifactId,
+      price: itemPrice,
+      coinsBefore: currentCoins,
+      coinsAfter: currentCoins,
+      shopOffer: currentOffer
+    };
+  }
+  const nextOffer = [...currentOffer];
+  nextOffer.splice(itemIndex, 1);
+  return {
+    ok: true,
+    reason: null,
+    artifactId,
+    price: itemPrice,
+    coinsBefore: currentCoins,
+    coinsAfter: currentCoins - itemPrice,
+    shopOffer: nextOffer,
+    removedOfferIndex: itemIndex
+  };
+}
+
+export function createRunShopRefreshPlan({
+  coins = 0,
+  refreshCost = 0,
+  refreshCount = 0,
+  currentRoundsSinceBag = 1,
+  generatedOffer = [],
+  hasBag = false
+} = {}) {
+  const currentCoins = normalizeRunCoins(coins);
+  const cost = normalizePositivePrice(refreshCost);
+  const currentRefreshCount = Math.max(0, Number(refreshCount) || 0);
+  const roundsSinceBag = Math.max(0, Number(currentRoundsSinceBag) || 0);
+  if (currentCoins < cost) {
+    return {
+      ok: false,
+      reason: 'insufficient_run_currency',
+      refreshCost: cost,
+      coinsBefore: currentCoins,
+      coinsAfter: currentCoins,
+      refreshCount: currentRefreshCount,
+      roundsSinceBag,
+      shopOffer: Array.isArray(generatedOffer) ? [...generatedOffer] : []
+    };
+  }
+  return {
+    ok: true,
+    reason: null,
+    refreshCost: cost,
+    coinsBefore: currentCoins,
+    coinsAfter: currentCoins - cost,
+    refreshCount: currentRefreshCount + 1,
+    roundsSinceBag: hasBag ? 0 : roundsSinceBag,
+    shopOffer: Array.isArray(generatedOffer) ? [...generatedOffer] : []
+  };
+}
+
+export function createRunShopSellPlan({
+  coins = 0,
+  price = 0,
+  purchasedRound = null,
+  currentRound = null
+} = {}) {
+  const currentCoins = normalizeRunCoins(coins);
+  const itemPrice = normalizePositivePrice(price);
+  const freshThisRound = Number(purchasedRound) === Number(currentRound);
+  const sellPrice = freshThisRound ? itemPrice : Math.max(1, Math.floor(itemPrice / 2));
+  return {
+    ok: true,
+    reason: null,
+    price: itemPrice,
+    sellPrice,
+    freshThisRound,
+    coinsBefore: currentCoins,
+    coinsAfter: currentCoins + sellPrice
+  };
+}

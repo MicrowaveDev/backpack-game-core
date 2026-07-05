@@ -605,6 +605,21 @@ export function assetGachaBurnableDuplicateRows(pack, activeAssetRows = [], rule
   return burnable;
 }
 
+export function selectAssetGachaBurnSourceRows(pack, activeAssetRows = [], rule, {
+  equippedInstanceIds = new Set()
+} = {}) {
+  const equippedIds = equippedInstanceIds instanceof Set
+    ? equippedInstanceIds
+    : new Set(equippedInstanceIds || []);
+  return assetGachaBurnableDuplicateRows(pack, activeAssetRows, rule, equippedIds)
+    .sort((a, b) => {
+      const aTime = new Date(a.acquired_at || 0).getTime();
+      const bTime = new Date(b.acquired_at || 0).getTime();
+      return aTime - bTime || String(a.id).localeCompare(String(b.id));
+    })
+    .slice(0, Math.max(0, Number(rule?.sourceCount || 0)));
+}
+
 function computePackBurnState(pack, { activeAssetRows = [], equippedInstanceIds = new Set() } = {}) {
   return normalizeAssetGachaBurnRules(pack).map((rule) => {
     const burnableCount = assetGachaBurnableDuplicateRows(pack, activeAssetRows, rule, equippedInstanceIds).length;
@@ -1130,6 +1145,205 @@ export function hashAssetGachaCandidatePool(candidates) {
   return hash.toString(16).padStart(8, '0');
 }
 
+function iterableIdSet(values = []) {
+  if (values instanceof Set) return new Set(values);
+  if (!values) return new Set();
+  return new Set(Array.from(values));
+}
+
+function normalizeGuaranteeApplications(applications = []) {
+  return (applications || []).map((entry) => ({
+    id: entry.id,
+    source: entry.source,
+    minRarity: entry.minRarity,
+    selectedAssetId: entry.selectedAssetId,
+    replacedAssetId: entry.replacedAssetId
+  }));
+}
+
+function normalizeSelectedSettlementItem(item = {}, index = 0, duplicateCopy = false) {
+  return {
+    slotIndex: Number.isInteger(Number(item.slotIndex)) ? Number(item.slotIndex) : index,
+    assetId: item.assetId,
+    asset: item.asset || null,
+    rarity: item.rarity || item.asset?.rarity || null,
+    selectedRarity: item.selectedRarity || item.rarity || item.asset?.rarity || null,
+    dropWeight: item.dropWeight,
+    slotRarityWeights: item.slotRarityWeights,
+    candidatePoolHash: item.candidatePoolHash || null,
+    duplicateCopy: Boolean(duplicateCopy),
+    guaranteeId: item.guaranteeId || null,
+    guaranteeSource: item.guaranteeSource || null,
+    guaranteeMinRarity: item.guaranteeMinRarity || null,
+    guaranteeReplacedAssetId: item.guaranteeReplacedAssetId || null
+  };
+}
+
+function rollSettlementResultItem(item, resultInstanceId = null) {
+  return {
+    slotIndex: item.slotIndex,
+    assetId: item.assetId,
+    assetName: item.asset?.name || null,
+    assetPath: item.asset?.path || null,
+    rarity: item.rarity,
+    selectedRarity: item.selectedRarity,
+    duplicateCopy: Boolean(item.duplicateCopy),
+    resultInstanceId
+  };
+}
+
+function rollSettlementEvidenceItem(item, instanceId = null) {
+  return {
+    slotIndex: item.slotIndex,
+    assetId: item.assetId,
+    instanceId,
+    rarity: item.rarity,
+    selectedRarity: item.selectedRarity,
+    dropWeight: item.dropWeight,
+    slotRarityWeights: item.slotRarityWeights,
+    candidatePoolHash: item.candidatePoolHash,
+    guaranteeId: item.guaranteeId,
+    guaranteeSource: item.guaranteeSource,
+    guaranteeMinRarity: item.guaranteeMinRarity,
+    guaranteeReplacedAssetId: item.guaranteeReplacedAssetId,
+    duplicateCopy: Boolean(item.duplicateCopy)
+  };
+}
+
+export function createAssetGachaRollSettlementPlan({
+  pack,
+  candidates = [],
+  selectedItems = [],
+  ownedAssetIds = [],
+  duplicatePolicy = normalizeAssetGachaDuplicatePolicy(pack),
+  pityBefore = [],
+  pityAfter = null,
+  candidatePoolHash = null,
+  rarityTableVersion = null,
+  gachaEnabled = null,
+  directBuyPolicy = null,
+  activePackIds = null,
+  randomSource = null
+} = {}) {
+  const selected = Array.from(selectedItems || []);
+  const owned = iterableIdSet(ownedAssetIds);
+  const resultAssetIds = selected.map((item) => item.assetId).filter(Boolean);
+  const duplicateAssetIds = resultAssetIds.filter((assetId) => owned.has(assetId));
+  const normalizedSelected = selected.map((item, index) =>
+    normalizeSelectedSettlementItem(item, index, owned.has(item.assetId))
+  );
+  const normalizedDuplicatePolicy = duplicatePolicy || normalizeAssetGachaDuplicatePolicy(pack);
+  const rollSize = assetGachaPackRollSize(pack);
+  const normalizedRollSize = Number.isInteger(rollSize) ? rollSize : pack?.rollSize;
+  const effectiveRollSize = normalizedSelected.length;
+  const normalizedRarityTableVersion = rarityTableVersion || pack?.rarityTableVersion || `${pack?.id || 'asset_pack'}:v1`;
+  const guaranteesApplied = normalizeGuaranteeApplications(selectedItems?.guaranteeApplications || []);
+  const normalizedPityAfter = Array.isArray(pityAfter)
+    ? pityAfter
+    : advanceAssetGachaPackPityState(pityBefore, selected);
+  const normalizedCandidatePoolHash = candidatePoolHash || hashAssetGachaCandidatePool(candidates);
+  const settlementMetadata = {
+    candidatePoolHash: normalizedCandidatePoolHash,
+    selectedAssetId: resultAssetIds[0] || null,
+    selectedAssetIds: resultAssetIds,
+    rollSize: normalizedRollSize,
+    effectiveRollSize,
+    rarityTableVersion: normalizedRarityTableVersion,
+    duplicatePolicy: normalizedDuplicatePolicy,
+    duplicateAssetIds,
+    guaranteesApplied,
+    pityBefore,
+    pityAfter: normalizedPityAfter
+  };
+  return {
+    type: 'asset_gacha_roll_settlement',
+    packId: pack?.id || null,
+    currencyCode: pack?.rollPriceCurrencyCode,
+    priceAmount: Number(pack?.rollPriceAmount || 0),
+    rollSize: normalizedRollSize,
+    effectiveRollSize,
+    rarityTableVersion: normalizedRarityTableVersion,
+    duplicatePolicy: normalizedDuplicatePolicy,
+    candidatePoolHash: normalizedCandidatePoolHash,
+    resultAssetIds,
+    duplicateAssetIds,
+    guaranteesApplied,
+    pityBefore,
+    pityAfter: normalizedPityAfter,
+    selectedItems: normalizedSelected,
+    walletSpend: {
+      currencyCode: pack?.rollPriceCurrencyCode,
+      amount: Number(pack?.rollPriceAmount || 0),
+      reason: 'asset_pack_roll',
+      sourceType: 'asset_pack',
+      sourceId: pack?.id || null,
+      metadata: settlementMetadata
+    },
+    guaranteeState: {
+      rollSize: normalizedRollSize,
+      effectiveRollSize,
+      rarityTableVersion: normalizedRarityTableVersion,
+      guaranteesApplied,
+      pityBefore,
+      pityAfter: normalizedPityAfter
+    },
+    rollMetadata: {
+      ...(gachaEnabled === null ? {} : { gachaEnabled }),
+      ...(directBuyPolicy === null ? {} : { directBuyPolicy }),
+      ...(activePackIds === null ? {} : { activePackIds }),
+      ...(randomSource === null ? {} : { randomSource }),
+      ...settlementMetadata
+    }
+  };
+}
+
+export function createAssetGachaRollGrantDrafts(plan, {
+  rollId = null,
+  transactionId = null
+} = {}) {
+  return (plan?.selectedItems || []).map((item) => ({
+    assetId: item.assetId,
+    acquisitionSource: 'gacha',
+    acquisitionSourceId: rollId,
+    allowDuplicate: Boolean(plan?.duplicatePolicy?.enabled),
+    metadata: {
+      packId: plan?.packId || null,
+      slotIndex: item.slotIndex,
+      rarity: item.rarity,
+      selectedRarity: item.selectedRarity,
+      rarityTableVersion: plan?.rarityTableVersion || null,
+      duplicatePolicy: plan?.duplicatePolicy?.mode || null,
+      duplicateCopy: Boolean(item.duplicateCopy),
+      guaranteeId: item.guaranteeId,
+      guaranteeSource: item.guaranteeSource,
+      guaranteeMinRarity: item.guaranteeMinRarity,
+      guaranteeReplacedAssetId: item.guaranteeReplacedAssetId,
+      transactionId
+    }
+  }));
+}
+
+export function shapeAssetGachaRollSettlementItems(plan, {
+  grantedItems = []
+} = {}) {
+  const selected = plan?.selectedItems || [];
+  const resultItems = selected.map((item, index) => {
+    const granted = grantedItems[index] || {};
+    const instance = granted.instance || granted;
+    return rollSettlementResultItem(item, instance?.id || granted.resultInstanceId || null);
+  });
+  const evidenceItems = selected.map((item, index) => {
+    const granted = grantedItems[index] || {};
+    const instance = granted.instance || granted;
+    return rollSettlementEvidenceItem(item, instance?.id || granted.resultInstanceId || null);
+  });
+  return {
+    resultItems,
+    evidenceItems,
+    resultInstanceIds: resultItems.map((item) => item.resultInstanceId)
+  };
+}
+
 function burnTargetCandidates(pack, rule, {
   ownedAssetIds = new Set(),
   copyCounts = new Map(),
@@ -1199,6 +1413,106 @@ export function selectAssetGachaBurnTargets(pack, rule, {
     activeCounts.set(selectedItem.assetId, (activeCounts.get(selectedItem.assetId) || 0) + 1);
   }
   return selected;
+}
+
+function normalizeBurnSourceRows(sourceRows = []) {
+  return normalizeAssetInstanceRows(sourceRows).map((row) => ({
+    id: row.id,
+    assetId: row.asset_id,
+    acquiredAt: row.acquired_at || null,
+    metadata: parseJsonField(row.metadata ?? row.metadata_json, {})
+  }));
+}
+
+export function createAssetGachaBurnSettlementPlan({
+  pack,
+  rule,
+  sourceRows = [],
+  targetItems = [],
+  ownedAssetIdsAfterBurn = [],
+  randomSource = null
+} = {}) {
+  const owned = iterableIdSet(ownedAssetIdsAfterBurn);
+  const normalizedTargets = [];
+  const duplicateAssetIds = [];
+  for (const [index, item] of Array.from(targetItems || []).entries()) {
+    const duplicateCopy = owned.has(item.assetId);
+    if (duplicateCopy) duplicateAssetIds.push(item.assetId);
+    normalizedTargets.push(normalizeSelectedSettlementItem(item, index, duplicateCopy));
+    if (item.assetId) owned.add(item.assetId);
+  }
+  const normalizedSources = normalizeBurnSourceRows(sourceRows);
+  const resultAssetIds = normalizedTargets.map((item) => item.assetId).filter(Boolean);
+  const sourceAssetInstanceIds = normalizedSources.map((row) => row.id).filter(Boolean);
+  const sourceAssetIds = normalizedSources.map((row) => row.assetId).filter(Boolean);
+  return {
+    type: 'asset_gacha_burn_settlement',
+    packId: pack?.id || null,
+    ruleId: rule?.id || null,
+    rule: rule || null,
+    sourceRows: normalizedSources,
+    sourceAssetInstanceIds,
+    sourceAssetIds,
+    targetItems: normalizedTargets,
+    resultAssetIds,
+    duplicateAssetIds,
+    exchangeMetadata: {
+      rule,
+      sourceAssetIds,
+      sourceAssetInstanceIds,
+      resultAssetIds,
+      duplicateAssetIds,
+      ...(randomSource === null ? {} : { randomSource })
+    }
+  };
+}
+
+export function createAssetGachaBurnSourceMetadata(row, plan, {
+  exchangeId = null,
+  now = null
+} = {}) {
+  const metadata = parseJsonField(row?.metadata ?? row?.metadata_json, {});
+  return {
+    ...metadata,
+    burnedAt: now,
+    burnExchangeId: exchangeId,
+    burnRuleId: plan?.ruleId || null,
+    burnPackId: plan?.packId || null
+  };
+}
+
+export function createAssetGachaBurnGrantDrafts(plan, {
+  exchangeId = null
+} = {}) {
+  return (plan?.targetItems || []).map((item) => ({
+    assetId: item.assetId,
+    acquisitionSource: 'asset_burn_exchange',
+    acquisitionSourceId: exchangeId,
+    allowDuplicate: true,
+    metadata: {
+      packId: plan?.packId || null,
+      burnRuleId: plan?.ruleId || null,
+      rarity: item.rarity,
+      selectedRarity: item.selectedRarity,
+      duplicateCopy: Boolean(item.duplicateCopy),
+      sourceAssetInstanceIds: plan?.sourceAssetInstanceIds || []
+    }
+  }));
+}
+
+export function shapeAssetGachaBurnSettlementItems(plan, {
+  grantedItems = []
+} = {}) {
+  const targets = plan?.targetItems || [];
+  const resultItems = targets.map((item, index) => {
+    const granted = grantedItems[index] || {};
+    const instance = granted.instance || granted;
+    return rollSettlementResultItem(item, instance?.id || granted.resultInstanceId || null);
+  });
+  return {
+    resultItems,
+    resultInstanceIds: resultItems.map((item) => item.resultInstanceId)
+  };
 }
 
 export function evaluateAssetAcquisitionPolicy(asset, {

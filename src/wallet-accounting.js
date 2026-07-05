@@ -236,6 +236,22 @@ function readField(value, camelKey, snakeKey = null) {
   return null;
 }
 
+function parseWalletJsonField(value, fallback = {}) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'object') return value;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function walletPurchaseIntentMetadata(intent = {}) {
+  const metadata = readField(intent, 'metadata', 'metadata_json');
+  return parseWalletJsonField(metadata, {});
+}
+
 export function walletPurchaseIntentSnapshot(intent = {}) {
   return {
     id: readField(intent, 'id'),
@@ -247,7 +263,164 @@ export function walletPurchaseIntentSnapshot(intent = {}) {
     walletAmount: normalizeWalletAmount(readField(intent, 'walletAmount', 'wallet_amount')),
     priceAmount: Number(readField(intent, 'priceAmount', 'price_amount') ?? 0),
     priceCurrency: readField(intent, 'priceCurrency', 'price_currency'),
-    status: normalizeWalletPurchaseStatus(readField(intent, 'status'))
+    status: normalizeWalletPurchaseStatus(readField(intent, 'status')),
+    checkoutStatus: readField(intent, 'checkoutStatus', 'checkout_status'),
+    checkoutClaimedAt: readField(intent, 'checkoutClaimedAt', 'checkout_claimed_at'),
+    idempotencyKey: readField(intent, 'idempotencyKey', 'idempotency_key'),
+    createdAt: readField(intent, 'createdAt', 'created_at'),
+    updatedAt: readField(intent, 'updatedAt', 'updated_at'),
+    completedAt: readField(intent, 'completedAt', 'completed_at')
+  };
+}
+
+export function createWalletPurchaseIntentDraft({
+  id,
+  playerId,
+  bundle = {},
+  providerInvoiceId = null,
+  idempotencyKey = null,
+  metadata = {},
+  status = WALLET_PURCHASE_STATUS.PENDING,
+  createdAt = null,
+  updatedAt = createdAt
+} = {}) {
+  return {
+    id,
+    playerId,
+    provider: bundle.provider || null,
+    providerInvoiceId,
+    providerPaymentId: null,
+    currencyCode: normalizeWalletCurrencyCode(bundle.currencyCode),
+    walletAmount: normalizeWalletGrantAmount(bundle.walletAmount),
+    priceAmount: Number(bundle.priceAmount || 0),
+    priceCurrency: normalizeWalletPriceCurrency(bundle.priceCurrency),
+    status: normalizeWalletPurchaseStatus(status) || WALLET_PURCHASE_STATUS.PENDING,
+    checkoutStatus: null,
+    checkoutClaimedAt: null,
+    idempotencyKey,
+    metadata: metadata && typeof metadata === 'object' ? metadata : {},
+    createdAt,
+    updatedAt,
+    completedAt: null
+  };
+}
+
+export function shapeWalletPurchaseCheckout(intent = {}, {
+  coinLabel = 'wallet coins'
+} = {}) {
+  const snapshot = walletPurchaseIntentSnapshot(intent);
+  const metadata = walletPurchaseIntentMetadata(intent);
+  const storedCheckout = metadata.checkout && typeof metadata.checkout === 'object'
+    ? metadata.checkout
+    : {};
+  if (snapshot.provider === 'telegram_stars') {
+    return {
+      type: 'telegram_invoice',
+      provider: snapshot.provider,
+      title: `${snapshot.walletAmount} ${coinLabel}`,
+      description: `${snapshot.walletAmount} profile ${coinLabel}`,
+      payload: snapshot.id,
+      currency: snapshot.priceCurrency,
+      prices: [
+        { label: `${snapshot.walletAmount} ${coinLabel}`, amount: snapshot.priceAmount }
+      ],
+      ...storedCheckout
+    };
+  }
+  return {
+    type: 'crypto_invoice',
+    provider: snapshot.provider,
+    invoiceId: snapshot.providerInvoiceId,
+    checkoutUrl: null,
+    paymentUri: null,
+    priceAmount: snapshot.priceAmount,
+    priceCurrency: snapshot.priceCurrency,
+    ...storedCheckout
+  };
+}
+
+export function walletPurchaseCheckoutIsResolved(intent = {}) {
+  const checkout = intent.checkout || shapeWalletPurchaseCheckout(intent);
+  return Boolean(checkout?.invoiceReady || checkout?.setupRequired);
+}
+
+export function createWalletPurchaseCheckoutMetadataPatch(intent = {}, checkout = {}) {
+  const snapshot = walletPurchaseIntentSnapshot(intent);
+  const metadata = walletPurchaseIntentMetadata(intent);
+  return {
+    providerInvoiceId: checkout.providerInvoiceId || snapshot.providerInvoiceId,
+    metadata: {
+      ...metadata,
+      checkout
+    },
+    checkoutStatus: 'ready',
+    checkoutClaimToken: null,
+    checkoutClaimedAt: null
+  };
+}
+
+export function createWalletPurchaseCompletionPlan(intent = {}, {
+  provider = null,
+  providerPaymentId = null,
+  priceAmount = null,
+  priceCurrency = null,
+  metadata = {}
+} = {}) {
+  const snapshot = walletPurchaseIntentSnapshot(intent);
+  const status = classifyWalletPurchaseStatus(snapshot.status);
+  if (status.completed) {
+    return {
+      action: 'already_completed',
+      ok: true,
+      intent: snapshot,
+      transaction: null
+    };
+  }
+  if (!status.pending) {
+    return {
+      action: 'not_pending',
+      ok: false,
+      intent: snapshot,
+      reason: snapshot.status
+    };
+  }
+  const priceCheck = walletPurchasePriceMatches({
+    expectedAmount: snapshot.priceAmount,
+    expectedCurrency: snapshot.priceCurrency,
+    receivedAmount: priceAmount,
+    receivedCurrency: priceCurrency
+  });
+  if (!priceCheck.ok) {
+    return {
+      action: 'price_mismatch',
+      ok: false,
+      intent: snapshot,
+      priceCheck
+    };
+  }
+  const paymentId = providerPaymentId || null;
+  const currentMetadata = walletPurchaseIntentMetadata(intent);
+  const completedMetadata = {
+    ...currentMetadata,
+    completion: metadata && typeof metadata === 'object' ? metadata : {}
+  };
+  const completedIntent = {
+    ...snapshot,
+    status: WALLET_PURCHASE_STATUS.COMPLETED,
+    providerPaymentId: paymentId,
+    metadata: completedMetadata
+  };
+  return {
+    action: 'complete',
+    ok: true,
+    intent: snapshot,
+    providerPaymentId: paymentId,
+    metadata: completedMetadata,
+    grantMutation: createWalletPurchaseGrantMutation(completedIntent, {
+      provider,
+      providerPaymentId: paymentId
+    }),
+    priceCheck
   };
 }
 

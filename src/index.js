@@ -28,6 +28,9 @@ export {
 } from './fusion-matching.js';
 
 export {
+  createRunShopPurchasePlan,
+  createRunShopRefreshPlan,
+  createRunShopSellPlan,
   generateShopOffer
 } from './shop-offer.js';
 

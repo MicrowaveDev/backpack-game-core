@@ -17,7 +17,9 @@ catalogs in their own repos.
   non-mutating seeded shuffle helpers.
 - `fusion-matching`: pure adjacent-ingredient matching with product policy
   hooks.
-- `shop-offer`: deterministic offer generation over injected item pools.
+- `shop-offer`: deterministic offer generation over injected item pools, plus
+  run-shop buy/refresh/sell state planners over injected offer/currency
+  snapshots.
 - `backpack-loadout`: provider-driven loadout generation over injected catalog,
   pricing, bag shape, weighting, and validation hooks.
 - `loadout-validation`: provider-driven flat-grid and bag-coverage validation
@@ -27,10 +29,11 @@ catalogs in their own repos.
 - `asset-gacha`: reusable asset acquisition and gacha pack policy helpers over
   injected catalogs, ownership snapshots, time, and RNG, including
   catalog-acquisition default/override resolution and roll/burn result DTO
-  shaping.
+  shaping plus roll/burn settlement planners.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
-  settlement invariants over injected persistence snapshots.
+  settlement invariants over injected persistence snapshots, plus
+  provider-neutral purchase intent, checkout, and completion planners.
 - `profile-asset-state`: reusable profile asset ownership/equipment row
   shaping, equip validation, purchase spend mutation shaping, purchase/equip
   result DTO shaping, grant summaries, and portrait variant/list projection over

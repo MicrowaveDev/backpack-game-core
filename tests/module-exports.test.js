@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  createAssetGachaRollSettlementPlan,
   resolveAssetCatalogAcquisitionPolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaRollResults,
@@ -25,6 +26,8 @@ import {
 } from '@microwavedev/backpack-game-core/modules/gacha/simulation';
 import {
   applyWalletBalanceDelta,
+  createWalletPurchaseCompletionPlan,
+  createWalletPurchaseIntentDraft,
   createWalletPurchaseGrantMutation
 } from '@microwavedev/backpack-game-core/modules/wallet';
 import {
@@ -42,7 +45,12 @@ import {
   profileAssetTargetKey
 } from '@microwavedev/backpack-game-core/modules/assets/profile-state';
 import * as gachaInterface from '@microwavedev/backpack-game-core/modules/gacha/interface';
-import { generateShopOffer } from '@microwavedev/backpack-game-core/modules/shop';
+import {
+  createRunShopPurchasePlan,
+  createRunShopRefreshPlan,
+  createRunShopSellPlan,
+  generateShopOffer
+} from '@microwavedev/backpack-game-core/modules/shop';
 import {
   createLoadoutValidator,
   getEffectiveShape,
@@ -128,6 +136,13 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
 
   const selected = selectAssetGachaRollResults(candidates, pack, { rng: () => 0 });
   assert.equal(selected[0].assetId, 'skin.a');
+  assert.equal(createAssetGachaRollSettlementPlan({
+    pack,
+    candidates,
+    selectedItems: selected,
+    ownedAssetIds: new Set(),
+    gachaEnabled: true
+  }).resultAssetIds[0], 'skin.a');
 
   const shaped = shapeAssetGachaPack(pack, { catalog, includeAssets: true, gachaEnabled: true });
   assert.equal(shaped.items[0].asset.assetId, 'skin.a');
@@ -177,6 +192,24 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     getItemId: (item) => item.id
   });
   assert.deepEqual(offer.offer, ['needle']);
+  assert.equal(createRunShopPurchasePlan({
+    coins: 10,
+    offer: ['needle'],
+    artifactId: 'needle',
+    price: 3
+  }).coinsAfter, 7);
+  assert.equal(createRunShopRefreshPlan({
+    coins: 10,
+    refreshCost: 2,
+    refreshCount: 1,
+    generatedOffer: ['needle']
+  }).refreshCount, 2);
+  assert.equal(createRunShopSellPlan({
+    coins: 1,
+    price: 5,
+    purchasedRound: 1,
+    currentRound: 2
+  }).sellPrice, 2);
 
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);
@@ -316,6 +349,19 @@ test('[modules] asset facade exposes profile asset result DTO shapers', () => {
 test('[modules] wallet facade exposes accounting helpers', () => {
   assert.equal(applyWalletBalanceDelta(10, -3).balanceAfter, 7);
   assert.equal(walletSettlementRequiresClawback('refunded'), true);
+  assert.equal(createWalletPurchaseIntentDraft({
+    id: 'intent_1',
+    playerId: 'player_1',
+    bundle: {
+      id: 'coins_100',
+      currencyCode: 'soft_coin',
+      walletAmount: 100,
+      provider: 'btcpay',
+      priceAmount: 1000,
+      priceCurrency: 'USD'
+    },
+    providerInvoiceId: 'invoice_1'
+  }).walletAmount, 100);
   assert.equal(createWalletPurchaseGrantMutation({
     id: 'intent_1',
     playerId: 'player_1',
@@ -325,6 +371,22 @@ test('[modules] wallet facade exposes accounting helpers', () => {
     currencyCode: 'soft_coin',
     walletAmount: 100
   }).idempotencyKey, 'wallet_purchase:intent_1');
+  assert.equal(createWalletPurchaseCompletionPlan({
+    id: 'intent_1',
+    playerId: 'player_1',
+    provider: 'btcpay',
+    providerInvoiceId: 'invoice_1',
+    currencyCode: 'soft_coin',
+    walletAmount: 100,
+    priceAmount: 1000,
+    priceCurrency: 'USD',
+    status: 'pending'
+  }, {
+    provider: 'btcpay',
+    providerPaymentId: 'payment_1',
+    priceAmount: 1000,
+    priceCurrency: 'USD'
+  }).grantMutation.amount, 100);
 });
 
 test('[modules] assets facade exposes profile asset state helpers', () => {

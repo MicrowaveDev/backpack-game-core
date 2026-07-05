@@ -4,6 +4,11 @@ import {
   advanceAssetGachaPackPityState,
   chooseWeightedAssetGachaCandidate,
   computeAssetGachaPackPityState,
+  createAssetGachaBurnGrantDrafts,
+  createAssetGachaBurnSettlementPlan,
+  createAssetGachaBurnSourceMetadata,
+  createAssetGachaRollGrantDrafts,
+  createAssetGachaRollSettlementPlan,
   evaluateAssetAcquisitionPolicy,
   normalizeAssetGachaBurnRules,
   normalizeAssetGachaBurnExchangeRow,
@@ -11,9 +16,12 @@ import {
   resolveAssetCatalogAcquisitionPolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaBurnTargets,
+  selectAssetGachaBurnSourceRows,
   selectAssetGachaRollResults,
+  shapeAssetGachaBurnSettlementItems,
   shapeAssetGachaBurnResult,
   shapeAssetGachaPack,
+  shapeAssetGachaRollSettlementItems,
   shapeAssetGachaRollResult,
   validateAssetGachaPack
 } from '../src/index.js';
@@ -221,6 +229,61 @@ test('[asset-gacha] computes and advances pack-scoped pity state', () => {
   assert.equal(afterHit[0].currentMisses, 0);
 });
 
+test('[asset-gacha] plans roll settlement metadata over selected items', () => {
+  const rollPack = pack({
+    rollSize: 2,
+    duplicatePolicy: 'allow_duplicates',
+    items: [
+      { assetId: 'skin.a', rarity: 'common', dropWeight: 100 },
+      { assetId: 'skin.b', rarity: 'rare', dropWeight: 10 },
+      { assetId: 'skin.c', rarity: 'rare', dropWeight: 10 }
+    ],
+    guarantees: [{ id: 'rare_one', minRarity: 'rare', count: 1 }]
+  });
+  const candidates = resolveAssetGachaRollCandidates(rollPack, {
+    ownedAssetIds: ['skin.a'],
+    catalog
+  });
+  const selected = selectAssetGachaRollResults(candidates, rollPack, {
+    rng: sequenceRng([0, 0, 0])
+  });
+  const pityBefore = computeAssetGachaPackPityState(rollPack, { rolls: [] });
+  const plan = createAssetGachaRollSettlementPlan({
+    pack: rollPack,
+    candidates,
+    selectedItems: selected,
+    ownedAssetIds: ['skin.a'],
+    pityBefore,
+    gachaEnabled: true,
+    directBuyPolicy: 'block_gacha_assets',
+    activePackIds: ['starter_pack'],
+    randomSource: 'injected_rng'
+  });
+
+  assert.equal(plan.type, 'asset_gacha_roll_settlement');
+  assert.equal(plan.walletSpend.reason, 'asset_pack_roll');
+  assert.equal(plan.walletSpend.amount, 100);
+  assert.equal(plan.rollMetadata.randomSource, 'injected_rng');
+  assert.deepEqual(plan.resultAssetIds, ['skin.a', 'skin.b']);
+  assert.deepEqual(plan.duplicateAssetIds, ['skin.a']);
+  assert.deepEqual(plan.guaranteesApplied, []);
+
+  const grantDrafts = createAssetGachaRollGrantDrafts(plan, {
+    rollId: 'roll_1',
+    transactionId: 'wtx_1'
+  });
+  assert.equal(grantDrafts[0].acquisitionSource, 'gacha');
+  assert.equal(grantDrafts[0].acquisitionSourceId, 'roll_1');
+  assert.equal(grantDrafts[0].metadata.transactionId, 'wtx_1');
+  assert.equal(grantDrafts[0].allowDuplicate, true);
+
+  const shaped = shapeAssetGachaRollSettlementItems(plan, {
+    grantedItems: [{ instance: { id: 'inst_b' } }, { instance: { id: 'inst_c' } }]
+  });
+  assert.deepEqual(shaped.resultItems.map((item) => item.resultInstanceId), ['inst_b', 'inst_c']);
+  assert.equal(shaped.evidenceItems[0].candidatePoolHash, selected[0].candidatePoolHash);
+});
+
 test('[asset-gacha] selects duplicate burn targets with unowned-first policy', () => {
   const burnPack = pack({
     duplicatePolicy: 'allow_duplicates',
@@ -237,6 +300,62 @@ test('[asset-gacha] selects duplicate burn targets with unowned-first policy', (
 
   assert.equal(selected.length, 1);
   assert.equal(selected[0].assetId, 'skin.c');
+});
+
+test('[asset-gacha] plans duplicate-burn settlement over source rows and targets', () => {
+  const burnPack = pack({
+    duplicatePolicy: 'allow_duplicates',
+    burnRules: [
+      { id: 'common_to_rare', sourceRarity: 'common', sourceCount: 2, targetMinRarity: 'rare', targetCount: 1, targetDuplicatePolicy: 'unowned_first' }
+    ]
+  });
+  const [rule] = normalizeAssetGachaBurnRules(burnPack);
+  const activeRows = [
+    { id: 'keep_a', asset_id: 'skin.a', status: 'active', acquired_at: '2026-01-01T00:00:00.000Z' },
+    { id: 'burn_a_1', asset_id: 'skin.a', status: 'active', acquired_at: '2026-01-02T00:00:00.000Z', metadata_json: '{"note":"one"}' },
+    { id: 'burn_a_2', asset_id: 'skin.a', status: 'active', acquired_at: '2026-01-03T00:00:00.000Z' }
+  ];
+  const sourceRows = selectAssetGachaBurnSourceRows(burnPack, activeRows, rule);
+  assert.deepEqual(sourceRows.map((row) => row.id), ['burn_a_1', 'burn_a_2']);
+
+  const targets = selectAssetGachaBurnTargets(burnPack, rule, {
+    rng: sequenceRng([0]),
+    ownedAssetIds: ['skin.a'],
+    catalog
+  });
+  const plan = createAssetGachaBurnSettlementPlan({
+    pack: burnPack,
+    rule,
+    sourceRows,
+    targetItems: targets,
+    ownedAssetIdsAfterBurn: ['skin.a'],
+    randomSource: 'injected_rng'
+  });
+
+  assert.equal(plan.type, 'asset_gacha_burn_settlement');
+  assert.deepEqual(plan.sourceAssetInstanceIds, ['burn_a_1', 'burn_a_2']);
+  assert.deepEqual(plan.resultAssetIds, ['skin.b']);
+  assert.equal(plan.exchangeMetadata.randomSource, 'injected_rng');
+
+  assert.deepEqual(createAssetGachaBurnSourceMetadata(sourceRows[0], plan, {
+    exchangeId: 'burn_1',
+    now: '2026-07-05T00:00:00.000Z'
+  }), {
+    note: 'one',
+    burnedAt: '2026-07-05T00:00:00.000Z',
+    burnExchangeId: 'burn_1',
+    burnRuleId: 'common_to_rare',
+    burnPackId: 'starter_pack'
+  });
+
+  const grantDrafts = createAssetGachaBurnGrantDrafts(plan, { exchangeId: 'burn_1' });
+  assert.equal(grantDrafts[0].acquisitionSource, 'asset_burn_exchange');
+  assert.equal(grantDrafts[0].metadata.sourceAssetInstanceIds.length, 2);
+
+  const shaped = shapeAssetGachaBurnSettlementItems(plan, {
+    grantedItems: [{ instance: { id: 'inst_b' } }]
+  });
+  assert.equal(shaped.resultItems[0].resultInstanceId, 'inst_b');
 });
 
 test('[asset-gacha] shapes pack state for consumer UIs', () => {

@@ -8,6 +8,20 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added asset-gacha roll and duplicate-burn settlement planners to
+  `modules/gacha`, so product services can share candidate/result metadata,
+  wallet spend payloads, grant drafts, evidence rows, burn-source metadata, and
+  result item DTOs while keeping secure RNG, idempotency, SQL transactions,
+  wallet debit execution, and audit records local.
+- Added wallet purchase intent, checkout metadata, and completion grant
+  planners to `modules/wallet`, so product services can share provider-neutral
+  intent drafts, checkout DTOs, checkout metadata patches, price checks, and
+  completed-intent grant mutations while keeping provider SDK calls, webhooks,
+  locks, SQL rows, and operations runbooks local.
+- Added run-shop lifecycle planners to `modules/shop`, so product services can
+  share buy/refresh/sell coin deltas, offer transitions, refresh counters, and
+  sell refund calculations while keeping run locks, loadout rows, artifacts,
+  product catalog policy, and persistence local.
 - Added gacha admin fixture-operation and simulation-item row helpers to
   `client-view-model`, so admin panels can share row limiting and fallback
   display fields for import previews and roll simulations.
