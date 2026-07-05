@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added headless artifact tile display contracts to `client-view-model`, so
+  product UIs can share tile dimensions, mask cells, role/shine class metadata,
+  image fallback, rotated-image hints, and role glyph labels while keeping
+  artwork, CSS, generated SVGs, and product visual classifiers local.
 - Added headless grid board render DTO shaping to `client-view-model`, so
   product UIs can share board cell flags, placed-piece grid positions, and
   bag-slot rows while keeping component markup, CSS classes, image paths,

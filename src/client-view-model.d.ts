@@ -180,6 +180,104 @@ export interface ArtifactOrientation {
   height: number;
 }
 
+export interface ArtifactTileRole {
+  id: string;
+  label?: string;
+  color?: string;
+  [key: string]: unknown;
+}
+
+export interface ArtifactTileShine {
+  id: string;
+  label?: string;
+  rank?: number;
+  cssClass?: string;
+  [key: string]: unknown;
+}
+
+export interface ArtifactTileVisual {
+  role?: ArtifactTileRole;
+  shine?: ArtifactTileShine;
+  footprintType?: string;
+  cssClasses?: string[];
+  [key: string]: unknown;
+}
+
+export interface ArtifactTileCell {
+  key: string;
+  index: number;
+  x: number;
+  y: number;
+  filled: boolean;
+  empty: boolean;
+  classNames: string[];
+  className: string;
+}
+
+export interface ArtifactTileDisplayOptions {
+  displayWidth?: number | null;
+  displayHeight?: number | null;
+  shape?: readonly (readonly unknown[])[];
+  shapeForArtifact?: (artifact: Record<string, unknown>) => readonly (readonly unknown[])[] | null | undefined;
+  visualForArtifact?: (artifact: Record<string, unknown>) => ArtifactTileVisual | null | undefined;
+  roleForArtifact?: (artifact: Record<string, unknown>) => ArtifactTileRole;
+  shineForArtifact?: (artifact: Record<string, unknown>) => ArtifactTileShine;
+  roleGlyphLabel?: (role: ArtifactTileRole, artifact: Record<string, unknown>, visual: ArtifactTileVisual) => string;
+  imageForArtifact?: (artifact: Record<string, unknown>) => string;
+  imageBasePath?: string;
+  imageExtension?: string;
+  cellClass?: string;
+  emptyCellClass?: string;
+  bitmapClass?: string;
+  bitmapFullClass?: string;
+  bitmapRotatedClass?: string;
+  roleGlyphClass?: string;
+  roleGlyphClassPrefix?: string;
+  bagFamily?: string;
+  roles?: Record<string, ArtifactTileRole>;
+  shineTiers?: Record<string, ArtifactTileShine>;
+}
+
+export interface ArtifactTileDisplay {
+  artifact: Record<string, unknown>;
+  id: string;
+  family: string;
+  label: unknown;
+  width: number;
+  height: number;
+  baseWidth: number;
+  baseHeight: number;
+  shape: number[][] | null;
+  hasMask: boolean;
+  footprintType: string;
+  role: ArtifactTileRole;
+  roleId: string;
+  shine: ArtifactTileShine;
+  shineId: string;
+  cssClasses: string[];
+  gridStyle: Record<string, string>;
+  cells: ArtifactTileCell[];
+  imageSrc: string;
+  imageAlt: unknown;
+  rotatedImage: boolean;
+  imageClassNames: string[];
+  imageStyle: Record<string, string>;
+  rotatedImageVars: Record<string, string>;
+  roleGlyph: {
+    roleId: string;
+    label: string;
+    classNames: string[];
+  };
+  dataset: {
+    artifactId: string;
+    family: string;
+    role: string;
+    shine: string;
+    width: number;
+    height: number;
+  };
+}
+
 export type ArtifactStatBonus = Record<string, unknown>;
 
 export interface ArtifactStatSource {
@@ -802,6 +900,43 @@ export function artifactPreviewOrientation(
   artifact?: { family?: string | null; width?: number | string | null; height?: number | string | null; shape?: readonly (readonly unknown[])[] | null; [key: string]: unknown } | null,
   options?: { bagFamily?: string }
 ): ArtifactOrientation;
+
+export const DEFAULT_ARTIFACT_TILE_SHINE_TIERS: Record<string, ArtifactTileShine>;
+
+export function artifactTileFootprintShape(
+  artifact?: Record<string, unknown> | null,
+  options?: Pick<ArtifactTileDisplayOptions, 'shape' | 'shapeForArtifact'>
+): number[][];
+
+export function artifactTileFootprintDimensions(
+  artifact?: Record<string, unknown> | null,
+  options?: Pick<ArtifactTileDisplayOptions, 'shape' | 'shapeForArtifact'>
+): { cols: number; rows: number };
+
+export function artifactTileFootprintType(
+  artifact?: Record<string, unknown> | null,
+  options?: Pick<ArtifactTileDisplayOptions, 'shape' | 'shapeForArtifact'>
+): string;
+
+export function defaultArtifactTileRole(
+  artifact?: Record<string, unknown> | null,
+  options?: Pick<ArtifactTileDisplayOptions, 'bagFamily' | 'roles'>
+): ArtifactTileRole;
+
+export function defaultArtifactTileShine(
+  artifact?: Record<string, unknown> | null,
+  options?: Pick<ArtifactTileDisplayOptions, 'bagFamily' | 'shineTiers' | 'shapeForArtifact'>
+): ArtifactTileShine;
+
+export function defaultArtifactTileVisual(
+  artifact?: Record<string, unknown> | null,
+  options?: ArtifactTileDisplayOptions
+): ArtifactTileVisual;
+
+export function shapeArtifactTileDisplay(
+  artifact?: Record<string, unknown> | null,
+  options?: ArtifactTileDisplayOptions
+): ArtifactTileDisplay | null;
 
 export function sumArtifactBonuses(
   items?: readonly Record<string, unknown>[],

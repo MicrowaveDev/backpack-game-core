@@ -52,6 +52,7 @@ import {
   runShopBuyResultViewState,
   runShopRefreshResultViewState,
   runShopSellResultViewState,
+  shapeArtifactTileDisplay,
   shapeArtifactStatRows,
   shapeReplayEventRows,
   shapeShopItemRows,
@@ -457,6 +458,75 @@ test('[client-view-model] shapes headless shop item rows', () => {
   assert.equal(rows[1].unavailable, true);
   assert.equal(rows[2].missing, true);
   assert.equal(rows[2].canAfford, false);
+});
+
+test('[client-view-model] shapes headless artifact tile display contracts', () => {
+  const rotated = shapeArtifactTileDisplay({
+    id: 'amber_fang',
+    family: 'damage',
+    name: 'Amber Fang',
+    width: 1,
+    height: 2,
+    price: 2,
+    imageId: 'fang'
+  }, {
+    displayWidth: 2,
+    displayHeight: 1,
+    imageBasePath: '/artifacts'
+  });
+
+  assert.equal(rotated.id, 'amber_fang');
+  assert.equal(rotated.width, 2);
+  assert.equal(rotated.height, 1);
+  assert.equal(rotated.imageSrc, '/artifacts/fang.png');
+  assert.equal(rotated.imageAlt, 'Amber Fang');
+  assert.equal(rotated.rotatedImage, true);
+  assert.deepEqual(rotated.imageClassNames, [
+    'artifact-figure-bitmap',
+    'artifact-figure-bitmap--full',
+    'artifact-figure-bitmap--rotated'
+  ]);
+  assert.deepEqual(rotated.rotatedImageVars, {
+    '--artifact-rotated-bitmap-width': '50%',
+    '--artifact-rotated-bitmap-height': '200%'
+  });
+  assert.equal(rotated.roleId, 'damage');
+  assert.equal(rotated.shineId, 'bright');
+  assert.deepEqual(rotated.cssClasses, ['artifact-role--damage', 'artifact-shine--bright']);
+  assert.deepEqual(rotated.cells.map((cell) => [cell.x, cell.y, cell.filled]), [
+    [0, 0, true],
+    [1, 0, true]
+  ]);
+
+  const masked = shapeArtifactTileDisplay({
+    id: 'hook_bag',
+    family: 'bag',
+    color: '#aa5500',
+    width: 2,
+    height: 2,
+    shape: [
+      [1, 0],
+      [1, 1]
+    ]
+  }, {
+    visualForArtifact: () => ({
+      role: { id: 'bag', label: 'Bag', color: '#aa5500' },
+      shine: { id: 'radiant', cssClass: 'artifact-shine--radiant' },
+      cssClasses: ['artifact-role--bag', 'artifact-shine--radiant']
+    }),
+    roleGlyphLabel: (role) => `${role.label} slot role`
+  });
+
+  assert.equal(masked.hasMask, true);
+  assert.equal(masked.footprintType, 'mask');
+  assert.equal(masked.gridStyle['--artifact-role-color'], '#aa5500');
+  assert.equal(masked.roleGlyph.label, 'Bag slot role');
+  assert.deepEqual(masked.cells.map((cell) => [cell.key, cell.className]), [
+    ['0:0', 'artifact-figure-cell'],
+    ['1:0', 'artifact-figure-cell artifact-figure-cell--empty'],
+    ['0:1', 'artifact-figure-cell'],
+    ['1:1', 'artifact-figure-cell']
+  ]);
 });
 
 test('[client-view-model] formats asset pack odds and availability labels', () => {

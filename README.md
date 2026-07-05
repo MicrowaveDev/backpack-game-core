@@ -45,6 +45,7 @@ catalogs in their own repos.
   loadout row projection, grid prop preparation, grid-cell classification,
   occupied-cell maps, board cell/piece/bag-slot rows,
   preferred/canonical artifact preview orientation,
+  artifact tile display contracts,
   artifact stat summary and stat-row helpers, asset pack summary/label helpers, wallet
   purchase-surface/status helpers, asset roll-feedback/error-status helpers,
   headless wallet/asset-roll mutation view-state helpers, wallet bundle loading

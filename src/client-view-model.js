@@ -361,6 +361,290 @@ function artifactLookupById(artifacts) {
   return (id) => map.get(id);
 }
 
+function titleCaseIdentifier(value, fallback = 'Artifact') {
+  const normalized = String(value || '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+  if (!normalized) return fallback;
+  return normalized.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeTileShape(shape) {
+  if (!Array.isArray(shape) || shape.length === 0) return null;
+  const width = Math.max(0, ...shape.map((row) => Array.isArray(row) ? row.length : 0));
+  if (!width) return null;
+  return shape.map((row) => Array.from({ length: width }, (_, index) => row?.[index] ? 1 : 0));
+}
+
+function rectangleTileShape(width, height) {
+  const cols = Math.max(1, numberOr(width, 1));
+  const rows = Math.max(1, numberOr(height, 1));
+  return Array.from({ length: rows }, () => Array(cols).fill(1));
+}
+
+function tileShapeHasGaps(shape) {
+  return Boolean(shape?.some((row) => row.some((cell) => !cell)));
+}
+
+function explicitTileShapeFor(artifact, {
+  shape = null,
+  shapeForArtifact = null
+} = {}) {
+  const providedShape = shape || (typeof shapeForArtifact === 'function' ? shapeForArtifact(artifact) : null);
+  return normalizeTileShape(providedShape || artifact?.shape);
+}
+
+export const DEFAULT_ARTIFACT_TILE_SHINE_TIERS = {
+  plain: { id: 'plain', label: 'Plain', rank: 1, cssClass: 'artifact-shine--plain' },
+  bright: { id: 'bright', label: 'Bright', rank: 2, cssClass: 'artifact-shine--bright' },
+  radiant: { id: 'radiant', label: 'Radiant', rank: 3, cssClass: 'artifact-shine--radiant' },
+  signature: { id: 'signature', label: 'Signature', rank: 4, cssClass: 'artifact-shine--signature' }
+};
+
+export function artifactTileFootprintShape(artifact, options = {}) {
+  return explicitTileShapeFor(artifact, options)
+    || rectangleTileShape(artifact?.width, artifact?.height);
+}
+
+export function artifactTileFootprintDimensions(artifact, options = {}) {
+  const shape = artifactTileFootprintShape(artifact, options);
+  return {
+    cols: shape[0]?.length || 1,
+    rows: shape.length || 1
+  };
+}
+
+export function artifactTileFootprintType(artifact, options = {}) {
+  const shape = artifactTileFootprintShape(artifact, options);
+  const explicitShape = explicitTileShapeFor(artifact, options);
+  if (
+    explicitShape
+    && (tileShapeHasGaps(shape) || artifact?.family === (options.bagFamily || 'bag'))
+  ) {
+    return 'mask';
+  }
+  const { cols, rows } = artifactTileFootprintDimensions(artifact, options);
+  if (cols === 1 && rows === 1) return 'single';
+  if (cols > rows) return 'wide';
+  if (rows > cols) return 'tall';
+  return 'block';
+}
+
+export function defaultArtifactTileRole(artifact, {
+  bagFamily = 'bag',
+  roles = null
+} = {}) {
+  const roleId = artifact?.family === bagFamily
+    ? bagFamily
+    : (artifact?.family || 'artifact');
+  const role = roles?.[roleId] || roles?.artifact || {};
+  return {
+    id: role.id || roleId,
+    label: role.label || titleCaseIdentifier(roleId),
+    ...role
+  };
+}
+
+export function defaultArtifactTileShine(artifact, {
+  shineTiers = DEFAULT_ARTIFACT_TILE_SHINE_TIERS,
+  bagFamily = 'bag',
+  shapeForArtifact = null
+} = {}) {
+  if (artifact?.characterItem || (artifact?.starterOnly && artifact?.family !== bagFamily)) {
+    return shineTiers.signature;
+  }
+  if (Number(artifact?.price) >= 3) return shineTiers.radiant;
+  const footprint = artifactTileFootprintDimensions(artifact, { shapeForArtifact });
+  if (Number(artifact?.price) >= 2 || footprint.cols * footprint.rows >= 2) {
+    return shineTiers.bright;
+  }
+  return shineTiers.plain;
+}
+
+export function defaultArtifactTileVisual(artifact, options = {}) {
+  const role = typeof options.roleForArtifact === 'function'
+    ? options.roleForArtifact(artifact)
+    : defaultArtifactTileRole(artifact, options);
+  const shine = typeof options.shineForArtifact === 'function'
+    ? options.shineForArtifact(artifact)
+    : defaultArtifactTileShine(artifact, options);
+  return {
+    role,
+    shine,
+    footprintType: artifactTileFootprintType(artifact, options),
+    cssClasses: [
+      `artifact-role--${role?.id || 'artifact'}`,
+      shine?.cssClass || `artifact-shine--${shine?.id || 'plain'}`
+    ]
+  };
+}
+
+function artifactTileImageSrc(artifact, {
+  imageForArtifact = null,
+  imageBasePath = '',
+  imageExtension = '.png'
+} = {}) {
+  if (typeof imageForArtifact === 'function') return imageForArtifact(artifact) || '';
+  if (artifact?.image) return artifact.image;
+  if (artifact?.imageSrc) return artifact.imageSrc;
+  if (artifact?.imageUrl) return artifact.imageUrl;
+  const imageId = artifact?.imageId || artifact?.id;
+  if (!imageId || !imageBasePath) return '';
+  return `${String(imageBasePath).replace(/\/$/, '')}/${imageId}${imageExtension}`;
+}
+
+function resolveArtifactTileVisual(artifact, options = {}) {
+  const visual = typeof options.visualForArtifact === 'function'
+    ? (options.visualForArtifact(artifact) || {})
+    : defaultArtifactTileVisual(artifact, options);
+  const role = visual.role || (typeof options.roleForArtifact === 'function'
+    ? options.roleForArtifact(artifact)
+    : defaultArtifactTileRole(artifact, options));
+  const shine = visual.shine || (typeof options.shineForArtifact === 'function'
+    ? options.shineForArtifact(artifact)
+    : defaultArtifactTileShine(artifact, options));
+  const cssClasses = Array.isArray(visual.cssClasses) && visual.cssClasses.length
+    ? visual.cssClasses
+    : [
+        `artifact-role--${role?.id || 'artifact'}`,
+        shine?.cssClass || `artifact-shine--${shine?.id || 'plain'}`
+      ];
+  return {
+    ...visual,
+    role,
+    shine,
+    footprintType: visual.footprintType || artifactTileFootprintType(artifact, options),
+    cssClasses
+  };
+}
+
+export function shapeArtifactTileDisplay(artifact, {
+  displayWidth = null,
+  displayHeight = null,
+  shape = null,
+  shapeForArtifact = null,
+  visualForArtifact = null,
+  roleForArtifact = null,
+  shineForArtifact = null,
+  roleGlyphLabel = null,
+  imageForArtifact = null,
+  imageBasePath = '',
+  imageExtension = '.png',
+  cellClass = 'artifact-figure-cell',
+  emptyCellClass = 'artifact-figure-cell--empty',
+  bitmapClass = 'artifact-figure-bitmap',
+  bitmapFullClass = 'artifact-figure-bitmap--full',
+  bitmapRotatedClass = 'artifact-figure-bitmap--rotated',
+  roleGlyphClass = 'artifact-role-glyph',
+  roleGlyphClassPrefix = 'artifact-role-glyph--'
+} = {}) {
+  if (!artifact) return null;
+
+  const maskShape = explicitTileShapeFor(artifact, { shape, shapeForArtifact });
+  const resolvedDisplayWidth = displayWidth != null && Number(displayWidth) > 0
+    ? Number(displayWidth)
+    : numberOr(artifact.width, 1);
+  const resolvedDisplayHeight = displayHeight != null && Number(displayHeight) > 0
+    ? Number(displayHeight)
+    : numberOr(artifact.height, 1);
+  const width = maskShape
+    ? (maskShape[0]?.length || 1)
+    : Math.max(1, resolvedDisplayWidth);
+  const height = maskShape
+    ? (maskShape.length || 1)
+    : Math.max(1, resolvedDisplayHeight);
+  const visual = resolveArtifactTileVisual(artifact, {
+    shape: maskShape,
+    shapeForArtifact,
+    visualForArtifact,
+    roleForArtifact,
+    shineForArtifact
+  });
+  const role = visual.role || { id: artifact.family || 'artifact', label: 'Artifact' };
+  const shine = visual.shine || DEFAULT_ARTIFACT_TILE_SHINE_TIERS.plain;
+  const baseWidth = Math.max(1, numberOr(artifact.width, width));
+  const baseHeight = Math.max(1, numberOr(artifact.height, height));
+  const rotatedBitmap = !maskShape
+    && baseWidth !== baseHeight
+    && width === baseHeight
+    && height === baseWidth;
+  const imageSrc = artifactTileImageSrc(artifact, { imageForArtifact, imageBasePath, imageExtension });
+  const imageAlt = artifact.alt || artifact.name || artifact.label || artifact.id || '';
+  const roleLabel = typeof roleGlyphLabel === 'function'
+    ? roleGlyphLabel(role, artifact, visual)
+    : `${role.label || titleCaseIdentifier(role.id)} role`;
+  const cells = Array.from({ length: width * height }, (_, index) => {
+    const x = index % width;
+    const y = Math.floor(index / width);
+    const filled = maskShape ? Boolean(maskShape[y]?.[x]) : true;
+    const classNames = filled ? [cellClass] : [cellClass, emptyCellClass];
+    return {
+      key: `${x}:${y}`,
+      index,
+      x,
+      y,
+      filled,
+      empty: !filled,
+      classNames,
+      className: classNames.join(' ')
+    };
+  });
+  const imageClassNames = [bitmapClass, bitmapFullClass, rotatedBitmap ? bitmapRotatedClass : ''].filter(Boolean);
+  const rotatedImageVars = rotatedBitmap
+    ? {
+        '--artifact-rotated-bitmap-width': `${(height / width) * 100}%`,
+        '--artifact-rotated-bitmap-height': `${(width / height) * 100}%`
+      }
+    : {};
+
+  return {
+    artifact,
+    id: artifact.id || '',
+    family: artifact.family || '',
+    label: artifact.name || artifact.label || artifact.id || '',
+    width,
+    height,
+    baseWidth,
+    baseHeight,
+    shape: maskShape,
+    hasMask: Boolean(maskShape),
+    footprintType: visual.footprintType || artifactTileFootprintType(artifact, { shape: maskShape, shapeForArtifact }),
+    role,
+    roleId: role.id || '',
+    shine,
+    shineId: shine.id || '',
+    cssClasses: visual.cssClasses || [],
+    gridStyle: {
+      gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${height}, minmax(0, 1fr))`,
+      ...(role.color ? { '--artifact-role-color': role.color } : {})
+    },
+    cells,
+    imageSrc,
+    imageAlt,
+    rotatedImage: rotatedBitmap,
+    imageClassNames,
+    imageStyle: {
+      ...(imageSrc ? { backgroundImage: `url('${imageSrc}')` } : {}),
+      ...rotatedImageVars
+    },
+    rotatedImageVars,
+    roleGlyph: {
+      roleId: role.id || '',
+      label: roleLabel,
+      classNames: [roleGlyphClass, `${roleGlyphClassPrefix}${role.id || 'artifact'}`]
+    },
+    dataset: {
+      artifactId: artifact.id || '',
+      family: artifact.family || '',
+      role: role.id || '',
+      shine: shine.id || '',
+      width,
+      height
+    }
+  };
+}
+
 function artifactBonusSource(source) {
   if (!source || typeof source !== 'object') return {};
   if (source.bonus && typeof source.bonus === 'object') return source.bonus;
