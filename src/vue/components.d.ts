@@ -1,0 +1,11 @@
+export interface VueComponentOption {
+  name?: string;
+  props?: Record<string, unknown>;
+  computed?: Record<string, unknown>;
+  methods?: Record<string, unknown>;
+  template?: string;
+  [key: string]: unknown;
+}
+
+export declare const AssetRollResultPanel: VueComponentOption;
+export declare const GachaOddsTable: VueComponentOption;

@@ -59,6 +59,10 @@ catalogs in their own repos.
   product-provided copy and route adapters, plus gacha admin odds preview row
   shaping for rarity/item tables and row helpers for fixture import previews
   and roll simulations.
+- `vue`: neutral Vue 3 component primitives backed by `client-view-model` DTOs.
+  Components provide structural markup, neutral events/slots, and class hooks
+  while product repos keep routes, copy, images, haptics, page layout, and
+  final themes local.
 - `modules/gacha/admin-validation`: backend-safe gacha admin release checklist,
   fixture normalization, fixture operation summary, season-plan projection,
   draft-diff, and promotion metadata helpers over product-provided rows.
@@ -84,6 +88,8 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/fusion`
 - `@microwavedev/backpack-game-core/client`
 - `@microwavedev/backpack-game-core/client-view-model`
+- `@microwavedev/backpack-game-core/vue`
+- `@microwavedev/backpack-game-core/vue/components`
 
 Consumers should import only the package root or these public subpaths. Do not
 import `src/*` or nested submodule paths from game code.
