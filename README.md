@@ -32,6 +32,9 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   state snapshots.
 - `backpack-loadout`: provider-driven loadout generation over injected catalog,
   pricing, bag shape, weighting, and validation hooks.
+- `artifact-capabilities`: default backpack family capability helpers plus
+  override hooks for game-specific item families, bag/container semantics, and
+  stat contribution checks.
 - `loadout-validation`: provider-driven flat-grid and bag-coverage validation
   over injected catalog, pricing, bag policy, and stat rules.
 - `battle-simulation`: deterministic 1v1 battle loop with injected combatant,
@@ -101,6 +104,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/loadout`
 - `@microwavedev/backpack-game-core/modules/battle`
 - `@microwavedev/backpack-game-core/modules/fusion`
+- `@microwavedev/backpack-game-core/artifact-capabilities`
 - `@microwavedev/backpack-game-core/client`
 - `@microwavedev/backpack-game-core/client-view-model`
 - `@microwavedev/backpack-game-core/server`

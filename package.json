@@ -33,6 +33,10 @@
       "types": "./src/backpack-loadout.d.ts",
       "import": "./src/backpack-loadout.js"
     },
+    "./artifact-capabilities": {
+      "types": "./src/artifact-capabilities.d.ts",
+      "import": "./src/artifact-capabilities.js"
+    },
     "./loadout-validation": {
       "types": "./src/loadout-validation.d.ts",
       "import": "./src/loadout-validation.js"

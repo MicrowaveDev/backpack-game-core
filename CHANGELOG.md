@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `artifact-capabilities` and included it in `modules/loadout`, so games
+  can share backpack family capability defaults, configurable bag-family
+  detection, combat/stat contribution checks, and container-placement rules
+  while keeping catalog taxonomy and item definitions local.
 - Added optional Vue 3 component subpaths (`./vue` and `./vue/components`)
   with neutral `ArtifactTile`, `AssetRollResultPanel`, `BackpackGrid`,
   `BattleLog`, `GachaOddsTable`, `GachaPackCard`, `GachaPackCardList`,

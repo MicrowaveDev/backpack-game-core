@@ -38,6 +38,7 @@ export {
   generateBackpackLoadout
 } from './backpack-loadout.js';
 
+export * from './artifact-capabilities.js';
 export * from './run-lifecycle.js';
 
 export {

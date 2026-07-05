@@ -52,6 +52,14 @@ import {
   generateShopOffer
 } from '@microwavedev/backpack-game-core/modules/shop';
 import {
+  FAMILY_CAPS,
+  contributesStats,
+  familyCaps,
+  isBag,
+  isCombatArtifact,
+  isContainerItem
+} from '@microwavedev/backpack-game-core/artifact-capabilities';
+import {
   createRunGhostBudgetPlan,
   createRunGroupCompletionPlan,
   createRunRoundResolutionPlan,
@@ -59,7 +67,9 @@ import {
 } from '@microwavedev/backpack-game-core/modules/run';
 import {
   createLoadoutValidator,
+  familyCaps as familyCapsFromLoadout,
   getEffectiveShape,
+  isBag as isBagFromLoadout,
   pieceCells
 } from '@microwavedev/backpack-game-core/modules/loadout';
 import {
@@ -293,6 +303,14 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
 
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);
+  assert.equal(FAMILY_CAPS.bag.holdsItems, true);
+  assert.deepEqual(familyCaps('missing'), FAMILY_CAPS.damage);
+  assert.equal(isBag({ family: 'bag' }), true);
+  assert.equal(isCombatArtifact({ family: 'damage' }), true);
+  assert.equal(isContainerItem({ x: -1, y: 0 }), true);
+  assert.equal(contributesStats({ family: 'damage' }, { x: 0, y: 0 }), true);
+  assert.equal(familyCapsFromLoadout, familyCaps);
+  assert.equal(isBagFromLoadout, isBag);
   assert.deepEqual(summarizeAssetRollPacks(), []);
   assert.equal(classifyCell([], 0, 0, { cols: 1, rows: 1 }), 'base-inv');
   assert.equal(buildOccupiedCellMap([{ artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }]).get('0:0'), 'needle');
