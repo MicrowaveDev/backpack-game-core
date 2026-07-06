@@ -13,6 +13,7 @@ import {
   FighterCard,
   FusionReveal,
   InventoryZone,
+  PrepScreen,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
@@ -378,6 +379,26 @@ test('[vue] InventoryZone exposes neutral inventory shell and container chips', 
   ]);
   assert.equal(emitted[1][1].id, 'bag_1');
   assert.equal(emitted[2][1].artifactId, 'bag');
+});
+
+test('[vue] PrepScreen exposes neutral prep layout shell contract', () => {
+  assert.equal(PrepScreen.name, 'PrepScreen');
+  assert.match(PrepScreen.template, /slot name="hud"/);
+  assert.match(PrepScreen.template, /slot name="loadout"/);
+  assert.match(PrepScreen.template, /slot name="shop"/);
+  assert.match(PrepScreen.template, /slot name="actions"/);
+  assert.equal(PrepScreen.computed.testId.call({
+    ready: true,
+    readyTestId: 'ready'
+  }), 'ready');
+  assert.equal(PrepScreen.computed.testId.call({
+    ready: false,
+    readyTestId: 'ready'
+  }), null);
+  assert.equal(PrepScreen.computed.headingText.call({
+    roundLabel: 'Round',
+    roundNumber: 3
+  }), 'Round 3');
 });
 
 test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {

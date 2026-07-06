@@ -11,6 +11,7 @@ export { CatalogPageScreen } from './components/CatalogPageScreen.js';
 export { FighterCard } from './components/FighterCard.js';
 export { FusionReveal } from './components/FusionReveal.js';
 export { InventoryZone } from './components/InventoryZone.js';
+export { PrepScreen } from './components/PrepScreen.js';
 export { PrepActions } from './components/PrepActions.js';
 export { RecipeCard } from './components/RecipeCard.js';
 export { RecipeList } from './components/RecipeList.js';

@@ -35,6 +35,12 @@ Vue installed.
   use neutral run summary, run-currency, item-drag, and action-state
   terminology. Products map legacy fields such as local run money names, icons,
   mode names, and route/action event names in wrappers.
+- Prep page shells such as `PrepScreen` should receive readiness state,
+  round labels, reconnecting state, and product-provided slots for HUD,
+  loadout, shop, actions, and overlays. Core owns only the outer prep layout
+  and stable class hooks; product run state, bag rows, drag/drop actions,
+  placement previews, shop mutations, fusion reveal queues, and route events
+  remain product-local.
 - Inventory/drop-zone widgets such as `BackpackZone` should receive resolved
   item DTOs, labels, stat formatters, highlight sets, and visual slots from the
   product app. Core owns only stable structure, event names, and class hooks.

@@ -11,6 +11,7 @@ export {
   CatalogPageScreen,
   FusionReveal,
   InventoryZone,
+  PrepScreen,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,

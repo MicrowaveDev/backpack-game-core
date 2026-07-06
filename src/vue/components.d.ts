@@ -16,6 +16,7 @@ export declare const CatalogPageScreen: VueComponentOption;
 export declare const FighterCard: VueComponentOption;
 export declare const FusionReveal: VueComponentOption;
 export declare const InventoryZone: VueComponentOption;
+export declare const PrepScreen: VueComponentOption;
 export declare const PrepActions: VueComponentOption;
 export declare const RecipeCard: VueComponentOption;
 export declare const RecipeList: VueComponentOption;
