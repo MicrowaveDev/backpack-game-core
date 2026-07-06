@@ -121,6 +121,12 @@ import {
   gachaAdminSimulationItemRows,
   gachaAdminValidationIssueRows,
   preferredArtifactOrientation,
+  planPrepActivateBag,
+  planPrepDeactivateBag,
+  planPrepMoveActiveBag,
+  planPrepMovePlacedItem,
+  planPrepPlaceFromContainer,
+  planPrepRotateBag,
   prepRefreshCost,
   prepSellPriceLabel,
   preferredReplaySpeed,
@@ -398,6 +404,12 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(buildOccupiedCellMap([{ artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }]).get('0:0'), 'needle');
   assert.deepEqual(preferredArtifactOrientation({ width: 1, height: 2 }), { width: 2, height: 1 });
   assert.equal(typeof createPrepGridController({}).effectiveRows, 'function');
+  assert.equal(typeof planPrepPlaceFromContainer, 'function');
+  assert.equal(typeof planPrepMovePlacedItem, 'function');
+  assert.equal(typeof planPrepActivateBag, 'function');
+  assert.equal(typeof planPrepDeactivateBag, 'function');
+  assert.equal(typeof planPrepMoveActiveBag, 'function');
+  assert.equal(typeof planPrepRotateBag, 'function');
   assert.equal(prepRefreshCost(3), 2);
   assert.equal(prepSellPriceLabel(), '');
   assert.equal(shapePrepScreenViewState().ready, false);

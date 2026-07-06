@@ -41,10 +41,12 @@ Vue installed.
   and stable class hooks. Headless prep helpers such as
   `createPrepGridController` and `shapePrepScreenViewState` may own neutral bag
   rows, effective row counts, disabled-cell checks, placement previews,
-  first-fit bag anchors, refresh-cost labels, and sell-price labels. Product
-  repos still own run state mutation, API persistence, haptics, route events,
-  shop purchase/sell/refresh side effects, fusion reveal queue mutation, and
-  final rendering slots.
+  first-fit bag anchors, refresh-cost labels, and sell-price labels. Neutral
+  prep command planners may also return next-array plans for place/move,
+  activate/deactivate/move/rotate bag, and related displacement commands.
+  Product repos still own applying those plans to their live store, API
+  persistence, haptics, route events, shop purchase/sell/refresh side effects,
+  fusion reveal queue mutation, local error copy, and final rendering slots.
 - Inventory/drop-zone widgets such as `BackpackZone` should receive resolved
   item DTOs, labels, stat formatters, highlight sets, and visual slots from the
   product app. Core owns only stable structure, event names, and class hooks.

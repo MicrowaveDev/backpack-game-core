@@ -146,6 +146,98 @@ function prepRectangleShape(cols, rows) {
   return Array.from({ length: rows }, () => Array(cols).fill(1));
 }
 
+function prepArray(state, key) {
+  const value = normalizedPrepState(state)[key];
+  return Array.isArray(value) ? value : [];
+}
+
+function prepArtifactTarget(target) {
+  if (target && typeof target === 'object') {
+    return {
+      artifactId: target.artifactId || target.id || '',
+      rowId: target.rowId || target.id || null
+    };
+  }
+  return { artifactId: target || '', rowId: null };
+}
+
+function samePrepBagTarget(bag, artifactId, rowId = null) {
+  return rowId ? bag?.id === rowId : bag?.artifactId === artifactId;
+}
+
+function popPrepContainerItem(containerItems = [], artifactId, rowId = null) {
+  const idx = (containerItems || []).findIndex((slot) => (
+    rowId ? slot.id === rowId : slot.artifactId === artifactId
+  ));
+  if (idx < 0) return { next: containerItems || [], removed: null };
+  const removed = containerItems[idx];
+  return {
+    next: [
+      ...containerItems.slice(0, idx),
+      ...containerItems.slice(idx + 1)
+    ],
+    removed
+  };
+}
+
+function prepItemCellSet(item = {}) {
+  const cells = new Set();
+  const width = Math.max(1, numberOr(item.width, 1));
+  const height = Math.max(1, numberOr(item.height, 1));
+  const x = numberOr(item.x);
+  const y = numberOr(item.y);
+  for (let dx = 0; dx < width; dx += 1) {
+    for (let dy = 0; dy < height; dy += 1) {
+      cells.add(`${x + dx}:${y + dy}`);
+    }
+  }
+  return cells;
+}
+
+function prepSetsOverlap(a, b) {
+  for (const key of a || []) {
+    if (b?.has?.(key)) return true;
+  }
+  return false;
+}
+
+function prepBagCellSet(controller, bag, rotationOverride = null) {
+  const rotation = rotationOverride == null
+    ? controller.bagRotation(bag.artifactId, bag.id)
+    : normalizeRotation(rotationOverride);
+  const artifact = controller.lookupArtifact?.(bag.artifactId);
+  const shape = artifact ? controller.shapeForArtifact(artifact, rotation) : [];
+  return prepShapeCellsAt(numberOr(bag.anchorX), numberOr(bag.anchorY), shape);
+}
+
+function displacePrepItemsForBag(state, controller, bag, rotationOverride = null) {
+  const bagCells = prepBagCellSet(controller, bag, rotationOverride);
+  const builderItems = [];
+  const displaced = [];
+  for (const item of prepArray(state, 'builderItems')) {
+    if (prepSetsOverlap(prepItemCellSet(item), bagCells)) displaced.push(item);
+    else builderItems.push(item);
+  }
+  return {
+    builderItems,
+    containerItems: [
+      ...prepArray(state, 'containerItems'),
+      ...displaced.map((item) => ({ id: item.id ?? null, artifactId: item.artifactId }))
+    ],
+    displacedItems: displaced
+  };
+}
+
+function prepControllerForPlan(options = {}) {
+  return createPrepGridController({
+    state: options.state,
+    getArtifact: options.getArtifact,
+    columns: options.columns,
+    minRows: options.minRows,
+    bagFamily: options.bagFamily
+  });
+}
+
 export function createPrepGridController({
   state = null,
   getState = null,
@@ -429,7 +521,288 @@ export function createPrepGridController({
     placementPreviewAt,
     rectCellKeys: prepRectCellKeys,
     shapeCellsAt: prepShapeCellsAt,
-    shapeForArtifact
+    shapeForArtifact,
+    lookupArtifact
+  };
+}
+
+export function planPrepPlaceFromContainer({
+  state = null,
+  target = null,
+  artifactId = '',
+  x = 0,
+  y = 0,
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  const resolvedState = normalizedPrepState(state);
+  const lookupArtifact = artifactLookup(getArtifact);
+  const targetInfo = prepArtifactTarget(target || {
+    artifactId: artifactId || resolvedState.draggingArtifactId,
+    rowId: resolvedState.draggingItem?.id || null
+  });
+  const resolvedArtifactId = artifactId || targetInfo.artifactId;
+  const artifact = lookupArtifact(resolvedArtifactId);
+  if (!artifact || artifact.family === bagFamily) return { ok: false, reason: 'invalid_artifact' };
+
+  const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
+  const rowId = targetInfo.rowId || resolvedState.draggingItem?.id || null;
+  const slot = prepArray(resolvedState, 'containerItems').find((item) => (
+    rowId ? item.id === rowId : item.artifactId === resolvedArtifactId
+  ));
+  if (!slot) return { ok: false, reason: 'missing_container_item' };
+
+  const preferred = preferredArtifactOrientation(artifact);
+  const orientations = [preferred];
+  if (artifact.width !== artifact.height) {
+    orientations.push({ width: preferred.height, height: preferred.width });
+  }
+
+  for (const orientation of orientations) {
+    const builderItems = controller.normalizePlacement(
+      artifact,
+      numberOr(x),
+      numberOr(y),
+      orientation.width,
+      orientation.height,
+      slot.id ?? null
+    );
+    if (!builderItems) continue;
+    const { next: containerItems } = popPrepContainerItem(
+      prepArray(resolvedState, 'containerItems'),
+      resolvedArtifactId,
+      slot.id ?? null
+    );
+    return {
+      ok: true,
+      reason: '',
+      builderItems,
+      containerItems,
+      placedItem: builderItems[builderItems.length - 1]
+    };
+  }
+
+  return { ok: false, reason: 'does_not_fit' };
+}
+
+export function planPrepMovePlacedItem({
+  state = null,
+  item = null,
+  x = 0,
+  y = 0,
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  if (!item) return { ok: false, reason: 'missing_item' };
+  const resolvedState = normalizedPrepState(state);
+  const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
+  if (!controller.canMovePlacedItemTo(item, numberOr(x), numberOr(y))) {
+    return { ok: false, reason: 'does_not_fit' };
+  }
+  const others = prepArray(resolvedState, 'builderItems').filter((candidate) => !samePrepItemInstance(candidate, item));
+  return {
+    ok: true,
+    reason: '',
+    builderItems: [...others, { ...item, x: numberOr(x), y: numberOr(y) }]
+  };
+}
+
+export function planPrepActivateBag({
+  state = null,
+  target = null,
+  artifactId = '',
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  const resolvedState = normalizedPrepState(state);
+  const lookupArtifact = artifactLookup(getArtifact);
+  const targetInfo = prepArtifactTarget(target || {
+    artifactId: artifactId || resolvedState.draggingArtifactId,
+    rowId: resolvedState.draggingItem?.id || null
+  });
+  const resolvedArtifactId = artifactId || targetInfo.artifactId;
+  const artifact = lookupArtifact(resolvedArtifactId);
+  if (!artifact || artifact.family !== bagFamily) return { ok: false, reason: 'invalid_bag' };
+  if (prepArray(resolvedState, 'activeBags').some((bag) => samePrepBagTarget(bag, resolvedArtifactId, targetInfo.rowId))) {
+    return { ok: false, reason: 'already_active' };
+  }
+  const { next: containerItems, removed } = popPrepContainerItem(
+    prepArray(resolvedState, 'containerItems'),
+    resolvedArtifactId,
+    targetInfo.rowId
+  );
+  if (!removed) return { ok: false, reason: 'missing_container_item' };
+
+  const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
+  const rotation = controller.bagRotation(resolvedArtifactId, removed.id);
+  const shape = controller.shapeForArtifact(artifact, rotation);
+  const cols = Math.min(Math.max(0, shape[0]?.length || 0), Math.max(1, numberOr(columns, 6)));
+  const rows = shape.length;
+  const { anchorX, anchorY } = controller.findFirstFitAnchor(cols, rows, null, shape);
+
+  return {
+    ok: true,
+    reason: '',
+    activeBags: [...prepArray(resolvedState, 'activeBags'), { ...removed, anchorX, anchorY }],
+    containerItems,
+    activatedBag: { ...removed, anchorX, anchorY }
+  };
+}
+
+export function planPrepDeactivateBag({
+  state = null,
+  target = null,
+  artifactId = '',
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  const resolvedState = normalizedPrepState(state);
+  const targetInfo = prepArtifactTarget(target || { artifactId });
+  const resolvedArtifactId = artifactId || targetInfo.artifactId;
+  const activeBags = prepArray(resolvedState, 'activeBags');
+  const idx = activeBags.findIndex((bag) => samePrepBagTarget(bag, resolvedArtifactId, targetInfo.rowId));
+  if (idx < 0) return { ok: false, reason: 'missing_active_bag' };
+  const removed = activeBags[idx];
+  const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
+  const displaced = displacePrepItemsForBag(resolvedState, controller, removed);
+  return {
+    ok: true,
+    reason: '',
+    activeBags: [
+      ...activeBags.slice(0, idx),
+      ...activeBags.slice(idx + 1)
+    ],
+    builderItems: displaced.builderItems,
+    containerItems: [...displaced.containerItems, removed],
+    deactivatedBag: removed,
+    displacedItems: displaced.displacedItems
+  };
+}
+
+export function planPrepMoveActiveBag({
+  state = null,
+  bagId = '',
+  x = 0,
+  y = 0,
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  const resolvedState = normalizedPrepState(state);
+  const activeBags = prepArray(resolvedState, 'activeBags');
+  const idx = activeBags.findIndex((bag) => bag.id === bagId);
+  if (idx < 0) return { ok: false, reason: 'missing_active_bag' };
+  const bag = activeBags[idx];
+  const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
+  const layout = controller.bagLayout(bag.artifactId, bag.id);
+  const anchorX = numberOr(x);
+  const anchorY = numberOr(y);
+  if (anchorX < 0 || anchorY < 0 || anchorX + layout.cols > Math.max(1, numberOr(columns, 6))) {
+    return { ok: false, reason: 'does_not_fit' };
+  }
+  if (controller.bagAreaOverlaps(anchorX, anchorY, layout.cols, layout.rows, bagId, layout.shape)) {
+    return { ok: false, reason: 'does_not_fit' };
+  }
+  const displaced = displacePrepItemsForBag(resolvedState, controller, bag);
+  return {
+    ok: true,
+    reason: '',
+    activeBags: activeBags.map((candidate, index) => (
+      index === idx ? { ...candidate, anchorX, anchorY } : candidate
+    )),
+    builderItems: displaced.builderItems,
+    containerItems: displaced.containerItems,
+    movedBag: { ...bag, anchorX, anchorY },
+    displacedItems: displaced.displacedItems
+  };
+}
+
+export function planPrepRotateBag({
+  state = null,
+  target = null,
+  artifactId = '',
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  const resolvedState = normalizedPrepState(state);
+  const lookupArtifact = artifactLookup(getArtifact);
+  const targetInfo = prepArtifactTarget(target || { artifactId });
+  const resolvedArtifactId = artifactId || targetInfo.artifactId;
+  const activeBags = prepArray(resolvedState, 'activeBags');
+  const activeBag = activeBags.find((bag) => samePrepBagTarget(bag, resolvedArtifactId, targetInfo.rowId));
+  if (!activeBag) return { ok: false, reason: 'missing_active_bag' };
+  const bag = lookupArtifact(resolvedArtifactId);
+  if (!bag || bag.family !== bagFamily) return { ok: false, reason: 'invalid_bag' };
+  if (bag.width === bag.height) return { ok: false, reason: 'not_rotatable' };
+
+  const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
+  const currentRotation = controller.bagRotation(activeBag.artifactId, activeBag.id);
+  const nextRotation = (currentRotation + 1) % 4;
+  const nextShape = controller.shapeForArtifact(bag, nextRotation);
+  const nextCols = nextShape.length > 0 ? nextShape[0].length : 0;
+  const nextRows = nextShape.length;
+  const { anchorX, anchorY } = controller.findFirstFitAnchor(nextCols, nextRows, activeBag.id, nextShape);
+  const columnCount = Math.max(1, numberOr(columns, 6));
+  if (
+    anchorX + nextCols > columnCount
+    || controller.bagAreaOverlaps(anchorX, anchorY, nextCols, nextRows, activeBag.id, nextShape)
+  ) {
+    return { ok: false, reason: 'does_not_fit' };
+  }
+
+  const displacedOld = displacePrepItemsForBag(resolvedState, controller, activeBag);
+  const stateAfterOldDisplacement = {
+    ...resolvedState,
+    builderItems: displacedOld.builderItems,
+    containerItems: displacedOld.containerItems
+  };
+  const displacedNew = displacePrepItemsForBag(
+    stateAfterOldDisplacement,
+    controller,
+    { ...activeBag, anchorX, anchorY },
+    nextRotation
+  );
+  const rotatedBags = prepArray(resolvedState, 'rotatedBags');
+  const rotationIndex = rotatedBags.findIndex((entry) => entry.id === activeBag.id);
+  let nextRotatedBags;
+  if (nextRotation === 0) {
+    nextRotatedBags = rotatedBags.filter((entry) => entry.id !== activeBag.id);
+  } else if (rotationIndex >= 0) {
+    nextRotatedBags = rotatedBags.map((entry, index) => (
+      index === rotationIndex
+        ? { id: activeBag.id, artifactId: activeBag.artifactId, rotation: nextRotation }
+        : entry
+    ));
+  } else {
+    nextRotatedBags = [
+      ...rotatedBags,
+      { id: activeBag.id, artifactId: activeBag.artifactId, rotation: nextRotation }
+    ];
+  }
+
+  return {
+    ok: true,
+    reason: '',
+    activeBags: activeBags.map((candidate) => (
+      candidate.id === activeBag.id ? { ...candidate, anchorX, anchorY } : candidate
+    )),
+    rotatedBags: nextRotatedBags,
+    builderItems: displacedNew.builderItems,
+    containerItems: displacedNew.containerItems,
+    rotatedBag: { ...activeBag, anchorX, anchorY },
+    rotation: nextRotation,
+    displacedItems: [...displacedOld.displacedItems, ...displacedNew.displacedItems]
   };
 }
 

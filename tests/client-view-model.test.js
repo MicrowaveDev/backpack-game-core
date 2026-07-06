@@ -34,6 +34,12 @@ import {
   createPrepGridController,
   occupiedCellKeys,
   prepareGridProps,
+  planPrepActivateBag,
+  planPrepDeactivateBag,
+  planPrepMoveActiveBag,
+  planPrepMovePlacedItem,
+  planPrepPlaceFromContainer,
+  planPrepRotateBag,
   prepRefreshCost,
   prepSellPriceLabel,
   preferredArtifactOrientation,
@@ -230,6 +236,151 @@ test('[client-view-model] shapes prep screen view state without product copy', (
   assert.equal(viewState.runRefreshCost, 2);
   assert.equal(viewState.runSellPriceLabel, '2');
   assert.deepEqual(viewState.activeFusionReveal, { id: 'fusion_1' });
+});
+
+test('[client-view-model] plans neutral prep item placement and movement commands', () => {
+  const state = {
+    activeBags: [
+      { id: 'starter_row', artifactId: 'starter_bag', anchorX: 0, anchorY: 0 }
+    ],
+    rotatedBags: [],
+    builderItems: [
+      { id: 'needle_row', artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }
+    ],
+    containerItems: [
+      { id: 'blade_row', artifactId: 'blade' }
+    ]
+  };
+
+  const placePlan = planPrepPlaceFromContainer({
+    state,
+    artifactId: 'blade',
+    x: 1,
+    y: 0,
+    getArtifact: artifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(placePlan.ok, true);
+  assert.deepEqual(placePlan.containerItems, []);
+  assert.deepEqual(placePlan.placedItem, {
+    id: 'blade_row',
+    artifactId: 'blade',
+    x: 1,
+    y: 0,
+    width: 2,
+    height: 1
+  });
+
+  const movePlan = planPrepMovePlacedItem({
+    state: { ...state, builderItems: placePlan.builderItems, containerItems: [] },
+    item: placePlan.placedItem,
+    x: 1,
+    y: 1,
+    getArtifact: artifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(movePlan.ok, true);
+  assert.deepEqual(movePlan.builderItems.find((item) => item.id === 'blade_row'), {
+    id: 'blade_row',
+    artifactId: 'blade',
+    x: 1,
+    y: 1,
+    width: 2,
+    height: 1
+  });
+});
+
+test('[client-view-model] plans neutral prep bag activation, movement, deactivation, and rotation', () => {
+  const baseState = {
+    activeBags: [
+      { id: 'starter_row', artifactId: 'starter_bag', anchorX: 0, anchorY: 0 }
+    ],
+    rotatedBags: [],
+    builderItems: [],
+    containerItems: [
+      { id: 'pouch_row', artifactId: 'pouch' }
+    ]
+  };
+
+  const activatePlan = planPrepActivateBag({
+    state: baseState,
+    target: { artifactId: 'pouch', id: 'pouch_row' },
+    getArtifact: artifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(activatePlan.ok, true);
+  assert.deepEqual(activatePlan.activatedBag, {
+    id: 'pouch_row',
+    artifactId: 'pouch',
+    anchorX: 3,
+    anchorY: 0
+  });
+  assert.deepEqual(activatePlan.containerItems, []);
+
+  const withPouchItem = {
+    ...baseState,
+    activeBags: activatePlan.activeBags,
+    containerItems: [],
+    builderItems: [
+      { id: 'blade_row', artifactId: 'blade', x: 3, y: 0, width: 2, height: 1 }
+    ]
+  };
+  const moveBagPlan = planPrepMoveActiveBag({
+    state: withPouchItem,
+    bagId: 'pouch_row',
+    x: 4,
+    y: 1,
+    getArtifact: artifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(moveBagPlan.ok, true);
+  assert.deepEqual(moveBagPlan.builderItems, []);
+  assert.deepEqual(moveBagPlan.containerItems, [{ id: 'blade_row', artifactId: 'blade' }]);
+  assert.deepEqual(moveBagPlan.movedBag, {
+    id: 'pouch_row',
+    artifactId: 'pouch',
+    anchorX: 4,
+    anchorY: 1
+  });
+
+  const deactivatePlan = planPrepDeactivateBag({
+    state: withPouchItem,
+    target: { artifactId: 'pouch', id: 'pouch_row' },
+    getArtifact: artifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(deactivatePlan.ok, true);
+  assert.deepEqual(deactivatePlan.activeBags, [
+    { id: 'starter_row', artifactId: 'starter_bag', anchorX: 0, anchorY: 0 }
+  ]);
+  assert.deepEqual(deactivatePlan.containerItems, [
+    { id: 'blade_row', artifactId: 'blade' },
+    { id: 'pouch_row', artifactId: 'pouch', anchorX: 3, anchorY: 0 }
+  ]);
+
+  const rotatePlan = planPrepRotateBag({
+    state: { ...baseState, activeBags: activatePlan.activeBags, containerItems: [] },
+    target: { artifactId: 'pouch', id: 'pouch_row' },
+    getArtifact: artifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(rotatePlan.ok, true);
+  assert.deepEqual(rotatePlan.rotatedBags, [
+    { id: 'pouch_row', artifactId: 'pouch', rotation: 1 }
+  ]);
+  assert.equal(rotatePlan.rotation, 1);
 });
 
 function bagRow({ artifactId = 'moss_pouch', row: y, anchorX, cols, enabledXs, color = '#6b8f5e' }) {

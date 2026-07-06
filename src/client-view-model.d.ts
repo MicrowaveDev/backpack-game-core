@@ -167,6 +167,36 @@ export interface PrepScreenViewStateOptions {
   refreshPricing?: PrepRefreshPricingOptions;
 }
 
+export interface PrepCommandPlannerOptions {
+  state?: PrepGridState | null;
+  target?: string | number | Record<string, unknown> | null;
+  artifactId?: string;
+  item?: Record<string, unknown> | null;
+  bagId?: string | number;
+  x?: number;
+  y?: number;
+  getArtifact?: ((artifactId: string) => Record<string, unknown> | undefined | null) | Map<string, Record<string, unknown>> | null;
+  columns?: number;
+  minRows?: number;
+  bagFamily?: string;
+}
+
+export interface PrepCommandPlan {
+  ok: boolean;
+  reason: string;
+  activeBags?: Record<string, unknown>[];
+  rotatedBags?: Record<string, unknown>[];
+  builderItems?: Record<string, unknown>[];
+  containerItems?: Record<string, unknown>[];
+  placedItem?: Record<string, unknown>;
+  activatedBag?: Record<string, unknown>;
+  deactivatedBag?: Record<string, unknown>;
+  movedBag?: Record<string, unknown>;
+  rotatedBag?: Record<string, unknown>;
+  rotation?: number;
+  displacedItems?: Record<string, unknown>[];
+}
+
 export interface GridCellBagRow {
   bagId?: string | number;
   row: number;
@@ -1037,6 +1067,18 @@ export function prepRefreshCost(refreshCount?: number, options?: PrepRefreshPric
 export function prepSellPriceLabel(options?: PrepSellPriceLabelOptions): string;
 
 export function shapePrepScreenViewState(options?: PrepScreenViewStateOptions): PrepScreenViewState;
+
+export function planPrepPlaceFromContainer(options?: PrepCommandPlannerOptions): PrepCommandPlan;
+
+export function planPrepMovePlacedItem(options?: PrepCommandPlannerOptions): PrepCommandPlan;
+
+export function planPrepActivateBag(options?: PrepCommandPlannerOptions): PrepCommandPlan;
+
+export function planPrepDeactivateBag(options?: PrepCommandPlannerOptions): PrepCommandPlan;
+
+export function planPrepMoveActiveBag(options?: PrepCommandPlannerOptions): PrepCommandPlan;
+
+export function planPrepRotateBag(options?: PrepCommandPlannerOptions): PrepCommandPlan;
 
 export function bagRowEntryFor(
   bagRows: readonly GridCellBagRow[] | null | undefined,
