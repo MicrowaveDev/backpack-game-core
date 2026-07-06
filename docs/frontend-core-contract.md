@@ -59,6 +59,10 @@ Vue installed.
   event, item select event, resize observation event, data attributes, and class
   hooks; catalog sorting/grouping, recipe sources, artifact previews, and stats
   remain product-local.
+- Catalog page shells such as `CatalogPageScreen` should receive cover labels,
+  class hooks, and catalog content through slots. Core owns only the generic
+  page frame; product copy, route placement, catalog browser/data wiring, and
+  final styling remain product-local.
 - Replay shells such as `ReplayDuel` should receive already-shaped fighter DTOs,
   prepared grid props, role summaries, attribution groups, visual-effect DTOs,
   labels, and replay-speed state from the product app. Core owns the duel

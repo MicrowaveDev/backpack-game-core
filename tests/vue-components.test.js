@@ -9,6 +9,7 @@ import {
   BackpackGrid,
   BackpackZone,
   BattleLog,
+  CatalogPageScreen,
   FighterCard,
   FusionReveal,
   InventoryZone,
@@ -138,6 +139,22 @@ test('[vue] FighterCard exposes neutral combatant and grid rendering contract', 
   });
   assert.equal(gridProps.totalRows >= 4, true);
   assert.equal(gridProps.items.some((item) => item.artifactId === 'blade'), true);
+});
+
+test('[vue] CatalogPageScreen exposes neutral catalog page shell contract', () => {
+  assert.equal(CatalogPageScreen.name, 'CatalogPageScreen');
+  assert.match(CatalogPageScreen.template, /slot name="title"/);
+  assert.match(CatalogPageScreen.template, /<slot><\/slot>/);
+  const context = {
+    labels: {
+      eyebrow: 'Recipes',
+      title: 'Catalog',
+      intro: 'Browse entries'
+    }
+  };
+  assert.equal(CatalogPageScreen.computed.eyebrowText.call(context), 'Recipes');
+  assert.equal(CatalogPageScreen.computed.titleText.call(context), 'Catalog');
+  assert.equal(CatalogPageScreen.computed.introText.call(context), 'Browse entries');
 });
 
 test('[vue] RunHud exposes neutral run summary and currency hooks', () => {

@@ -174,6 +174,7 @@ import {
   BackpackGrid,
   BackpackZone,
   BattleLog,
+  CatalogPageScreen,
   FighterCard,
   FusionReveal,
   InventoryZone,
@@ -202,6 +203,7 @@ import {
   BackpackGrid as BackpackGridFromComponents,
   BackpackZone as BackpackZoneFromComponents,
   BattleLog as BattleLogFromComponents,
+  CatalogPageScreen as CatalogPageScreenFromComponents,
   FighterCard as FighterCardFromComponents,
   FusionReveal as FusionRevealFromComponents,
   InventoryZone as InventoryZoneFromComponents,
@@ -424,6 +426,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(BackpackGrid.name, 'BackpackGrid');
   assert.equal(BackpackZone.name, 'BackpackZone');
   assert.equal(BattleLog.name, 'BattleLog');
+  assert.equal(CatalogPageScreen.name, 'CatalogPageScreen');
   assert.equal(FighterCard.name, 'FighterCard');
   assert.equal(FusionReveal.name, 'FusionReveal');
   assert.equal(InventoryZone.name, 'InventoryZone');
@@ -451,6 +454,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(BackpackGridFromComponents, BackpackGrid);
   assert.equal(BackpackZoneFromComponents, BackpackZone);
   assert.equal(BattleLogFromComponents, BattleLog);
+  assert.equal(CatalogPageScreenFromComponents, CatalogPageScreen);
   assert.equal(FighterCardFromComponents, FighterCard);
   assert.equal(FusionRevealFromComponents, FusionReveal);
   assert.equal(InventoryZoneFromComponents, InventoryZone);

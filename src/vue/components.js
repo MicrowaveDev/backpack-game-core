@@ -7,6 +7,7 @@ export { ArtifactCatalogBrowser } from './components/ArtifactCatalogBrowser.js';
 export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
 export { BattleLog } from './components/BattleLog.js';
 export { BackpackZone } from './components/BackpackZone.js';
+export { CatalogPageScreen } from './components/CatalogPageScreen.js';
 export { FighterCard } from './components/FighterCard.js';
 export { FusionReveal } from './components/FusionReveal.js';
 export { InventoryZone } from './components/InventoryZone.js';

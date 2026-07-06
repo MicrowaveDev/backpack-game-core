@@ -8,6 +8,7 @@ export {
   BackpackZone,
   BattleLog,
   FighterCard,
+  CatalogPageScreen,
   FusionReveal,
   InventoryZone,
   GachaOddsTable,
