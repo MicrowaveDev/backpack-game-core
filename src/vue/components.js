@@ -5,6 +5,7 @@ function nonEmptyArray(value) {
 export { AchievementBadge } from './components/AchievementBadge.js';
 export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
 export { FighterCard } from './components/FighterCard.js';
+export { PrepActions } from './components/PrepActions.js';
 export { RunHud } from './components/RunHud.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';

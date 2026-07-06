@@ -177,6 +177,7 @@ import {
   GachaPackCard,
   GachaPackCardList,
   GachaOddsTable,
+  PrepActions,
   RunHud,
   SellZone,
   SeasonRankEmblem,
@@ -194,6 +195,7 @@ import {
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents,
+  PrepActions as PrepActionsFromComponents,
   RunHud as RunHudFromComponents,
   SellZone as SellZoneFromComponents,
   SeasonRankEmblem as SeasonRankEmblemFromComponents,
@@ -406,6 +408,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
+  assert.equal(PrepActions.name, 'PrepActions');
   assert.equal(RunHud.name, 'RunHud');
   assert.equal(SellZone.name, 'SellZone');
   assert.equal(ShopItemList.name, 'ShopItemList');
@@ -423,6 +426,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);
+  assert.equal(PrepActionsFromComponents, PrepActions);
   assert.equal(RunHudFromComponents, RunHud);
   assert.equal(SellZoneFromComponents, SellZone);
   assert.equal(ShopItemListFromComponents, ShopItemList);

@@ -11,6 +11,7 @@ import {
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
+  PrepActions,
   RunHud,
   SellZone,
   SeasonRankEmblem,
@@ -155,6 +156,52 @@ test('[vue] RunHud exposes neutral run summary and currency hooks', () => {
     player: { runCurrency: 3 },
     runCurrency: {}
   }), 3);
+});
+
+test('[vue] PrepActions exposes neutral ready and abandon action hooks', () => {
+  assert.equal(PrepActions.name, 'PrepActions');
+  assert.match(PrepActions.template, /showOpponentStatus/);
+  assert.match(PrepActions.template, /@click="emitReady"/);
+  const context = {
+    labels: {
+      ready: 'Go',
+      readying: 'Going...',
+      abandon: 'Leave',
+      opponentReady: 'Other ready',
+      opponentWaiting: 'Waiting'
+    },
+    actionInFlight: true,
+    opponentReady: false
+  };
+  assert.equal(PrepActions.computed.readyLabel.call(context), 'Go');
+  assert.equal(PrepActions.computed.readyingLabel.call({
+    labels: {},
+    readyLabel: 'Ready'
+  }), 'Ready');
+  assert.equal(PrepActions.computed.abandonLabel.call(context), 'Leave');
+  assert.equal(PrepActions.computed.primaryText.call({
+    ...context,
+    readyLabel: 'Go',
+    readyingLabel: 'Going...'
+  }), 'Going...');
+  assert.equal(PrepActions.computed.opponentText.call({
+    ...context,
+    opponentReadyLabel: 'Other ready',
+    opponentWaitingLabel: 'Waiting'
+  }), 'Waiting');
+  assert.equal(PrepActions.computed.opponentClass.call({
+    opponentReady: true,
+    opponentReadyClass: 'ready',
+    opponentWaitingClass: 'waiting'
+  }), 'ready');
+  const emitted = [];
+  PrepActions.methods.emitReady.call({
+    $emit: (event) => emitted.push(event)
+  });
+  PrepActions.methods.emitAbandon.call({
+    $emit: (event) => emitted.push(event)
+  });
+  assert.deepEqual(emitted, ['ready', 'primary-action', 'abandon', 'secondary-action']);
 });
 
 test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {

@@ -31,9 +31,10 @@ Vue installed.
 - Battle/replay shells such as `FighterCard` should use neutral combatant
   naming and receive product grid components, image paths, copy, and class hooks
   through props or wrappers.
-- Prep/control widgets such as `RunHud` and `SellZone` should use neutral run
-  summary, run-currency, and item-drag terminology. Products map legacy fields
-  such as local run money names, icons, and sell event names in wrappers.
+- Prep/control widgets such as `RunHud`, `SellZone`, and `PrepActions` should
+  use neutral run summary, run-currency, item-drag, and action-state
+  terminology. Products map legacy fields such as local run money names, icons,
+  mode names, and route/action event names in wrappers.
 - Product repos own final CSS, responsive page layout, route callbacks,
   localization, image resolvers, Telegram wrappers, haptics, and policy.
 
