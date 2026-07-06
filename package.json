@@ -157,6 +157,10 @@
       "types": "./src/modules/community/client.d.ts",
       "import": "./src/modules/community/client.js"
     },
+    "./modules/social-preview": {
+      "types": "./src/modules/social-preview/index.d.ts",
+      "import": "./src/modules/social-preview/index.js"
+    },
     "./modules/loadout": {
       "types": "./src/modules/loadout/index.d.ts",
       "import": "./src/modules/loadout/index.js"

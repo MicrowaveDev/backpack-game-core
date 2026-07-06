@@ -161,6 +161,41 @@ export declare function createHostedCommunityClientServerModule(
   options?: HostedCommunityClientServerModuleOptions
 ): BackpackServerModule;
 
+export interface SocialPreviewCacheServerModuleOptions {
+  name?: string;
+  serviceKey?: string;
+  requires?: string[];
+  provides?: string[];
+  providerKeys?: {
+    renderPreview?: string;
+    ensureOutputDirectory?: string;
+    copyFallback?: string;
+    logger?: string;
+    relativePath?: string;
+  };
+  providers?: Record<string, unknown>;
+  config?: {
+    renderOptions?: Record<string, unknown>;
+    outputPath?: string | null;
+    logKind?: string;
+    registerJob?: boolean;
+    jobName?: string;
+    [key: string]: unknown;
+  };
+  renderPreview?: (options: Record<string, unknown>) => unknown | Promise<unknown>;
+  ensureOutputDirectory?: (input: Record<string, unknown>) => unknown | Promise<unknown>;
+  copyFallback?: (input: Record<string, unknown>) => boolean | unknown | Promise<boolean | unknown>;
+  logger?: Record<string, unknown> | null;
+  relativePath?: ((outputPath: string) => string) | null;
+  registerJob?: boolean;
+  jobName?: string;
+  [key: string]: unknown;
+}
+
+export declare function createSocialPreviewCacheServerModule(
+  options?: SocialPreviewCacheServerModuleOptions
+): BackpackServerModule;
+
 export {
   createKeyedAsyncMutex,
   createRunReadinessManager

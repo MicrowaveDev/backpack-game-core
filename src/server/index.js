@@ -1,5 +1,6 @@
 import { createAssetGachaSimulationService } from '../modules/gacha/simulation-service.js';
 import { createHostedCommunityClient } from '../modules/community/client.js';
+import { createSocialPreviewCacheService } from '../modules/social-preview/index.js';
 import {
   createLoadoutValidationService,
   LOADOUT_VALIDATION_PROVIDER_NAMES
@@ -239,6 +240,59 @@ export function createHostedCommunityClientServerModule({
         services: {
           [serviceKey]: client
         }
+      };
+    }
+  });
+}
+
+export function createSocialPreviewCacheServerModule({
+  name = 'core.socialPreviewCache',
+  serviceKey = 'socialPreviewCacheService',
+  requires = [],
+  provides = [serviceKey],
+  providerKeys = {},
+  providers = {},
+  config = {},
+  registerJob = true,
+  jobName = 'socialPreviewCache',
+  ...serviceOptions
+} = {}) {
+  const providerNames = [
+    'renderPreview',
+    'ensureOutputDirectory',
+    'copyFallback',
+    'logger',
+    'relativePath'
+  ];
+  const requiredProviderKeys = providerNames
+    .map((providerName) => providerKeys[providerName])
+    .filter((key, index) => {
+      const providerName = providerNames[index];
+      return key && !providers?.[providerName] && !serviceOptions?.[providerName];
+    });
+  return createBackpackServerModule({
+    name,
+    requires: [...requires, ...requiredProviderKeys],
+    provides,
+    config,
+    setup(ctx) {
+      const moduleConfig = ctx.getConfig(name, {});
+      const serviceProviders = providerOptionsFromContext(ctx, providers, providerKeys, providerNames);
+      const service = createSocialPreviewCacheService({
+        ...serviceOptions,
+        ...moduleConfig,
+        ...serviceProviders
+      });
+      return {
+        services: {
+          [serviceKey]: service
+        },
+        jobs: registerJob === false || moduleConfig.registerJob === false
+          ? []
+          : [{
+              name: moduleConfig.jobName || jobName,
+              run: (options) => service.ensureSocialPreviewCache(options)
+            }]
       };
     }
   });

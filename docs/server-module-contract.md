@@ -98,6 +98,11 @@ low-risk shared services:
   over a configured hosted community-server URL plus optional injected fetch,
   keeping local apps read-only for leaderboard/friends/challenge surfaces until
   products add explicit hosted write APIs.
+- `createSocialPreviewCacheServerModule()`: registers
+  `socialPreviewCacheService` and an optional warmup job over injected preview
+  renderer, output-directory, fallback-copy, path, and logger adapters. Product
+  repos still own artwork paths, copy, renderer implementation, and static-file
+  serving.
 
 Apps still decide which providers exist, which module order to use, and how
 routes call the registered services.

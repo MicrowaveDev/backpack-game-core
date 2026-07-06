@@ -7,6 +7,7 @@ import {
   createHostedCommunityClientServerModule,
   createLoadoutValidationServerModule,
   createRunReadinessServerModule,
+  createSocialPreviewCacheServerModule,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
 
@@ -286,4 +287,51 @@ test('[server] hosted community module registers a configurable client', async (
     entries: [{ id: 'ranked-player' }]
   });
   assert.equal(requestedUrl, 'https://community.example.test/api/leaderboard');
+});
+
+test('[server] social preview cache module registers a service and job', async () => {
+  const rendered = [];
+  const result = setupBackpackServerModules([
+    createSocialPreviewCacheServerModule({
+      providerKeys: {
+        renderPreview: 'service.preview.render',
+        ensureOutputDirectory: 'service.preview.ensureDir',
+        copyFallback: 'service.preview.copyFallback'
+      },
+      config: {
+        renderOptions: {
+          title: 'Core Consumer',
+          out: '/tmp/social-preview.jpg'
+        },
+        jobName: 'warmSocialPreview'
+      }
+    })
+  ], {
+    services: {
+      'service.preview.render': async (options) => {
+        rendered.push(options);
+      },
+      'service.preview.ensureDir': async ({ outputPath }) => {
+        rendered.push({ ensureDir: outputPath });
+      },
+      'service.preview.copyFallback': async () => false
+    }
+  });
+
+  assert.deepEqual(result.installed, ['core.socialPreviewCache']);
+  assert.equal(result.jobs[0].name, 'warmSocialPreview');
+  const service = result.get('socialPreviewCacheService');
+  const cacheResult = await service.ensureSocialPreviewCache();
+  assert.equal(cacheResult.outcome, 'generated');
+  assert.deepEqual(rendered, [
+    { ensureDir: '/tmp/social-preview.jpg' },
+    { title: 'Core Consumer', out: '/tmp/social-preview.jpg' }
+  ]);
+
+  rendered.length = 0;
+  await result.jobs[0].run({ title: 'Override' });
+  assert.deepEqual(rendered, [
+    { ensureDir: '/tmp/social-preview.jpg' },
+    { title: 'Override', out: '/tmp/social-preview.jpg' }
+  ]);
 });

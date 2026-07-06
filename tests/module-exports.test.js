@@ -94,6 +94,9 @@ import {
   createLoadoutValidationService
 } from '@microwavedev/backpack-game-core/modules/loadout/validation-service';
 import {
+  createSocialPreviewCacheService
+} from '@microwavedev/backpack-game-core/modules/social-preview';
+import {
   assetRollErrorViewState,
   assetRollMutationResultViewState,
   assetRollPendingViewState,
@@ -152,6 +155,7 @@ import {
   createLoadoutValidationServerModule,
   createRunReadinessServerModule,
   createRunReadinessManager,
+  createSocialPreviewCacheServerModule,
   idempotency,
   rateLimit,
   setupBackpackServerModules
@@ -521,6 +525,7 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof createBackpackServerContext, 'function');
   assert.equal(typeof setupBackpackServerModules, 'function');
   assert.equal(typeof createAssetGachaSimulationServerModule, 'function');
+  assert.equal(typeof createSocialPreviewCacheServerModule, 'function');
   assert.equal(typeof createKeyedAsyncMutex, 'function');
   assert.equal(typeof createRunReadinessManager, 'function');
   assert.equal(typeof idempotency, 'function');
@@ -529,6 +534,10 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof clearRateLimitBuckets, 'function');
   assert.equal(idempotencyFromMiddleware, idempotency);
   assert.equal(rateLimitFromMiddleware, rateLimit);
+});
+
+test('[modules] social-preview facade exposes cache helpers', () => {
+  assert.equal(typeof createSocialPreviewCacheService, 'function');
 });
 
 test('[modules] wallet facade exposes accounting helpers', () => {
