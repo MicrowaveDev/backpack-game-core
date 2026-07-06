@@ -11,6 +11,17 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+const ROUTE_METHODS = new Set([
+  'all',
+  'delete',
+  'get',
+  'head',
+  'options',
+  'patch',
+  'post',
+  'put'
+]);
+
 function uniqueStrings(values, label) {
   const seen = new Set();
   const normalized = [];
@@ -33,6 +44,136 @@ function moduleConfigFromContext(module, context) {
     ...module.config,
     ...(moduleConfigs[module.configKey] || moduleConfigs[module.name] || {})
   };
+}
+
+function normalizeRouteMethod(method = 'get') {
+  const normalized = String(method || 'get').trim().toLowerCase();
+  if (!ROUTE_METHODS.has(normalized)) {
+    throw new Error(`Backpack route method is not supported: ${method}`);
+  }
+  return normalized;
+}
+
+function normalizePathPart(value, { allowEmpty = false } = {}) {
+  const text = String(value || '').trim();
+  if (!text) {
+    if (allowEmpty) return '';
+    throw new Error('Backpack route path is required');
+  }
+  return text.startsWith('/') ? text : `/${text}`;
+}
+
+function joinRoutePaths(prefix = '', path = '') {
+  const normalizedPrefix = normalizePathPart(prefix, { allowEmpty: true }).replace(/\/+$/, '');
+  const normalizedPath = normalizePathPart(path).replace(/^\/+/, '');
+  return `${normalizedPrefix}/${normalizedPath}`.replace(/\/+/g, '/') || '/';
+}
+
+function normalizeRouteHandlers(route = {}) {
+  const handlers = [
+    ...asArray(route.middleware),
+    ...asArray(route.handlers),
+    ...(route.handler ? [route.handler] : [])
+  ];
+  if (!handlers.length) {
+    throw new Error(`Backpack route ${route.name || route.path || ''} requires at least one handler`);
+  }
+  for (const handler of handlers) {
+    if (typeof handler !== 'function') {
+      throw new Error(`Backpack route ${route.name || route.path || ''} handlers must be functions`);
+    }
+  }
+  return handlers;
+}
+
+export function createBackpackRouteDescriptor(route = {}) {
+  const name = String(route.name || '').trim();
+  if (!name) throw new Error('Backpack route descriptor requires a name');
+  return {
+    name,
+    method: normalizeRouteMethod(route.method),
+    path: normalizePathPart(route.path),
+    handlers: normalizeRouteHandlers(route),
+    meta: {
+      ...(route.meta || {})
+    }
+  };
+}
+
+export function createBackpackRouteGroup(group = {}) {
+  const name = String(group.name || '').trim();
+  if (!name) throw new Error('Backpack route group requires a name');
+  return {
+    name,
+    prefix: normalizePathPart(group.prefix || '', { allowEmpty: true }),
+    routes: asArray(group.routes).map(createBackpackRouteDescriptor),
+    meta: {
+      ...(group.meta || {})
+    }
+  };
+}
+
+function isRouteDescriptor(value) {
+  return Boolean(value && typeof value === 'object' && value.method && value.path && value.handlers);
+}
+
+function isRouteGroup(value) {
+  return Boolean(value && typeof value === 'object' && Array.isArray(value.routes));
+}
+
+function routeInputsFrom(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (value.routes && !value.method) return [value];
+  if (value.routes || value.method || value.path) return [value];
+  if (typeof value === 'object') return Object.values(value);
+  return [];
+}
+
+export function flattenBackpackRouteDescriptors(routes = [], { prefix = '' } = {}) {
+  return routeInputsFrom(routes).flatMap((entry) => {
+    if (isRouteGroup(entry)) {
+      const group = createBackpackRouteGroup(entry);
+      const nextPrefix = joinRoutePaths(prefix, group.prefix || '/');
+      return group.routes.map((route) => ({
+        ...route,
+        path: joinRoutePaths(nextPrefix, route.path),
+        meta: {
+          ...group.meta,
+          ...route.meta,
+          groupName: route.meta.groupName || group.name
+        }
+      }));
+    }
+    if (isRouteDescriptor(entry) || entry?.method || entry?.path) {
+      const route = createBackpackRouteDescriptor(entry);
+      return [{
+        ...route,
+        path: joinRoutePaths(prefix, route.path)
+      }];
+    }
+    return flattenBackpackRouteDescriptors(entry, { prefix });
+  });
+}
+
+export function bindBackpackRouteDescriptors(target, routes = [], {
+  prefix = '',
+  mountRoute
+} = {}) {
+  if (!target) throw new Error('Backpack route binding requires a target');
+  const descriptors = flattenBackpackRouteDescriptors(routes, { prefix });
+  for (const descriptor of descriptors) {
+    if (mountRoute) {
+      mountRoute(target, descriptor);
+      continue;
+    }
+    const mount = target[descriptor.method];
+    if (typeof mount !== 'function') {
+      throw new Error(`Backpack route target cannot mount method ${descriptor.method}`);
+    }
+    mount.call(target, descriptor.path, ...descriptor.handlers);
+  }
+  return descriptors;
 }
 
 export function createBackpackServerModule(definition = {}) {

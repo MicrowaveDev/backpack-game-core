@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
   createBackpackServerContext,
   createBackpackServerModule,
+  createBackpackRouteDescriptor,
+  createBackpackRouteGroup,
+  flattenBackpackRouteDescriptors,
   createHostedCommunityClientServerModule,
   createLoadoutValidationServerModule,
   createRunReadinessServerModule,
@@ -151,6 +155,90 @@ test('[server] module setup protects existing providers unless override is expli
   });
 
   assert.equal(result.get('profileService').version, 2);
+});
+
+test('[server] route descriptors are framework-neutral and bind through adapters', () => {
+  const auth = (_req, _res, next) => next?.();
+  const handler = () => ({ ok: true });
+  const descriptor = createBackpackRouteDescriptor({
+    name: 'profile.bootstrap',
+    method: 'GET',
+    path: 'bootstrap',
+    middleware: [auth],
+    handler,
+    meta: { auth: true }
+  });
+  assert.equal(descriptor.method, 'get');
+  assert.equal(descriptor.path, '/bootstrap');
+  assert.deepEqual(descriptor.handlers, [auth, handler]);
+
+  const group = createBackpackRouteGroup({
+    name: 'profileRoutes',
+    prefix: '/api/profile',
+    routes: [descriptor],
+    meta: { area: 'profile' }
+  });
+  const flattened = flattenBackpackRouteDescriptors([group], { prefix: '/v1' });
+  assert.equal(flattened[0].path, '/v1/api/profile/bootstrap');
+  assert.equal(flattened[0].meta.area, 'profile');
+  assert.equal(flattened[0].meta.auth, true);
+  assert.equal(flattened[0].meta.groupName, 'profileRoutes');
+
+  const mounted = [];
+  const returned = bindBackpackRouteDescriptors({}, [group], {
+    prefix: '/v1',
+    mountRoute(target, route) {
+      assert.ok(target);
+      mounted.push(route);
+    }
+  });
+  assert.deepEqual(returned, mounted);
+  assert.equal(mounted[0].method, 'get');
+});
+
+test('[server] route descriptors can be provided by modules', () => {
+  const handler = () => ({ ok: true });
+  const result = setupBackpackServerModules([
+    {
+      name: 'core.profileRoutes',
+      provides: ['routes.profile'],
+      setup() {
+        return {
+          routes: {
+            'routes.profile': createBackpackRouteGroup({
+              name: 'profileRoutes',
+              prefix: '/api',
+              routes: [{
+                name: 'profile.bootstrap',
+                method: 'get',
+                path: '/bootstrap',
+                handler
+              }]
+            })
+          }
+        };
+      }
+    }
+  ]);
+
+  assert.deepEqual(result.installed, ['core.profileRoutes']);
+  assert.equal(result.get('routes.profile'), result.routes['routes.profile']);
+  assert.equal(flattenBackpackRouteDescriptors(result.routes)[0].path, '/api/bootstrap');
+});
+
+test('[server] route descriptors reject incomplete routes', () => {
+  assert.throws(
+    () => createBackpackRouteDescriptor({ name: 'bad', method: 'trace', path: '/bad', handler: () => {} }),
+    /method is not supported/
+  );
+  assert.throws(
+    () => createBackpackRouteDescriptor({ name: 'bad', method: 'get', path: '/bad' }),
+    /requires at least one handler/
+  );
+  assert.throws(
+    () => createBackpackRouteGroup({ name: '', routes: [] }),
+    /route group requires a name/
+  );
 });
 
 test('[server] gacha simulation module registers provider-driven service', () => {

@@ -43,6 +43,50 @@ export interface BackpackServerModuleSetupResult {
   healthChecks?: unknown[];
 }
 
+export type BackpackRouteMethod =
+  | 'all'
+  | 'delete'
+  | 'get'
+  | 'head'
+  | 'options'
+  | 'patch'
+  | 'post'
+  | 'put';
+
+export type BackpackRouteHandler = (...args: unknown[]) => unknown;
+
+export interface BackpackRouteDescriptorInput {
+  name: string;
+  method?: BackpackRouteMethod | string;
+  path: string;
+  handler?: BackpackRouteHandler;
+  handlers?: BackpackRouteHandler[];
+  middleware?: BackpackRouteHandler[];
+  meta?: Record<string, unknown>;
+}
+
+export interface BackpackRouteDescriptor {
+  name: string;
+  method: BackpackRouteMethod;
+  path: string;
+  handlers: BackpackRouteHandler[];
+  meta: Record<string, unknown>;
+}
+
+export interface BackpackRouteGroupInput {
+  name: string;
+  prefix?: string;
+  routes?: BackpackRouteDescriptorInput[];
+  meta?: Record<string, unknown>;
+}
+
+export interface BackpackRouteGroup {
+  name: string;
+  prefix: string;
+  routes: BackpackRouteDescriptor[];
+  meta: Record<string, unknown>;
+}
+
 export declare function createBackpackServerModule(definition?: BackpackServerModuleDefinition): BackpackServerModule;
 export declare function createBackpackServerContext(options?: {
   adapters?: Record<string, unknown>;
@@ -56,6 +100,20 @@ export declare function setupBackpackServerModules(
   modules?: BackpackServerModuleDefinition[],
   baseContext?: BackpackServerContext | Parameters<typeof createBackpackServerContext>[0]
 ): BackpackServerContext & { installed: string[] };
+export declare function createBackpackRouteDescriptor(route?: BackpackRouteDescriptorInput): BackpackRouteDescriptor;
+export declare function createBackpackRouteGroup(group?: BackpackRouteGroupInput): BackpackRouteGroup;
+export declare function flattenBackpackRouteDescriptors(
+  routes?: unknown,
+  options?: { prefix?: string }
+): BackpackRouteDescriptor[];
+export declare function bindBackpackRouteDescriptors(
+  target: unknown,
+  routes?: unknown,
+  options?: {
+    prefix?: string;
+    mountRoute?: (target: unknown, route: BackpackRouteDescriptor) => unknown;
+  }
+): BackpackRouteDescriptor[];
 
 export interface AssetGachaSimulationServerModuleOptions {
   name?: string;

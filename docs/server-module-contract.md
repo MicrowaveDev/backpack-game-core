@@ -1,9 +1,9 @@
 # Server Module Contract
 
 Backpack server modules are product-neutral feature descriptors. They let a
-game assemble shared services from explicit dependencies while keeping storage,
-credentials, provider callbacks, catalogs, product routes, and deployment
-composition in the product repo.
+game assemble shared services, route groups, jobs, and health checks from
+explicit dependencies while keeping storage, credentials, provider callbacks,
+catalogs, final route mounting, and deployment composition in the product repo.
 
 ## Descriptor Shape
 
@@ -23,6 +23,18 @@ createBackpackServerModule({
           players: ctx.get('repo.players'),
           sessions: ctx.get('repo.sessions'),
           config: ctx.getConfig('core.profile')
+        })
+      },
+      routes: {
+        profileRoutes: createBackpackRouteGroup({
+          name: 'profileRoutes',
+          prefix: '/api',
+          routes: [{
+            name: 'profile.bootstrap',
+            method: 'get',
+            path: '/bootstrap',
+            handler: (req, res) => res.json({ ok: true })
+          }]
         })
       }
     };
@@ -66,6 +78,42 @@ keys such as:
 
 Product repos own the concrete objects behind those keys.
 
+## Route Descriptors
+
+Core modules may expose route groups, but route groups are plain descriptors.
+They do not import or own the product HTTP framework, middleware ordering,
+auth attachment, rate-limit placement, static files, or final path ownership.
+
+```js
+const routes = createBackpackRouteGroup({
+  name: 'runRoutes',
+  prefix: '/api/game-run',
+  routes: [{
+    name: 'run.start',
+    method: 'post',
+    path: '/start',
+    middleware: [requireAuth],
+    handler: startRunHandler
+  }]
+});
+```
+
+Products mount descriptors with `bindBackpackRouteDescriptors()` or their own
+adapter:
+
+```js
+bindBackpackRouteDescriptors(app, context.routes, {
+  mountRoute(app, route) {
+    app[route.method](route.path, ...route.handlers);
+  }
+});
+```
+
+This is the target path for moving most Mushroom server files: extract a
+feature's service facade and route factory into core, then let Mushroom and
+Meat provide repositories, catalogs, policies, and route mounting config.
+Avoid moving a product's entire app bootstrap or database layer into core.
+
 ## Loader Guarantees
 
 `setupBackpackServerModules()`:
@@ -106,6 +154,30 @@ low-risk shared services:
 
 Apps still decide which providers exist, which module order to use, and how
 routes call the registered services.
+
+## Target App Composition
+
+The long-term app shape should be a product-declared module list:
+
+```js
+const context = setupBackpackServerModules([
+  mushroomDbModule(),
+  mushroomCatalogModule(),
+  coreAuthModule(),
+  coreProfileModule(),
+  coreRunModule(),
+  coreWalletModule(),
+  coreAssetsModule(),
+  coreGachaModule(),
+  mushroomTelegramModule(),
+  mushroomPaymentsModule()
+], baseContext);
+```
+
+Meat declares the same `core.*` modules with Meat repositories, catalogs,
+runtime-mode config, and content policy, plus any Meat-only modules. Product
+modules should be able to override or extend core providers only by declaring
+`allowOverride: true`.
 
 ## Boundary Rules
 

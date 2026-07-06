@@ -6,13 +6,17 @@ Battles and Meat Master. Keep it product-neutral.
 ## Core Boundary
 
 - Do not import Mushroom or Meat code from core.
-- Do not add product catalogs, art paths, copy, themes, route maps, Telegram
-  helpers, payment SDKs, support/admin policy, or provider credentials here.
+- Do not add product catalogs, art paths, copy, themes, product route maps,
+  Telegram helpers, payment SDKs, support/admin policy, or provider
+  credentials here.
 - Do not add Sequelize models, migrations, database clients, Postgres code, or
   SQLite code to core. Product repos own persistence, transactions, deployment,
   and repository implementations.
 - Core helpers should accept plain rows, snapshots, config objects, callbacks,
   or repository/service adapters from the consuming game.
+- Core server modules may expose neutral route descriptors and route factories,
+  but product repos own final route mounting, middleware order, auth
+  attachment, static files, and provider/webhook routes.
 - Browser-safe exports must avoid Node-only imports.
 
 ## Cross-Game Runtime Goals
