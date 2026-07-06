@@ -4,6 +4,7 @@ function nonEmptyArray(value) {
 
 export { AchievementBadge } from './components/AchievementBadge.js';
 export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
+export { BackpackZone } from './components/BackpackZone.js';
 export { FighterCard } from './components/FighterCard.js';
 export { FusionReveal } from './components/FusionReveal.js';
 export { PrepActions } from './components/PrepActions.js';

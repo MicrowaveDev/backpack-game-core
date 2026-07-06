@@ -171,6 +171,7 @@ import {
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
+  BackpackZone,
   BattleLog,
   FighterCard,
   FusionReveal,
@@ -191,6 +192,7 @@ import {
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
   BackpackGrid as BackpackGridFromComponents,
+  BackpackZone as BackpackZoneFromComponents,
   BattleLog as BattleLogFromComponents,
   FighterCard as FighterCardFromComponents,
   FusionReveal as FusionRevealFromComponents,
@@ -405,6 +407,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
   assert.equal(ArtifactTile.name, 'ArtifactTile');
   assert.equal(BackpackGrid.name, 'BackpackGrid');
+  assert.equal(BackpackZone.name, 'BackpackZone');
   assert.equal(BattleLog.name, 'BattleLog');
   assert.equal(FighterCard.name, 'FighterCard');
   assert.equal(FusionReveal.name, 'FusionReveal');
@@ -424,6 +427,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
   assert.equal(BackpackGridFromComponents, BackpackGrid);
+  assert.equal(BackpackZoneFromComponents, BackpackZone);
   assert.equal(BattleLogFromComponents, BattleLog);
   assert.equal(FighterCardFromComponents, FighterCard);
   assert.equal(FusionRevealFromComponents, FusionReveal);

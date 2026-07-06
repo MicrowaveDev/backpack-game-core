@@ -35,6 +35,9 @@ Vue installed.
   use neutral run summary, run-currency, item-drag, and action-state
   terminology. Products map legacy fields such as local run money names, icons,
   mode names, and route/action event names in wrappers.
+- Inventory/drop-zone widgets such as `BackpackZone` should receive resolved
+  item DTOs, labels, stat formatters, highlight sets, and visual slots from the
+  product app. Core owns only stable structure, event names, and class hooks.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

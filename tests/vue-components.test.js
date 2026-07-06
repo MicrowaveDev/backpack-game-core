@@ -6,6 +6,7 @@ import {
   ArtifactTile,
   AssetRollResultPanel,
   BackpackGrid,
+  BackpackZone,
   BattleLog,
   FighterCard,
   FusionReveal,
@@ -250,6 +251,55 @@ test('[vue] FusionReveal exposes neutral artifact-slot animation shell', () => {
     FusionReveal.methods.fallbackLabel({ name: { en: 'Result' } }),
     'Result'
   );
+});
+
+test('[vue] BackpackZone exposes neutral item list and drop-zone shell', () => {
+  assert.equal(BackpackZone.name, 'BackpackZone');
+  assert.match(BackpackZone.template, /slot\s+name="visual"/);
+  assert.match(BackpackZone.template, /selectItem/);
+
+  const items = [
+    { id: 'bag', rowId: 'row_bag', family: 'bag', width: 2, height: 2, slotCount: 4, name: { en: 'Bag' } },
+    null,
+    { id: 'blade', rowId: 'row_blade', width: 1, height: 2, name: { en: 'Blade' } }
+  ];
+  assert.deepEqual(BackpackZone.computed.renderedItems.call({ items }), [items[0], items[2]]);
+  assert.equal(BackpackZone.computed.titleLabel.call({ labels: { title: 'Inventory' } }), 'Inventory');
+  assert.equal(BackpackZone.methods.itemId(items[0]), 'bag');
+  assert.equal(BackpackZone.methods.itemRowId(items[0]), 'row_bag');
+  assert.equal(BackpackZone.methods.itemName.call({ nameForItem: null, lang: 'en', itemId: BackpackZone.methods.itemId }, items[0]), 'Bag');
+  assert.deepEqual(BackpackZone.methods.previewOrientation.call({
+    previewOrientationForItem: null
+  }, items[2]), { width: 1, height: 2 });
+  assert.deepEqual(BackpackZone.methods.previewItem.call({
+    previewOrientation: BackpackZone.methods.previewOrientation,
+    itemId: BackpackZone.methods.itemId
+  }, items[2]), [{
+    artifactId: 'blade',
+    rowId: 'row_blade',
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 2
+  }]);
+  assert.equal(BackpackZone.methods.isPending.call({
+    pendingItemIds: new Set(['row_bag']),
+    itemRowId: BackpackZone.methods.itemRowId
+  }, items[0]), true);
+  assert.equal(BackpackZone.methods.itemTitle.call({
+    labels: { pendingTitle: 'Pending' },
+    isPending: () => true,
+    isHighlighted: () => false
+  }, items[0]), 'Pending');
+
+  const emitted = [];
+  BackpackZone.methods.selectItem.call({
+    itemId: BackpackZone.methods.itemId,
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, items[0]);
+  assert.equal(emitted[0][0], 'select-item');
+  assert.equal(emitted[0][1].artifactId, 'bag');
+  assert.equal(emitted[0][1].id, 'row_bag');
 });
 
 test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {

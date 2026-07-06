@@ -4,6 +4,7 @@ export {
   AssetRollResultPanel,
   ArtifactTile,
   BackpackGrid,
+  BackpackZone,
   BattleLog,
   FighterCard,
   FusionReveal,
