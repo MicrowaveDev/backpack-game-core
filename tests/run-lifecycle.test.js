@@ -44,6 +44,10 @@ test('[run-lifecycle] plans initial run state without persistence', () => {
   });
   assert.equal(plan.playerDraft.livesRemaining, 5);
   assert.equal(plan.playerDraft.coins, 5);
+  assert.equal(plan.playerDraft.characterId, 'thalla');
+  assert.equal(plan.playerDraft.mushroomId, 'thalla');
+  assert.equal(plan.response.characterId, 'thalla');
+  assert.equal(plan.response.mushroomId, 'thalla');
   assert.equal(plan.shopStateDraft.roundsSinceBag, 1);
   assert.deepEqual(plan.shopStateDraft.shopOffer, ['needle', 'plate']);
   assert.deepEqual(plan.loadoutDrafts.map((item) => item.artifactId), [
@@ -136,14 +140,51 @@ test('[run-lifecycle] plans active round resolution counters and rewards', () =>
   assert.equal(plan.currentRound, 2);
   assert.equal(plan.nextRound, 2);
   assert.equal(plan.roundIncome, 5);
-  assert.deepEqual(plan.rewards, { spore: 2, mycelium: 15 });
-  assert.deepEqual(plan.awards, { spore: 4, mycelium: 30 });
+  assert.deepEqual(plan.rewards, { profileCurrency: 2, characterProgress: 15, spore: 2, mycelium: 15 });
+  assert.deepEqual(plan.awards, { profileCurrency: 4, characterProgress: 30, spore: 4, mycelium: 30 });
   assert.deepEqual(plan.player, {
     completedRounds: 1,
     wins: 1,
     losses: 0,
     livesRemaining: 5,
     coins: 10
+  });
+});
+
+test('[run-lifecycle] accepts neutral character and reward currency keys', () => {
+  const startPlan = createRunStartPlan({
+    runId: 'run_neutral',
+    playerId: 'player_neutral',
+    characterId: 'ruby',
+    initialCoins: 3,
+    startingLives: 2
+  });
+
+  assert.equal(startPlan.playerDraft.characterId, 'ruby');
+  assert.equal(startPlan.response.characterId, 'ruby');
+  assert.equal('mushroomId' in startPlan.playerDraft, false);
+  assert.equal('mushroomId' in startPlan.response, false);
+
+  const roundPlan = createRunRoundResolutionPlan({
+    outcome: 'win',
+    rewardTable: {
+      win: { profileCurrency: 3, characterProgress: 8 }
+    },
+    rewardMultiplier: 2,
+    maxRounds: 2
+  });
+
+  assert.deepEqual(roundPlan.rewards, {
+    profileCurrency: 3,
+    characterProgress: 8,
+    spore: 3,
+    mycelium: 8
+  });
+  assert.deepEqual(roundPlan.awards, {
+    profileCurrency: 6,
+    characterProgress: 16,
+    spore: 6,
+    mycelium: 16
   });
 });
 

@@ -30,6 +30,25 @@ function assignIfPresent(target, key, value) {
   if (value != null) target[key] = value;
 }
 
+function rewardAmount(rewards = {}, neutralKey, snakeKey, legacyKey) {
+  return toFiniteNumber(firstNonNull(
+    readField(rewards, neutralKey, snakeKey),
+    rewards[legacyKey]
+  ), 0);
+}
+
+function shapeRewardAmounts(rewards = {}, multiplier = 1) {
+  const normalizedMultiplier = toFiniteNumber(multiplier, 1);
+  const profileCurrency = rewardAmount(rewards, 'profileCurrency', 'profile_currency', 'spore');
+  const characterProgress = rewardAmount(rewards, 'characterProgress', 'character_progress', 'mycelium');
+  return {
+    profileCurrency: profileCurrency * normalizedMultiplier,
+    characterProgress: characterProgress * normalizedMultiplier,
+    spore: profileCurrency * normalizedMultiplier,
+    mycelium: characterProgress * normalizedMultiplier
+  };
+}
+
 function normalizeStarterBag(starterBag = {}) {
   return {
     artifactId: starterBag.artifactId || 'starter_bag',
@@ -114,6 +133,7 @@ export function createRunStartPlan({
   runId = null,
   mode = 'solo',
   playerId = null,
+  characterId = null,
   mushroomId = null,
   runPlayerId = null,
   startedAt = null,
@@ -128,6 +148,7 @@ export function createRunStartPlan({
   const currentRound = 1;
   const coins = toFiniteNumber(initialCoins, 0);
   const livesRemaining = toNonNegativeInt(startingLives, 0);
+  const resolvedCharacterId = firstNonNull(characterId, mushroomId);
   const shopStateDraft = createRunInitialShopStatePlan({
     shopOffer,
     hasBag: shopHasBag,
@@ -144,7 +165,7 @@ export function createRunStartPlan({
     id: runPlayerId,
     gameRunId: runId,
     playerId,
-    mushroomId,
+    characterId: resolvedCharacterId,
     isActive: true,
     completedRounds: 0,
     wins: 0,
@@ -152,6 +173,21 @@ export function createRunStartPlan({
     livesRemaining,
     coins
   };
+  assignIfPresent(playerDraft, 'mushroomId', mushroomId);
+  const response = {
+    id: runId,
+    mode,
+    status: 'active',
+    characterId: resolvedCharacterId,
+    currentRound,
+    startedAt,
+    endedAt: null,
+    endReason: null,
+    shopOffer: shopStateDraft.shopOffer,
+    starterItems: Array.from(starterItems || []),
+    player: playerDraft
+  };
+  assignIfPresent(response, 'mushroomId', mushroomId);
 
   return {
     gameRunDraft: {
@@ -164,19 +200,7 @@ export function createRunStartPlan({
     playerDraft,
     shopStateDraft,
     loadoutDrafts,
-    response: {
-      id: runId,
-      mode,
-      status: 'active',
-      mushroomId,
-      currentRound,
-      startedAt,
-      endedAt: null,
-      endReason: null,
-      shopOffer: shopStateDraft.shopOffer,
-      starterItems: Array.from(starterItems || []),
-      player: playerDraft
-    }
+    response
   };
 }
 
@@ -217,7 +241,7 @@ export function createRunRoundResolutionPlan({
 } = {}) {
   const normalizedRound = Math.max(1, toNonNegativeInt(roundNumber, 1));
   const normalizedMaxRounds = Math.max(1, toNonNegativeInt(maxRounds, 1));
-  const rewards = rewardTable?.[outcome] || { spore: 0, mycelium: 0 };
+  const rewards = shapeRewardAmounts(rewardTable?.[outcome]);
   const multiplier = toFiniteNumber(rewardMultiplier, 1);
   const completedRoundsBefore = toNonNegativeInt(readField(playerState, 'completedRounds', 'completed_rounds'), 0);
   const winsBefore = toNonNegativeInt(readField(playerState, 'wins'), 0);
@@ -243,14 +267,8 @@ export function createRunRoundResolutionPlan({
   return {
     outcome,
     roundNumber: normalizedRound,
-    rewards: {
-      spore: toFiniteNumber(rewards.spore, 0),
-      mycelium: toFiniteNumber(rewards.mycelium, 0)
-    },
-    awards: {
-      spore: toFiniteNumber(rewards.spore, 0) * multiplier,
-      mycelium: toFiniteNumber(rewards.mycelium, 0) * multiplier
-    },
+    rewards,
+    awards: shapeRewardAmounts(rewards, multiplier),
     roundIncome: roundIncomeAmount,
     player: {
       completedRounds,
@@ -343,7 +361,9 @@ export function shapeRunStateSummary(run = {}, {
     endedAt: readField(run, 'endedAt', 'ended_at'),
     endReason: readField(run, 'endReason', 'end_reason')
   };
-  assignIfPresent(summary, 'characterId', readField(run, 'characterId', 'character_id'));
-  assignIfPresent(summary, 'mushroomId', readField(run, 'mushroomId', 'mushroom_id'));
+  const characterId = readField(run, 'characterId', 'character_id');
+  const legacyMushroomId = readField(run, 'mushroomId', 'mushroom_id');
+  assignIfPresent(summary, 'characterId', firstNonNull(characterId, legacyMushroomId));
+  assignIfPresent(summary, 'mushroomId', legacyMushroomId);
   return summary;
 }

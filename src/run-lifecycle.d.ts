@@ -33,7 +33,8 @@ export interface RunStartPlan {
     id: string | null;
     gameRunId: string | null;
     playerId: string | null;
-    mushroomId: string | null;
+    characterId: string | null;
+    mushroomId?: string | null;
     isActive: boolean;
     completedRounds: number;
     wins: number;
@@ -47,7 +48,8 @@ export interface RunStartPlan {
     id: string | null;
     mode: string;
     status: 'active';
-    mushroomId: string | null;
+    characterId: string | null;
+    mushroomId?: string | null;
     currentRound: number;
     startedAt: string | null;
     endedAt: null;
@@ -71,10 +73,14 @@ export interface RunRoundResolutionPlan {
   outcome: unknown;
   roundNumber: number;
   rewards: {
+    profileCurrency: number;
+    characterProgress: number;
     spore: number;
     mycelium: number;
   };
   awards: {
+    profileCurrency: number;
+    characterProgress: number;
     spore: number;
     mycelium: number;
   };
@@ -147,6 +153,7 @@ export function createRunStartPlan(options?: {
   runId?: string | null;
   mode?: string;
   playerId?: string | null;
+  characterId?: string | null;
   mushroomId?: string | null;
   runPlayerId?: string | null;
   startedAt?: string | null;
@@ -172,7 +179,14 @@ export function createRunRoundResolutionPlan(options?: {
   roundNumber?: unknown;
   playerState?: Record<string, unknown>;
   roundIncome?: unknown[];
-  rewardTable?: Record<string, { spore?: unknown; mycelium?: unknown }>;
+  rewardTable?: Record<string, {
+    profileCurrency?: unknown;
+    profile_currency?: unknown;
+    characterProgress?: unknown;
+    character_progress?: unknown;
+    spore?: unknown;
+    mycelium?: unknown;
+  }>;
   rewardMultiplier?: unknown;
   maxRounds?: unknown;
 }): RunRoundResolutionPlan;
