@@ -137,6 +137,10 @@
       "types": "./src/modules/run/index.d.ts",
       "import": "./src/modules/run/index.js"
     },
+    "./modules/support": {
+      "types": "./src/modules/support/index.d.ts",
+      "import": "./src/modules/support/index.js"
+    },
     "./modules/loadout": {
       "types": "./src/modules/loadout/index.d.ts",
       "import": "./src/modules/loadout/index.js"

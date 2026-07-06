@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-neutral support lookup bundle and support mutation result DTO
+  shaping under `modules/support`, so apps can share support/admin response
+  envelopes while keeping permissions, audit persistence, and mutations local.
 - Added provider-driven run-state summary DTO shaping to `modules/run`, so
   product services can share active-run response assembly while keeping loadout
   totals, shop row formatting, battle execution, persistence, and routes local.

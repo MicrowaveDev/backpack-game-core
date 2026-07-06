@@ -53,6 +53,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   settlement invariants over injected persistence snapshots, plus
   provider-neutral purchase intent, checkout, completion planners, and generic
   settlement input parsing/adapter registry helpers.
+- `modules/support`: provider-neutral support lookup bundle and mutation result
+  DTO shaping over product-owned query/mutation rows.
 - `profile-asset-state`: reusable profile asset ownership/equipment row
   shaping, equip validation, purchase spend mutation shaping, purchase/equip
   result DTO shaping, grant summaries, and portrait variant/list projection over

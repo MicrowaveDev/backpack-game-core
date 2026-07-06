@@ -71,6 +71,10 @@ import {
   shapeRunStateSummary
 } from '@microwavedev/backpack-game-core/modules/run';
 import {
+  shapeSupportLookupResult,
+  shapeSupportWalletMutationResult
+} from '@microwavedev/backpack-game-core/modules/support';
+import {
   createLoadoutValidator,
   createLoadoutValidationService as createLoadoutValidationServiceFromLoadout,
   familyCaps as familyCapsFromLoadout,
@@ -330,6 +334,11 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createLoadoutValidationServerModule, 'function');
   assert.equal(typeof createRunReadinessServerModule, 'function');
   assert.equal(typeof createProviderSettlementAdapterRegistry, 'function');
+  assert.equal(shapeSupportLookupResult({ players: [{}] }, { includeCounts: true }).counts.players, 1);
+  assert.equal(shapeSupportWalletMutationResult({
+    transaction: { id: 'tx' },
+    supportAction: { id: 'support' }
+  }).supportAction.id, 'support');
   assert.deepEqual(summarizeAssetRollPacks(), []);
   assert.equal(classifyCell([], 0, 0, { cols: 1, rows: 1 }), 'base-inv');
   assert.equal(buildOccupiedCellMap([{ artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }]).get('0:0'), 'needle');
