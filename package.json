@@ -149,6 +149,14 @@
       "types": "./src/modules/support/index.d.ts",
       "import": "./src/modules/support/index.js"
     },
+    "./modules/community": {
+      "types": "./src/modules/community/index.d.ts",
+      "import": "./src/modules/community/index.js"
+    },
+    "./modules/community/client": {
+      "types": "./src/modules/community/client.d.ts",
+      "import": "./src/modules/community/client.js"
+    },
     "./modules/loadout": {
       "types": "./src/modules/loadout/index.d.ts",
       "import": "./src/modules/loadout/index.js"

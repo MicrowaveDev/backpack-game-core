@@ -4,6 +4,7 @@ import {
   createAssetGachaSimulationServerModule,
   createBackpackServerContext,
   createBackpackServerModule,
+  createHostedCommunityClientServerModule,
   createLoadoutValidationServerModule,
   createRunReadinessServerModule,
   setupBackpackServerModules
@@ -247,4 +248,42 @@ test('[server] run readiness module registers configurable manager', () => {
   });
   clock += 5000;
   assert.deepEqual(manager.getIdleRunIds(4000), ['run_1']);
+});
+
+test('[server] hosted community module registers a configurable client', async () => {
+  let requestedUrl = null;
+  const result = setupBackpackServerModules([
+    createHostedCommunityClientServerModule({
+      providerKeys: {
+        fetchImpl: 'service.fetch'
+      },
+      config: {
+        runtimeMode: 'local',
+        communityServerUrl: 'https://community.example.test',
+        surfaces: {
+          friends: true
+        }
+      }
+    })
+  ], {
+    services: {
+      'service.fetch': async (url) => {
+        requestedUrl = String(url);
+        return {
+          ok: true,
+          json: async () => ({ data: [{ id: 'ranked-player' }] })
+        };
+      }
+    }
+  });
+
+  assert.deepEqual(result.installed, ['core.hostedCommunity']);
+  const client = result.get('communityClient');
+  assert.equal(client.status().surfaces.friends, true);
+  assert.deepEqual(await client.leaderboard(), {
+    available: true,
+    source: 'hosted',
+    entries: [{ id: 'ranked-player' }]
+  });
+  assert.equal(requestedUrl, 'https://community.example.test/api/leaderboard');
 });

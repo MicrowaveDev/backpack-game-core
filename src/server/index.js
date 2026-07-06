@@ -1,4 +1,5 @@
 import { createAssetGachaSimulationService } from '../modules/gacha/simulation-service.js';
+import { createHostedCommunityClient } from '../modules/community/client.js';
 import {
   createLoadoutValidationService,
   LOADOUT_VALIDATION_PROVIDER_NAMES
@@ -202,6 +203,41 @@ export function createRunReadinessServerModule({
       return {
         services: {
           [serviceKey]: service
+        }
+      };
+    }
+  });
+}
+
+export function createHostedCommunityClientServerModule({
+  name = 'core.hostedCommunity',
+  serviceKey = 'communityClient',
+  requires = [],
+  provides = [serviceKey],
+  providerKeys = {},
+  providers = {},
+  config = {},
+  ...clientOptions
+} = {}) {
+  const fetchKey = providerKeys.fetchImpl;
+  return createBackpackServerModule({
+    name,
+    requires: fetchKey && !providers?.fetchImpl && !clientOptions?.fetchImpl
+      ? [...requires, fetchKey]
+      : requires,
+    provides,
+    config,
+    setup(ctx) {
+      const moduleConfig = ctx.getConfig(name, {});
+      const fetchImpl = providerFromContext(ctx, providers, providerKeys, 'fetchImpl') || clientOptions.fetchImpl;
+      const client = createHostedCommunityClient({
+        ...clientOptions,
+        ...moduleConfig,
+        ...(fetchImpl ? { fetchImpl } : {})
+      });
+      return {
+        services: {
+          [serviceKey]: client
         }
       };
     }

@@ -94,6 +94,10 @@ low-risk shared services:
 - `createAssetGachaSimulationServerModule()`: registers
   `assetGachaSimulationService` over injected static/runtime pack, catalog,
   odds, and visibility providers.
+- `createHostedCommunityClientServerModule()`: registers `communityClient`
+  over a configured hosted community-server URL plus optional injected fetch,
+  keeping local apps read-only for leaderboard/friends/challenge surfaces until
+  products add explicit hosted write APIs.
 
 Apps still decide which providers exist, which module order to use, and how
 routes call the registered services.

@@ -130,6 +130,37 @@ export declare function createRunReadinessServerModule(
   options?: RunReadinessServerModuleOptions
 ): BackpackServerModule;
 
+export interface HostedCommunityClientServerModuleOptions {
+  name?: string;
+  serviceKey?: string;
+  requires?: string[];
+  provides?: string[];
+  providerKeys?: {
+    fetchImpl?: string;
+  };
+  providers?: {
+    fetchImpl?: typeof fetch;
+    [key: string]: unknown;
+  };
+  config?: {
+    runtimeMode?: string;
+    communityServerUrl?: string;
+    endpoints?: Record<string, string>;
+    surfaces?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  runtimeMode?: string;
+  communityServerUrl?: string;
+  fetchImpl?: typeof fetch;
+  endpoints?: Record<string, string>;
+  surfaces?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export declare function createHostedCommunityClientServerModule(
+  options?: HostedCommunityClientServerModuleOptions
+): BackpackServerModule;
+
 export {
   createKeyedAsyncMutex,
   createRunReadinessManager
