@@ -35,6 +35,9 @@ Vue installed.
   use neutral run summary, run-currency, item-drag, and action-state
   terminology. Products map legacy fields such as local run money names, icons,
   mode names, and route/action event names in wrappers.
+- Animation shells such as `FusionReveal` should own timing, structural
+  classes, and layout math while receiving already-resolved artifact DTOs,
+  labels, and visual slots from product wrappers.
 - Product repos own final CSS, responsive page layout, route callbacks,
   localization, image resolvers, Telegram wrappers, haptics, and policy.
 

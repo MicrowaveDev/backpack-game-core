@@ -173,6 +173,7 @@ import {
   BackpackGrid,
   BattleLog,
   FighterCard,
+  FusionReveal,
   createReducedMotionTracker,
   GachaPackCard,
   GachaPackCardList,
@@ -192,6 +193,7 @@ import {
   BackpackGrid as BackpackGridFromComponents,
   BattleLog as BattleLogFromComponents,
   FighterCard as FighterCardFromComponents,
+  FusionReveal as FusionRevealFromComponents,
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents,
@@ -405,6 +407,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(BackpackGrid.name, 'BackpackGrid');
   assert.equal(BattleLog.name, 'BattleLog');
   assert.equal(FighterCard.name, 'FighterCard');
+  assert.equal(FusionReveal.name, 'FusionReveal');
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
@@ -423,6 +426,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(BackpackGridFromComponents, BackpackGrid);
   assert.equal(BattleLogFromComponents, BattleLog);
   assert.equal(FighterCardFromComponents, FighterCard);
+  assert.equal(FusionRevealFromComponents, FusionReveal);
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);

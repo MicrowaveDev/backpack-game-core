@@ -8,6 +8,7 @@ import {
   BackpackGrid,
   BattleLog,
   FighterCard,
+  FusionReveal,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
@@ -202,6 +203,53 @@ test('[vue] PrepActions exposes neutral ready and abandon action hooks', () => {
     $emit: (event) => emitted.push(event)
   });
   assert.deepEqual(emitted, ['ready', 'primary-action', 'abandon', 'secondary-action']);
+});
+
+test('[vue] FusionReveal exposes neutral artifact-slot animation shell', () => {
+  assert.equal(FusionReveal.name, 'FusionReveal');
+  assert.match(FusionReveal.template, /slot\s+name="artifact"/);
+  assert.match(FusionReveal.template, /resolvedIngredientArtifacts/);
+
+  const ingredientArtifacts = [
+    { id: 'a', width: 2, height: 1 },
+    null,
+    { id: 'b', width: 1, height: 3 }
+  ];
+  assert.deepEqual(
+    FusionReveal.computed.resolvedIngredientArtifacts.call({ ingredientArtifacts }),
+    [ingredientArtifacts[0], ingredientArtifacts[2]]
+  );
+  assert.deepEqual(FusionReveal.methods.figureSize({ width: 2, height: 3 }), {
+    width: 2,
+    height: 3
+  });
+  assert.equal(
+    FusionReveal.methods.figureFrameStyle({ width: 2, height: 1 }).width,
+    'calc(2 * var(--fusion-reveal-cell-size, 64px) + 1 * var(--fusion-reveal-gap, 8px))'
+  );
+
+  const style = FusionReveal.methods.ingredientStyle.call({
+    resolvedIngredientArtifacts: [ingredientArtifacts[0], ingredientArtifacts[2]],
+    radius: 100,
+    figureSize: FusionReveal.methods.figureSize,
+    figureFrameStyle: FusionReveal.methods.figureFrameStyle
+  }, ingredientArtifacts[0], 0);
+  assert.equal(style['--fusion-start-x'], '-100px');
+  assert.equal(style['--fusion-spin'], '-9deg');
+
+  const emitted = [];
+  const context = {
+    finished: false,
+    clearTimer() {},
+    $emit: (event) => emitted.push(event)
+  };
+  FusionReveal.methods.finish.call(context);
+  FusionReveal.methods.finish.call(context);
+  assert.deepEqual(emitted, ['done']);
+  assert.equal(
+    FusionReveal.methods.fallbackLabel({ name: { en: 'Result' } }),
+    'Result'
+  );
 });
 
 test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {

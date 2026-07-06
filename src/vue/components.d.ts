@@ -11,6 +11,7 @@ export declare const AssetRollResultPanel: VueComponentOption;
 export declare const AchievementBadge: VueComponentOption;
 export declare const ArtifactStatSummary: VueComponentOption;
 export declare const FighterCard: VueComponentOption;
+export declare const FusionReveal: VueComponentOption;
 export declare const PrepActions: VueComponentOption;
 export declare const RunHud: VueComponentOption;
 export declare const SellZone: VueComponentOption;

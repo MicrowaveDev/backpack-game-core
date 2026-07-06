@@ -6,6 +6,7 @@ export {
   BackpackGrid,
   BattleLog,
   FighterCard,
+  FusionReveal,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
