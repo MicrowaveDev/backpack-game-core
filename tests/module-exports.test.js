@@ -185,6 +185,7 @@ import {
   RecipeCard,
   RecipeList,
   ReplayDuel,
+  ReplayScreen,
   RunHud,
   SellZone,
   SeasonRankEmblem,
@@ -211,6 +212,7 @@ import {
   RecipeCard as RecipeCardFromComponents,
   RecipeList as RecipeListFromComponents,
   ReplayDuel as ReplayDuelFromComponents,
+  ReplayScreen as ReplayScreenFromComponents,
   RunHud as RunHudFromComponents,
   SellZone as SellZoneFromComponents,
   SeasonRankEmblem as SeasonRankEmblemFromComponents,
@@ -432,6 +434,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(RecipeCard.name, 'RecipeCard');
   assert.equal(RecipeList.name, 'RecipeList');
   assert.equal(ReplayDuel.name, 'ReplayDuel');
+  assert.equal(ReplayScreen.name, 'ReplayScreen');
   assert.equal(RunHud.name, 'RunHud');
   assert.equal(SellZone.name, 'SellZone');
   assert.equal(ShopZone.name, 'ShopZone');
@@ -458,6 +461,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(RecipeCardFromComponents, RecipeCard);
   assert.equal(RecipeListFromComponents, RecipeList);
   assert.equal(ReplayDuelFromComponents, ReplayDuel);
+  assert.equal(ReplayScreenFromComponents, ReplayScreen);
   assert.equal(RunHudFromComponents, RunHud);
   assert.equal(SellZoneFromComponents, SellZone);
   assert.equal(ShopZoneFromComponents, ShopZone);

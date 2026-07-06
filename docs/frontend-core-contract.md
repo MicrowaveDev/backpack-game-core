@@ -66,6 +66,13 @@ Vue installed.
   `set-speed` event, and fighter/grid slots; product combatant shaping,
   artifact lookups, visual effects, replay timeline state, and final battle
   page composition remain product-local.
+- Replay page shells such as `ReplayScreen` should receive result/reward
+  summaries, battle summary rows, battle-log rows, continuation labels, and
+  collapse state as neutral DTOs. Core owns the replay page layout, result
+  sheet structure, battle-log placement, neutral result/log events, and a
+  battle-stage slot; product route navigation, replay timeline state,
+  localization, currency labels, reward policy, combatant DTO shaping, and
+  final fighter rendering remain product-local.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

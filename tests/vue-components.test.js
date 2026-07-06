@@ -19,6 +19,7 @@ import {
   RecipeCard,
   RecipeList,
   ReplayDuel,
+  ReplayScreen,
   RunHud,
   SellZone,
   SeasonRankEmblem,
@@ -627,6 +628,65 @@ test('[vue] ReplayDuel exposes neutral replay duel shell contract', () => {
     $emit: (event, payload) => emitted.push([event, payload])
   }, 4);
   assert.deepEqual(emitted, [['set-speed', 4]]);
+});
+
+test('[vue] ReplayScreen exposes neutral replay page shell contract', () => {
+  assert.equal(ReplayScreen.name, 'ReplayScreen');
+  assert.equal(ReplayScreen.components.BattleLog.name, 'BattleLog');
+  assert.match(ReplayScreen.template, /name="battle-stage"/);
+  assert.match(ReplayScreen.template, /battle-log/);
+  assert.ok(ReplayScreen.emits.includes('toggle-result'));
+  assert.ok(ReplayScreen.emits.includes('go-results'));
+  assert.ok(ReplayScreen.emits.includes('select-log-row'));
+
+  const context = {
+    finished: true,
+    resultCollapsed: true,
+    resultHero: { tone: 'win', title: 'Victory', summary: 'Done' },
+    rewardsPanel: {
+      visible: true,
+      tone: 'win',
+      stats: [{ key: 'coins', label: 'Coins', value: '+2' }],
+      opponentStats: ['7 HP'],
+      runStatus: [{ key: 'wins', label: 'Wins', value: 3 }]
+    },
+    battleSummary: {
+      rows: [{ side: 'left', name: 'Hero', metrics: [{ key: 'damage', label: 'Damage', value: 8 }] }]
+    },
+    logRows: [{ key: 'a', text: 'Hit' }]
+  };
+
+  assert.deepEqual(ReplayScreen.computed.rootClasses.call(context), {
+    'replay-layout--result-ready': true,
+    'replay-layout--result-collapsed': true
+  });
+  assert.equal(ReplayScreen.computed.heroTone.call({
+    ...context,
+    hero: context.resultHero
+  }), 'win');
+  assert.equal(ReplayScreen.computed.showRewards.call({
+    ...context,
+    rewards: context.rewardsPanel
+  }), true);
+  assert.deepEqual(ReplayScreen.computed.rewardStats.call({
+    ...context,
+    rewards: context.rewardsPanel
+  }), context.rewardsPanel.stats);
+  assert.deepEqual(ReplayScreen.computed.summaryRows.call({
+    ...context,
+    summary: context.battleSummary
+  }), context.battleSummary.rows);
+
+  const emitted = [];
+  const emitContext = { $emit: (event, payload) => emitted.push([event, payload]) };
+  ReplayScreen.methods.emitToggleResult.call(emitContext);
+  ReplayScreen.methods.emitGoResults.call(emitContext);
+  ReplayScreen.methods.emitSelectLogRow.call(emitContext, { row: { replayIndex: 2 } });
+  assert.deepEqual(emitted, [
+    ['toggle-result', undefined],
+    ['go-results', undefined],
+    ['select-log-row', { row: { replayIndex: 2 } }]
+  ]);
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {
