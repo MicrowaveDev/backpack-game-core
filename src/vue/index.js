@@ -9,6 +9,8 @@ export {
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
+  RunHud,
+  SellZone,
   SeasonRankEmblem,
   ShopItemList,
   ShopItemRow

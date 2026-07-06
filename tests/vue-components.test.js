@@ -11,6 +11,8 @@ import {
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
+  RunHud,
+  SellZone,
   SeasonRankEmblem,
   ShopItemList,
   ShopItemRow
@@ -126,6 +128,55 @@ test('[vue] FighterCard exposes neutral combatant and grid rendering contract', 
   });
   assert.equal(gridProps.totalRows >= 4, true);
   assert.equal(gridProps.items.some((item) => item.artifactId === 'blade'), true);
+});
+
+test('[vue] RunHud exposes neutral run summary and currency hooks', () => {
+  assert.equal(RunHud.name, 'RunHud');
+  assert.match(RunHud.template, /currencyText/);
+  const context = {
+    player: { wins: 2, livesRemaining: 4 },
+    labels: { wins: 'Victories', lives: 'Health' },
+    runCurrency: { amount: 7, icon: '*', label: 'Tokens' }
+  };
+  assert.equal(RunHud.computed.winsLabel.call(context), 'Victories');
+  assert.equal(RunHud.computed.livesLabel.call(context), 'Health');
+  assert.equal(RunHud.computed.winsValue.call(context), 2);
+  assert.equal(RunHud.computed.livesValue.call(context), 4);
+  assert.equal(RunHud.computed.currencyAmount.call(context), 7);
+  assert.deepEqual(RunHud.computed.currencyParts.call({
+    ...context,
+    currencyAmount: 7
+  }), ['*', 7, 'Tokens']);
+  assert.equal(RunHud.computed.currencyText.call({
+    ...context,
+    currencyParts: ['*', 7, 'Tokens']
+  }), '* 7 Tokens');
+  assert.equal(RunHud.computed.currencyAmount.call({
+    player: { runCurrency: 3 },
+    runCurrency: {}
+  }), 3);
+});
+
+test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {
+  assert.equal(SellZone.name, 'SellZone');
+  assert.match(SellZone.template, /slot v-if="showPrice"/);
+  assert.equal(SellZone.computed.showPrice.call({
+    active: true,
+    draggingItemId: 'row_1'
+  }), true);
+  assert.deepEqual(SellZone.computed.rootClasses.call({
+    rootClass: 'sell-zone',
+    activeClass: 'sell-zone--active',
+    active: true
+  }), ['sell-zone', 'sell-zone--active']);
+  assert.equal(SellZone.computed.priceText.call({
+    pricePrefix: '*',
+    priceLabel: '2'
+  }), '* +2');
+  assert.equal(SellZone.computed.idleText.call({
+    inactivePrefix: '$',
+    inactiveText: 'Sell here'
+  }), '$ Sell here');
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {
