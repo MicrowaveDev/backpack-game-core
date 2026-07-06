@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-neutral auth user/session/logout response shapers under
+  `modules/auth`, so apps can share login payload envelopes while keeping
+  auth verification, session storage, and player lookup local.
 - Hardened `client` error-message extraction so shared route clients preserve
   API errors shaped as either strings or `{ message }` objects.
 - Added provider-neutral runtime config validation result, assertion, and CLI

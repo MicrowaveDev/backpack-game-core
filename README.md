@@ -50,6 +50,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   module lists.
 - `modules/config`: provider-neutral runtime config validation result,
   assertion, and CLI summary line shapers over product-owned validation rules.
+- `modules/auth`: provider-neutral auth user/session/logout response shapers
+  over product-owned auth verification, sessions, and player rows.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots, plus

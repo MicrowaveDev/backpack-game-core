@@ -113,6 +113,10 @@
       "types": "./src/modules/config/index.d.ts",
       "import": "./src/modules/config/index.js"
     },
+    "./modules/auth": {
+      "types": "./src/modules/auth/index.d.ts",
+      "import": "./src/modules/auth/index.js"
+    },
     "./modules/wallet": {
       "types": "./src/modules/wallet/index.d.ts",
       "import": "./src/modules/wallet/index.js"

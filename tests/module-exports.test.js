@@ -32,6 +32,10 @@ import {
   shapeRuntimeConfigValidationResult
 } from '@microwavedev/backpack-game-core/modules/config';
 import {
+  shapeAuthSessionResult,
+  shapeAuthUserProfile
+} from '@microwavedev/backpack-game-core/modules/auth';
+import {
   applyWalletBalanceDelta,
   createProviderSettlementAdapterRegistry,
   createWalletPurchaseCompletionPlan,
@@ -256,6 +260,11 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
   assert.equal(formatRuntimeConfigValidationLines(shapeRuntimeConfigValidationResult(), {
     readyMessage: 'ok'
   })[0], 'ok');
+  assert.equal(shapeAuthSessionResult({
+    token: 'token',
+    player: shapeAuthUserProfile({ id: 'player', displayName: 'Player' }),
+    userField: 'player'
+  }).player.name, 'Player');
   assert.equal(normalizeGachaAdminFixture({ packs: [{ id: 'fixture_pack' }] }).packs[0].id, 'fixture_pack');
   assert.equal(gachaAdminPackSnapshot({ id: 'pack', roll_price_amount: '5' }).rollPriceAmount, 5);
   assert.equal(buildGachaAdminPackDraftDiff({
