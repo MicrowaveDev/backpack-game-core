@@ -100,6 +100,28 @@ export interface RunGroupCompletionPlan {
   allMaxRounds: boolean;
 }
 
+export interface RunStateSummary {
+  id?: unknown;
+  mode?: unknown;
+  status?: unknown;
+  currentRound?: unknown;
+  characterId?: unknown;
+  mushroomId?: unknown;
+  player: Record<string, unknown>;
+  shopOffer: unknown[];
+  shopItems: unknown[];
+  loadoutItems: unknown[];
+  loadoutCost: unknown;
+  loadoutTotals: unknown;
+  refreshCount?: unknown;
+  battles: unknown[];
+  lastBattle: unknown | null;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  endedAt?: unknown;
+  endReason?: unknown;
+}
+
 export function createRunInitialShopStatePlan(options?: {
   shopOffer?: unknown[];
   hasBag?: boolean;
@@ -159,3 +181,21 @@ export function createRunGroupCompletionPlan(options?: {
   playerResults?: unknown[] | Record<string, unknown>;
   maxRounds?: unknown;
 }): RunGroupCompletionPlan;
+
+export function shapeRunStateSummary(
+  run?: Record<string, unknown>,
+  options?: {
+    getLoadoutTotals?: (loadoutItems: unknown[], context: { run: Record<string, unknown>; player: Record<string, unknown> }) => unknown;
+    getLoadoutCost?: (loadoutItems: unknown[], context: { run: Record<string, unknown>; player: Record<string, unknown> }) => unknown;
+    getShopItems?: (
+      shopOffer: unknown[],
+      loadoutItems: unknown[],
+      context: {
+        run: Record<string, unknown>;
+        player: Record<string, unknown>;
+        availableBudget: number;
+      }
+    ) => unknown[];
+    shapeBattleSummary?: (battle: Record<string, unknown>, context: { run: Record<string, unknown> }) => unknown;
+  }
+): RunStateSummary;

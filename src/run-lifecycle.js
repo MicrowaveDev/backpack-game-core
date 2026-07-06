@@ -18,6 +18,18 @@ function cloneOffer(offer = []) {
   return Array.isArray(offer) ? [...offer] : [];
 }
 
+function cloneArray(value) {
+  return Array.isArray(value) ? [...value] : [];
+}
+
+function firstNonNull(...values) {
+  return values.find((value) => value != null);
+}
+
+function assignIfPresent(target, key, value) {
+  if (value != null) target[key] = value;
+}
+
 function normalizeStarterBag(starterBag = {}) {
   return {
     artifactId: starterBag.artifactId || 'starter_bag',
@@ -276,4 +288,62 @@ export function createRunGroupCompletionPlan({
     anyEliminated,
     allMaxRounds
   };
+}
+
+function defaultBattleSummary(battle = {}) {
+  return {
+    id: battle.id,
+    roundNumber: readField(battle, 'roundNumber', 'round_number'),
+    outcome: battle.outcome,
+    createdAt: readField(battle, 'createdAt', 'created_at')
+  };
+}
+
+export function shapeRunStateSummary(run = {}, {
+  getLoadoutTotals = () => ({}),
+  getLoadoutCost = () => 0,
+  getShopItems = () => [],
+  shapeBattleSummary = defaultBattleSummary
+} = {}) {
+  const player = {
+    ...(firstNonNull(
+      readField(run, 'player'),
+      readField(run, 'playerState', 'player_state'),
+      {}
+    ) || {})
+  };
+  const shopOffer = cloneArray(firstNonNull(
+    readField(run, 'shopOffer', 'shop_offer'),
+    readField(run, 'shopIds', 'shop_ids')
+  ));
+  const loadoutItems = firstNonNull(
+    readField(run, 'loadoutItems', 'loadout_items'),
+    readField(run, 'loadout')
+  ) || [];
+  const battles = cloneArray(readField(run, 'battles')).map((battle) => (
+    shapeBattleSummary(battle, { run })
+  ));
+  const availableBudget = toFiniteNumber(readField(player, 'coins'), 0);
+  const summary = {
+    id: run.id,
+    mode: run.mode,
+    status: run.status,
+    currentRound: readField(run, 'currentRound', 'current_round'),
+    player,
+    shopOffer,
+    shopItems: getShopItems(shopOffer, loadoutItems, { run, player, availableBudget }),
+    loadoutItems,
+    loadoutCost: getLoadoutCost(loadoutItems, { run, player }),
+    loadoutTotals: getLoadoutTotals(loadoutItems, { run, player }),
+    refreshCount: readField(run, 'refreshCount', 'refresh_count'),
+    battles,
+    lastBattle: firstNonNull(readField(run, 'lastBattle', 'last_battle'), cloneArray(readField(run, 'battles')).at(-1)) || null,
+    createdAt: readField(run, 'createdAt', 'created_at'),
+    updatedAt: readField(run, 'updatedAt', 'updated_at'),
+    endedAt: readField(run, 'endedAt', 'ended_at'),
+    endReason: readField(run, 'endReason', 'end_reason')
+  };
+  assignIfPresent(summary, 'characterId', readField(run, 'characterId', 'character_id'));
+  assignIfPresent(summary, 'mushroomId', readField(run, 'mushroomId', 'mushroom_id'));
+  return summary;
 }

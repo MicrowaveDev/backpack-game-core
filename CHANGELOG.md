@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-driven run-state summary DTO shaping to `modules/run`, so
+  product services can share active-run response assembly while keeping loadout
+  totals, shop row formatting, battle execution, persistence, and routes local.
 - Added provider-neutral settlement input adapter registry helpers under
   `modules/wallet/settlement-adapters`, so apps can share CSV/JSON parsing,
   scoped field lookup, and record mapping while keeping provider-specific field

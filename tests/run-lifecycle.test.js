@@ -7,7 +7,8 @@ import {
   createRunRoundResolutionPlan,
   createRunRoundShopStatePlan,
   createRunStartPlan,
-  createRunStarterLoadoutDrafts
+  createRunStarterLoadoutDrafts,
+  shapeRunStateSummary
 } from '../src/index.js';
 
 const roundIncome = [5, 5, 5, 6, 6, 7, 7, 8, 8];
@@ -217,4 +218,64 @@ test('[run-lifecycle] plans challenge group completion reasons', () => {
     playerResults: [{ completedRounds: 1, livesRemaining: 5 }],
     maxRounds: 9
   }).runEnded, false);
+});
+
+test('[run-lifecycle] shapes run state summaries over injected shop and loadout providers', () => {
+  const run = {
+    id: 'run_1',
+    mode: 'solo',
+    status: 'active',
+    currentRound: 2,
+    characterId: 'ruby',
+    playerState: { coins: 7, wins: 1 },
+    shopIds: ['knife'],
+    loadout: [{ artifactId: 'bag', price: 0 }, { artifactId: 'knife', price: 3 }],
+    refreshCount: 1,
+    battles: [{
+      id: 'battle_1',
+      roundNumber: 1,
+      outcome: 'win',
+      events: [{ type: 'start' }],
+      createdAt: '2026-07-05T01:00:00.000Z'
+    }],
+    createdAt: '2026-07-05T00:00:00.000Z',
+    updatedAt: '2026-07-05T01:00:00.000Z',
+    endedAt: null,
+    endReason: null
+  };
+  const summary = shapeRunStateSummary(run, {
+    getLoadoutCost: (items) => items.reduce((sum, item) => sum + Number(item.price || 0), 0),
+    getLoadoutTotals: (items) => ({ itemCount: items.length }),
+    getShopItems: (offer, items, { availableBudget }) => offer.map((artifactId) => ({
+      artifactId,
+      canAfford: availableBudget >= 3,
+      loadoutSize: items.length
+    }))
+  });
+
+  assert.deepEqual(summary, {
+    id: 'run_1',
+    mode: 'solo',
+    status: 'active',
+    currentRound: 2,
+    characterId: 'ruby',
+    player: { coins: 7, wins: 1 },
+    shopOffer: ['knife'],
+    shopItems: [{ artifactId: 'knife', canAfford: true, loadoutSize: 2 }],
+    loadoutItems: run.loadout,
+    loadoutCost: 3,
+    loadoutTotals: { itemCount: 2 },
+    refreshCount: 1,
+    battles: [{
+      id: 'battle_1',
+      roundNumber: 1,
+      outcome: 'win',
+      createdAt: '2026-07-05T01:00:00.000Z'
+    }],
+    lastBattle: run.battles[0],
+    createdAt: '2026-07-05T00:00:00.000Z',
+    updatedAt: '2026-07-05T01:00:00.000Z',
+    endedAt: null,
+    endReason: null
+  });
 });

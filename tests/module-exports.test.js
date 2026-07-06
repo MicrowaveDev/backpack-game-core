@@ -67,7 +67,8 @@ import {
   createRunGhostBudgetPlan,
   createRunGroupCompletionPlan,
   createRunRoundResolutionPlan,
-  createRunStartPlan
+  createRunStartPlan,
+  shapeRunStateSummary
 } from '@microwavedev/backpack-game-core/modules/run';
 import {
   createLoadoutValidator,
@@ -312,6 +313,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     playerResults: [{ completedRounds: 9, livesRemaining: 5 }],
     maxRounds: 9
   }).endReason, 'max_rounds');
+  assert.equal(typeof shapeRunStateSummary, 'function');
 
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);

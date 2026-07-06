@@ -29,7 +29,7 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   snapshots.
 - `run-lifecycle`: run start, initial/next shop state, starter loadout, ghost
   budget, round result, and group-completion planners over injected config and
-  state snapshots.
+  state snapshots, plus provider-driven run-state summary DTO shaping.
 - `backpack-loadout`: provider-driven loadout generation over injected catalog,
   pricing, bag shape, weighting, and validation hooks.
 - `artifact-capabilities`: default backpack family capability helpers plus
