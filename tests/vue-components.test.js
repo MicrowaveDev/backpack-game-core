@@ -10,6 +10,7 @@ import {
   BattleLog,
   FighterCard,
   FusionReveal,
+  InventoryZone,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
@@ -300,6 +301,60 @@ test('[vue] BackpackZone exposes neutral item list and drop-zone shell', () => {
   assert.equal(emitted[0][0], 'select-item');
   assert.equal(emitted[0][1].artifactId, 'bag');
   assert.equal(emitted[0][1].id, 'row_bag');
+});
+
+test('[vue] InventoryZone exposes neutral inventory shell and container chips', () => {
+  assert.equal(InventoryZone.name, 'InventoryZone');
+  assert.match(InventoryZone.template, /slot\s+name="grid"/);
+  assert.match(InventoryZone.template, /slot\s+name="footer"/);
+
+  const items = [
+    { artifactId: 'blade', rowId: 'row_blade' },
+    null,
+    { artifactId: 'shield', rowId: 'row_shield' }
+  ];
+  const containers = [
+    { id: 'starter', artifactId: 'starter', hidden: true },
+    { id: 'bag_1', artifactId: 'bag', name: 'Bag', color: '#abc', draggable: true, rotatable: true },
+    { id: 'bag_2', artifactId: 'pack', label: 'Pack', draggable: false, locked: true }
+  ];
+
+  assert.deepEqual(InventoryZone.computed.renderedItems.call({ items }), [items[0], items[2]]);
+  assert.deepEqual(
+    InventoryZone.computed.visibleContainers.call({ activeContainers: containers }),
+    [containers[1], containers[2]]
+  );
+  assert.equal(InventoryZone.computed.showFooter.call({ renderedItems: [items[0]] }), true);
+  assert.equal(InventoryZone.computed.rotateActionLabel.call({ labels: {} }), 'Rotate');
+  assert.equal(InventoryZone.methods.containerName(containers[1]), 'Bag');
+  assert.deepEqual(InventoryZone.methods.containerStyle.call({
+    containerColor: InventoryZone.methods.containerColor
+  }, containers[1]), { borderColor: '#abc' });
+  assert.deepEqual(InventoryZone.methods.containerClasses.call({
+    containerLockedClass: 'locked',
+    containerDraggableClass: 'drag'
+  }, containers[2]), { locked: true, drag: false });
+  assert.deepEqual(InventoryZone.methods.containerDataset(containers[2]), {
+    'data-bag-row-id': 'bag_2',
+    'data-bag-locked': 'true'
+  });
+
+  const emitted = [];
+  const context = {
+    $emit: (event, payload) => emitted.push([event, payload])
+  };
+  InventoryZone.methods.onRemoveItem.call(context, { rowId: 'row_blade' });
+  InventoryZone.methods.onContainerDragStart.call(context, containers[1], { type: 'dragstart' });
+  InventoryZone.methods.rotateContainer.call(context, containers[1]);
+  InventoryZone.methods.deactivateContainer.call(context, containers[1]);
+  assert.deepEqual(emitted.map(([event]) => event), [
+    'remove-item',
+    'container-chip-drag-start',
+    'rotate-container',
+    'deactivate-container'
+  ]);
+  assert.equal(emitted[1][1].id, 'bag_1');
+  assert.equal(emitted[2][1].artifactId, 'bag');
 });
 
 test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {

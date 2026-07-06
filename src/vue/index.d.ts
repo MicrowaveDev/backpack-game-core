@@ -8,6 +8,7 @@ export {
   BattleLog,
   FighterCard,
   FusionReveal,
+  InventoryZone,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,

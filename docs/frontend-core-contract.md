@@ -38,6 +38,11 @@ Vue installed.
 - Inventory/drop-zone widgets such as `BackpackZone` should receive resolved
   item DTOs, labels, stat formatters, highlight sets, and visual slots from the
   product app. Core owns only stable structure, event names, and class hooks.
+- Inventory/grid-section widgets such as `InventoryZone` should receive
+  prepared item rows, active container chip DTOs, labels, grid metadata, and
+  grid/footer slots from the product app. Core owns event bridging, chip
+  structure, and class hooks, while placement rules and stat rendering stay in
+  product wrappers.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.
