@@ -16,6 +16,7 @@ export {
   RunHud,
   SellZone,
   SeasonRankEmblem,
+  ShopZone,
   ShopItemList,
   ShopItemRow
 } from './components.js';

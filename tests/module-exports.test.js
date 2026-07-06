@@ -184,6 +184,7 @@ import {
   RunHud,
   SellZone,
   SeasonRankEmblem,
+  ShopZone,
   ShopItemList,
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue';
@@ -205,6 +206,7 @@ import {
   RunHud as RunHudFromComponents,
   SellZone as SellZoneFromComponents,
   SeasonRankEmblem as SeasonRankEmblemFromComponents,
+  ShopZone as ShopZoneFromComponents,
   ShopItemList as ShopItemListFromComponents,
   ShopItemRow as ShopItemRowFromComponents
 } from '@microwavedev/backpack-game-core/vue/components';
@@ -420,6 +422,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(PrepActions.name, 'PrepActions');
   assert.equal(RunHud.name, 'RunHud');
   assert.equal(SellZone.name, 'SellZone');
+  assert.equal(ShopZone.name, 'ShopZone');
   assert.equal(ShopItemList.name, 'ShopItemList');
   assert.equal(ShopItemRow.name, 'ShopItemRow');
   assert.equal(typeof createReducedMotionTracker, 'function');
@@ -441,6 +444,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(PrepActionsFromComponents, PrepActions);
   assert.equal(RunHudFromComponents, RunHud);
   assert.equal(SellZoneFromComponents, SellZone);
+  assert.equal(ShopZoneFromComponents, ShopZone);
   assert.equal(ShopItemListFromComponents, ShopItemList);
   assert.equal(ShopItemRowFromComponents, ShopItemRow);
   assert.equal(createReducedMotionTrackerFromComposables, createReducedMotionTracker);

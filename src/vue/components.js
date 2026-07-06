@@ -12,6 +12,7 @@ export { PrepActions } from './components/PrepActions.js';
 export { RunHud } from './components/RunHud.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
+export { ShopZone } from './components/ShopZone.js';
 
 export const AssetRollResultPanel = {
   name: 'AssetRollResultPanel',

@@ -43,6 +43,11 @@ Vue installed.
   grid/footer slots from the product app. Core owns event bridging, chip
   structure, and class hooks, while placement rules and stat rendering stay in
   product wrappers.
+- Shop widgets such as `ShopZone` should receive already-shaped offer rows,
+  labels, refresh state, sell-zone state, row class/attribute hooks, and visual
+  slots from the product app. Core owns the shell, refresh event, buy event,
+  neutral sell-zone event bridge, and class hooks; pricing/catalog/fusion
+  policy remains product-local.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

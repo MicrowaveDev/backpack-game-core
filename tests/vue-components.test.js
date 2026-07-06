@@ -18,6 +18,7 @@ import {
   RunHud,
   SellZone,
   SeasonRankEmblem,
+  ShopZone,
   ShopItemList,
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue/components';
@@ -377,6 +378,88 @@ test('[vue] SellZone exposes neutral sell-drop rendering and events', () => {
     inactivePrefix: '$',
     inactiveText: 'Sell here'
   }), '$ Sell here');
+});
+
+test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
+  assert.equal(ShopZone.name, 'ShopZone');
+  assert.match(ShopZone.template, /slot name="visual"/);
+  assert.match(ShopZone.template, /:class="visualClass"/);
+  assert.match(ShopZone.template, /sell-zone/);
+
+  const row = {
+    artifactId: 'blade',
+    name: 'Blade',
+    price: 2,
+    canAfford: true,
+    previewOrientation: { width: 1, height: 2 },
+    statRows: [{ key: 'damage', label: 'Damage', value: '+2', positive: true }]
+  };
+  const context = {
+    rows: [row],
+    labels: {
+      title: 'Market',
+      refresh: 'Reroll',
+      refreshPricePrefix: '*',
+      pricePrefix: '* ',
+      characterItem: 'Hero item',
+      bagSlots: 'slots'
+    },
+    refreshCost: 3,
+    sellZone: {
+      active: true,
+      draggingItemId: 'row_1',
+      priceLabel: '2',
+      pricePrefix: '*',
+      inactivePrefix: '$',
+      inactiveText: 'Sell here'
+    }
+  };
+
+  assert.deepEqual(ShopZone.computed.renderedRows.call(context), [row]);
+  assert.equal(ShopZone.computed.titleLabel.call(context), 'Market');
+  assert.equal(ShopZone.computed.refreshText.call({
+    ...context,
+    refreshLabel: 'Reroll',
+    refreshPricePrefix: '*'
+  }), 'Reroll (*3)');
+  assert.equal(ShopZone.computed.pricePrefix.call(context), '* ');
+  assert.deepEqual(ShopZone.computed.sellZoneProps.call(context), {
+    active: true,
+    draggingItemId: 'row_1',
+    priceLabel: '2',
+    pricePrefix: '*',
+    inactivePrefix: '$',
+    inactiveText: 'Sell here',
+    rootClass: 'sell-zone',
+    activeClass: 'sell-zone--active'
+  });
+  assert.deepEqual(ShopZone.methods.classFor.call({
+    itemClass: 'shop-item',
+    rowClass: (shopRow) => ({ expensive: !shopRow.canAfford })
+  }, row), ['shop-item', { expensive: false }]);
+  assert.deepEqual(ShopZone.methods.attrsFor.call({
+    itemAttrs: { role: 'button' }
+  }, row), { role: 'button' });
+  assert.equal(ShopZone.methods.previewHeight(row), 2);
+  assert.deepEqual(ShopZone.methods.renderedStats(row), row.statRows);
+  assert.deepEqual(ShopZone.methods.statClass.call({
+    statChipClass: 'chip',
+    positiveTagClass: 'pos',
+    negativeTagClass: 'neg'
+  }, row.statRows[0]), ['chip', 'pos']);
+
+  const emitted = [];
+  const emitContext = {
+    $emit: (event, payload) => emitted.push([event, payload])
+  };
+  ShopZone.methods.emitBuy.call(emitContext, row);
+  ShopZone.methods.emitRefresh.call(emitContext);
+  ShopZone.methods.emitSellDrop.call(emitContext, { type: 'drop' });
+  assert.deepEqual(emitted, [
+    ['buy', row],
+    ['refresh', undefined],
+    ['sell-drop', { type: 'drop' }]
+  ]);
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {

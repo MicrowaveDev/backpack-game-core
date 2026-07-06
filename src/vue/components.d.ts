@@ -18,6 +18,7 @@ export declare const PrepActions: VueComponentOption;
 export declare const RunHud: VueComponentOption;
 export declare const SellZone: VueComponentOption;
 export declare const GachaOddsTable: VueComponentOption;
+export declare const ShopZone: VueComponentOption;
 export declare const ArtifactTile: VueComponentOption;
 export declare const BackpackGrid: VueComponentOption;
 export declare const BattleLog: VueComponentOption;
