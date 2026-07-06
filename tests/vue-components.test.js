@@ -15,6 +15,8 @@ import {
   GachaPackCard,
   GachaPackCardList,
   PrepActions,
+  RecipeCard,
+  RecipeList,
   RunHud,
   SellZone,
   SeasonRankEmblem,
@@ -460,6 +462,74 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
     ['refresh', undefined],
     ['sell-drop', { type: 'drop' }]
   ]);
+});
+
+test('[vue] RecipeCard exposes neutral recipe flow rendering contract', () => {
+  assert.equal(RecipeCard.name, 'RecipeCard');
+  assert.match(RecipeCard.template, /name="artifact"/);
+  assert.match(RecipeCard.template, /data-result-artifact-id/);
+
+  const recipe = {
+    id: 'fusion_1',
+    resultArtifactId: 'result',
+    resultName: 'Result',
+    resultDescription: 'Forged together.',
+    ingredients: [{ id: 'a' }, { id: 'b' }],
+    result: { id: 'result' }
+  };
+  const context = {
+    recipe,
+    index: 2,
+    active: true,
+    cardClass: 'recipe-card',
+    activeClass: 'active',
+    labels: { kicker: 'Fusion' },
+    kickerText: '',
+    interactive: true,
+    tabindex: 0
+  };
+
+  assert.equal(RecipeCard.computed.visible.call(context), true);
+  assert.deepEqual(RecipeCard.computed.ingredients.call(context), recipe.ingredients);
+  assert.equal(RecipeCard.computed.resultArtifactId.call(context), 'result');
+  assert.equal(RecipeCard.computed.titleText.call(context), 'Result');
+  assert.equal(RecipeCard.computed.descriptionText.call(context), 'Forged together.');
+  assert.equal(RecipeCard.computed.kickerLabel.call(context), 'Fusion');
+  assert.deepEqual(RecipeCard.computed.cardClasses.call(context), ['recipe-card', 'active']);
+  assert.equal(RecipeCard.computed.componentRole.call(context), 'button');
+  assert.equal(RecipeCard.methods.artifactKey(recipe.ingredients[0], 0, 'ingredient'), 'a');
+
+  const emitted = [];
+  RecipeCard.methods.emitSelect.call({
+    ...context,
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, { type: 'click' });
+  assert.deepEqual(emitted, [['select', { recipe, index: 2, event: { type: 'click' } }]]);
+});
+
+test('[vue] RecipeList exposes neutral repeated recipe shell', () => {
+  assert.equal(RecipeList.name, 'RecipeList');
+  assert.equal(RecipeList.components.RecipeCard, RecipeCard);
+  assert.match(RecipeList.template, /recipe-card/);
+
+  const recipes = [
+    { id: 'one', resultArtifactId: 'result_1' },
+    { id: 'hidden', visible: false },
+    { id: 'two', resultArtifactId: 'result_2', interactive: true }
+  ];
+  assert.deepEqual(RecipeList.computed.renderedRecipes.call({ recipes }), [recipes[0], recipes[2]]);
+  assert.equal(RecipeList.methods.recipeKey(recipes[0], 0), 'one');
+  assert.deepEqual(RecipeList.methods.classFor.call({
+    cardClass: (recipe, index) => ({ [`recipe-${index}`]: !!recipe })
+  }, recipes[0], 0), { 'recipe-0': true });
+  assert.equal(RecipeList.methods.isActive.call({ activeIndex: 1 }, recipes[0], 1), true);
+  assert.equal(RecipeList.methods.isInteractive.call({ interactive: false }, recipes[2]), true);
+
+  const emitted = [];
+  RecipeList.methods.emitSelect.call({
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, { recipe: recipes[0], index: 0 });
+  assert.deepEqual(emitted, [['select', { recipe: recipes[0], index: 0 }]]);
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {

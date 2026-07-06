@@ -9,6 +9,8 @@ export { FighterCard } from './components/FighterCard.js';
 export { FusionReveal } from './components/FusionReveal.js';
 export { InventoryZone } from './components/InventoryZone.js';
 export { PrepActions } from './components/PrepActions.js';
+export { RecipeCard } from './components/RecipeCard.js';
+export { RecipeList } from './components/RecipeList.js';
 export { RunHud } from './components/RunHud.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';

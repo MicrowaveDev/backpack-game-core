@@ -48,6 +48,11 @@ Vue installed.
   slots from the product app. Core owns the shell, refresh event, buy event,
   neutral sell-zone event bridge, and class hooks; pricing/catalog/fusion
   policy remains product-local.
+- Recipe surfaces such as `RecipeCard` and `RecipeList` should receive
+  already-shaped recipe DTOs with localized result copy plus visual/stat slots
+  from the product app. Core owns repeated recipe structure, active/interactive
+  state, keyboard selection, data attributes, and class hooks; catalog lookup,
+  fusion recipe sources, artifact grid rendering, and stats remain product-local.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

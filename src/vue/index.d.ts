@@ -13,6 +13,8 @@ export {
   GachaPackCard,
   GachaPackCardList,
   PrepActions,
+  RecipeCard,
+  RecipeList,
   RunHud,
   SellZone,
   SeasonRankEmblem,
