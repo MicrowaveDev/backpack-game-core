@@ -104,6 +104,7 @@ import {
   artifactPreviewOrientation,
   buildOccupiedCellMap,
   classifyCell,
+  createPrepGridController,
   formatStatDelta,
   gameRunCompletionResultViewState,
   gameRunReadyResultViewState,
@@ -120,6 +121,8 @@ import {
   gachaAdminSimulationItemRows,
   gachaAdminValidationIssueRows,
   preferredArtifactOrientation,
+  prepRefreshCost,
+  prepSellPriceLabel,
   preferredReplaySpeed,
   formatWalletBundlePrice,
   replayAdvanceTickViewState,
@@ -131,6 +134,7 @@ import {
   runShopBuyResultViewState,
   runShopRefreshResultViewState,
   runShopSellResultViewState,
+  shapePrepScreenViewState,
   summarizeAssetRollFeedback,
   summarizeAssetRollPacks,
   walletBundlesLoadedViewState,
@@ -393,6 +397,10 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(classifyCell([], 0, 0, { cols: 1, rows: 1 }), 'base-inv');
   assert.equal(buildOccupiedCellMap([{ artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }]).get('0:0'), 'needle');
   assert.deepEqual(preferredArtifactOrientation({ width: 1, height: 2 }), { width: 2, height: 1 });
+  assert.equal(typeof createPrepGridController({}).effectiveRows, 'function');
+  assert.equal(prepRefreshCost(3), 2);
+  assert.equal(prepSellPriceLabel(), '');
+  assert.equal(shapePrepScreenViewState().ready, false);
   assert.deepEqual(artifactPreviewOrientation({ family: 'damage', width: 1, height: 2 }), { width: 1, height: 2 });
   assert.equal(formatStatDelta(2), '+2');
   assert.equal(formatWalletBundlePrice({ priceAmount: 100, priceCurrency: 'USD' }), '$1.00');

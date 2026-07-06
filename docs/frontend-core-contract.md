@@ -38,9 +38,13 @@ Vue installed.
 - Prep page shells such as `PrepScreen` should receive readiness state,
   round labels, reconnecting state, and product-provided slots for HUD,
   loadout, shop, actions, and overlays. Core owns only the outer prep layout
-  and stable class hooks; product run state, bag rows, drag/drop actions,
-  placement previews, shop mutations, fusion reveal queues, and route events
-  remain product-local.
+  and stable class hooks. Headless prep helpers such as
+  `createPrepGridController` and `shapePrepScreenViewState` may own neutral bag
+  rows, effective row counts, disabled-cell checks, placement previews,
+  first-fit bag anchors, refresh-cost labels, and sell-price labels. Product
+  repos still own run state mutation, API persistence, haptics, route events,
+  shop purchase/sell/refresh side effects, fusion reveal queue mutation, and
+  final rendering slots.
 - Inventory/drop-zone widgets such as `BackpackZone` should receive resolved
   item DTOs, labels, stat formatters, highlight sets, and visual slots from the
   product app. Core owns only stable structure, event names, and class hooks.

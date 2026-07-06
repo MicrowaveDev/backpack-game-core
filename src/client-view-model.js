@@ -1,4 +1,4 @@
-import { getEffectiveShape, normalizeRotation } from './bag-shape.js';
+import { getEffectiveShape, isCellInShape, normalizeRotation } from './bag-shape.js';
 
 function artifactLookup(getArtifact) {
   if (typeof getArtifact === 'function') return getArtifact;
@@ -105,6 +105,390 @@ export function prepareGridProps(loadoutItems = [], bagArtifactIds = [], getArti
     items: projected.builderItems,
     bagRows: rows.sort((a, b) => a.row - b.row),
     totalRows: maxBottom
+  };
+}
+
+function normalizedPrepState(state) {
+  return state && typeof state === 'object' ? state : {};
+}
+
+function prepStateFrom(options = {}) {
+  return normalizedPrepState(typeof options.getState === 'function' ? options.getState() : options.state);
+}
+
+function samePrepItemInstance(a = {}, b = {}) {
+  if (a?.id && b?.id) return a.id === b.id;
+  return numberOr(a?.x) === numberOr(b?.x) && numberOr(a?.y) === numberOr(b?.y);
+}
+
+function prepRectCellKeys(x, y, width, height) {
+  const cells = [];
+  for (let dx = 0; dx < width; dx += 1) {
+    for (let dy = 0; dy < height; dy += 1) {
+      cells.push(`${x + dx}:${y + dy}`);
+    }
+  }
+  return cells;
+}
+
+function prepShapeCellsAt(anchorX, anchorY, shape = []) {
+  const cells = new Set();
+  for (let dy = 0; dy < shape.length; dy += 1) {
+    const row = shape[dy] || [];
+    for (let dx = 0; dx < row.length; dx += 1) {
+      if (row[dx]) cells.add(`${anchorX + dx}:${anchorY + dy}`);
+    }
+  }
+  return cells;
+}
+
+function prepRectangleShape(cols, rows) {
+  return Array.from({ length: rows }, () => Array(cols).fill(1));
+}
+
+export function createPrepGridController({
+  state = null,
+  getState = null,
+  getArtifact = null,
+  columns = 6,
+  minRows = 6,
+  bagFamily = 'bag'
+} = {}) {
+  const lookupArtifact = artifactLookup(getArtifact);
+  const columnCount = Math.max(1, numberOr(columns, 6));
+  const minimumRows = Math.max(1, numberOr(minRows, 6));
+  const options = { state, getState };
+
+  function currentState() {
+    return prepStateFrom(options);
+  }
+
+  function activeBags() {
+    return currentState().activeBags || [];
+  }
+
+  function rotatedBags() {
+    return currentState().rotatedBags || [];
+  }
+
+  function builderItems() {
+    return currentState().builderItems || [];
+  }
+
+  function containerItems() {
+    return currentState().containerItems || [];
+  }
+
+  function bagRotation(bagArtifactId, rowId = null) {
+    const entry = rotatedBags().find((bag) => (rowId ? bag.id === rowId : bag.artifactId === bagArtifactId));
+    return normalizeRotation(entry?.rotation ?? (entry ? 1 : 0));
+  }
+
+  function shapeForArtifact(artifact, rotation = 0) {
+    return getEffectiveShape(artifact, normalizeRotation(rotation));
+  }
+
+  function bagLayout(bagArtifactId, rowId = null) {
+    const bag = lookupArtifact(bagArtifactId);
+    if (!bag) return { cols: columnCount, rows: 1, shape: [], rotation: 0 };
+    const rotation = bagRotation(bagArtifactId, rowId);
+    const shape = shapeForArtifact(bag, rotation);
+    const cols = shape.length > 0 ? shape[0].length : 0;
+    const rows = shape.length;
+    return { cols: Math.min(cols, columnCount), rows, shape, rotation };
+  }
+
+  function bagsBottomRow() {
+    let max = 0;
+    for (const bag of activeBags()) {
+      const layout = bagLayout(bag.artifactId, bag.id);
+      const bottom = (bag.anchorY ?? 0) + layout.rows;
+      if (bottom > max) max = bottom;
+    }
+    return max;
+  }
+
+  function effectiveRows() {
+    return Math.max(minimumRows, bagsBottomRow());
+  }
+
+  function bagRows() {
+    const rows = [];
+    for (const activeBag of activeBags()) {
+      const bag = lookupArtifact(activeBag.artifactId);
+      if (!bag) continue;
+      const layout = bagLayout(activeBag.artifactId, activeBag.id);
+      const anchorX = numberOr(activeBag.anchorX);
+      const anchorY = numberOr(activeBag.anchorY);
+      for (let i = 0; i < layout.shape.length; i += 1) {
+        const maskRow = layout.shape[i] || [];
+        const enabledCells = [];
+        for (let x = 0; x < maskRow.length; x += 1) {
+          const cellX = anchorX + x;
+          if (cellX >= columnCount) break;
+          if (maskRow[x]) enabledCells.push(cellX);
+        }
+        if (enabledCells.length === 0) continue;
+        rows.push({
+          bagId: activeBag.id,
+          row: anchorY + i,
+          color: bag.color || '#888',
+          artifactId: activeBag.artifactId,
+          rotation: layout.rotation,
+          enabledCells,
+          bboxStart: anchorX,
+          bboxEnd: Math.min(anchorX + maskRow.length, columnCount)
+        });
+      }
+    }
+    return rows.sort((a, b) => a.row - b.row);
+  }
+
+  function bagForCell(cx, cy) {
+    for (const bag of activeBags()) {
+      const layout = bagLayout(bag.artifactId, bag.id);
+      const ax = numberOr(bag.anchorX);
+      const ay = numberOr(bag.anchorY);
+      if (cx >= ax && cx < ax + layout.cols && cy >= ay && cy < ay + layout.rows) {
+        const localX = cx - ax;
+        const localY = cy - ay;
+        if (!isCellInShape(layout.shape, localX, localY)) continue;
+        return {
+          bagRowId: bag.id,
+          bagArtifactId: bag.artifactId,
+          anchorX: ax,
+          anchorY: ay,
+          rowCount: layout.rows,
+          cols: layout.cols,
+          shape: layout.shape
+        };
+      }
+    }
+    return null;
+  }
+
+  function isCellDisabled(cx, cy) {
+    return !bagForCell(cx, cy);
+  }
+
+  function containerKeyForCell(cx, cy) {
+    const info = bagForCell(cx, cy);
+    return info ? info.bagRowId : null;
+  }
+
+  function footprintInOneContainer(x, y, width, height) {
+    for (let dx = 0; dx < width; dx += 1) {
+      for (let dy = 0; dy < height; dy += 1) {
+        if (containerKeyForCell(x + dx, y + dy) == null) return false;
+      }
+    }
+    return true;
+  }
+
+  function bagAreaOverlaps(anchorX, anchorY, cols, rows, ignoreBagId = null, candidateShape = null) {
+    const candidateCells = prepShapeCellsAt(
+      anchorX,
+      anchorY,
+      candidateShape || prepRectangleShape(cols, rows)
+    );
+    for (const other of activeBags()) {
+      if (other.id === ignoreBagId) continue;
+      const layout = bagLayout(other.artifactId, other.id);
+      const otherCells = prepShapeCellsAt(numberOr(other.anchorX), numberOr(other.anchorY), layout.shape);
+      for (const key of candidateCells) {
+        if (otherCells.has(key)) return true;
+      }
+    }
+    return false;
+  }
+
+  function findFirstFitAnchor(cols, rows, ignoreBagId = null, shape = null) {
+    const maxY = Math.max(0, bagsBottomRow()) + rows;
+    for (let ay = 0; ay <= maxY; ay += 1) {
+      for (let ax = 0; ax + cols <= columnCount; ax += 1) {
+        if (!bagAreaOverlaps(ax, ay, cols, rows, ignoreBagId, shape)) {
+          return { anchorX: ax, anchorY: ay };
+        }
+      }
+    }
+    return { anchorX: 0, anchorY: maxY };
+  }
+
+  function normalizePlacement(artifact, x, y, width, height, rowId = null) {
+    const w = Math.max(1, numberOr(width ?? artifact?.width, 1));
+    const h = Math.max(1, numberOr(height ?? artifact?.height, 1));
+    if (x + w > columnCount || y + h > effectiveRows()) return null;
+    const occupied = buildOccupiedCellMap(builderItems());
+    for (let dx = 0; dx < w; dx += 1) {
+      for (let dy = 0; dy < h; dy += 1) {
+        if (occupied.has(`${x + dx}:${y + dy}`)) return null;
+        if (isCellDisabled(x + dx, y + dy)) return null;
+      }
+    }
+    if (!footprintInOneContainer(x, y, w, h)) return null;
+    const candidate = {
+      id: rowId,
+      artifactId: artifact?.id || artifact?.artifactId,
+      x,
+      y,
+      width: w,
+      height: h
+    };
+    return [...builderItems(), candidate];
+  }
+
+  function canMovePlacedItemTo(item, x, y) {
+    const others = builderItems().filter((candidate) => !samePrepItemInstance(candidate, item));
+    const occupied = buildOccupiedCellMap(others);
+    const w = Math.max(1, numberOr(item?.width, 1));
+    const h = Math.max(1, numberOr(item?.height, 1));
+    if (x + w > columnCount || y + h > effectiveRows()) return false;
+    for (let dx = 0; dx < w; dx += 1) {
+      for (let dy = 0; dy < h; dy += 1) {
+        if (occupied.has(`${x + dx}:${y + dy}`)) return false;
+        if (isCellDisabled(x + dx, y + dy)) return false;
+      }
+    }
+    return footprintInOneContainer(x, y, w, h);
+  }
+
+  function placementPreviewAt(x, y) {
+    const resolvedState = currentState();
+    if (resolvedState.draggingSource === 'bag-chip') {
+      const bagId = resolvedState.draggingBagId;
+      const bag = activeBags().find((activeBag) => activeBag.id === bagId);
+      if (!bag) return null;
+      const layout = bagLayout(bag.artifactId, bag.id);
+      const cells = Array.from(prepShapeCellsAt(x, y, layout.shape));
+      const valid = x >= 0
+        && y >= 0
+        && x + layout.cols <= columnCount
+        && !bagAreaOverlaps(x, y, layout.cols, layout.rows, bagId, layout.shape);
+      return {
+        cells,
+        valid,
+        artifactId: bag.artifactId,
+        family: bagFamily
+      };
+    }
+
+    if (resolvedState.draggingSource === 'container') {
+      const artifactId = resolvedState.draggingArtifactId;
+      const artifact = lookupArtifact(artifactId);
+      if (!artifact || artifact.family === bagFamily) return null;
+      const draggedRowId = resolvedState.draggingItem?.id ?? null;
+      const slot = containerItems().find((item) => (
+        draggedRowId ? item.id === draggedRowId : item.artifactId === artifactId
+      ));
+      const rowId = slot?.id ?? null;
+      const preferred = preferredArtifactOrientation(artifact);
+      const orientations = [preferred];
+      if (artifact.width !== artifact.height) {
+        orientations.push({ width: preferred.height, height: preferred.width });
+      }
+      const validOrientation = orientations.find((orientation) =>
+        normalizePlacement(artifact, x, y, orientation.width, orientation.height, rowId)
+      );
+      const display = validOrientation || orientations[0];
+      return {
+        cells: prepRectCellKeys(x, y, display.width, display.height),
+        valid: Boolean(validOrientation),
+        artifactId,
+        family: artifact.family
+      };
+    }
+
+    if (resolvedState.draggingSource === 'inventory' && resolvedState.draggingItem) {
+      const item = resolvedState.draggingItem;
+      const artifact = lookupArtifact(item.artifactId);
+      return {
+        cells: prepRectCellKeys(x, y, item.width, item.height),
+        valid: canMovePlacedItemTo(item, x, y),
+        artifactId: item.artifactId,
+        family: artifact?.family || 'damage'
+      };
+    }
+
+    return null;
+  }
+
+  return {
+    bagAreaOverlaps,
+    bagForCell,
+    bagLayout,
+    bagRows,
+    bagRotation,
+    bagsBottomRow,
+    canMovePlacedItemTo,
+    containerKeyForCell,
+    effectiveRows,
+    findFirstFitAnchor,
+    footprintInOneContainer,
+    isCellDisabled,
+    normalizePlacement,
+    placementPreviewAt,
+    rectCellKeys: prepRectCellKeys,
+    shapeCellsAt: prepShapeCellsAt,
+    shapeForArtifact
+  };
+}
+
+export function prepRefreshCost(refreshCount = 0, {
+  firstCost = 1,
+  firstCostCount = 3,
+  laterCost = 2
+} = {}) {
+  return numberOr(refreshCount) < numberOr(firstCostCount, 3)
+    ? numberOr(firstCost, 1)
+    : numberOr(laterCost, 2);
+}
+
+export function prepSellPriceLabel({
+  sellDragOver = false,
+  draggingArtifactId = '',
+  freshPurchases = [],
+  getArtifact = null,
+  getArtifactPrice = null
+} = {}) {
+  if (!sellDragOver || !draggingArtifactId) return '';
+  const artifact = artifactLookup(getArtifact)(draggingArtifactId);
+  if (!artifact) return '';
+  const price = typeof getArtifactPrice === 'function'
+    ? numberOr(getArtifactPrice(artifact))
+    : numberOr(artifact.price, 1);
+  return String((freshPurchases || []).includes(draggingArtifactId) ? price : Math.floor(price / 2));
+}
+
+export function shapePrepScreenViewState({
+  state = null,
+  getArtifact = null,
+  getArtifactPrice = null,
+  columns = 6,
+  minRows = 6,
+  refreshPricing = {}
+} = {}) {
+  const resolvedState = normalizedPrepState(state);
+  const controller = createPrepGridController({
+    state: resolvedState,
+    getArtifact,
+    columns,
+    minRows
+  });
+  return {
+    ready: Boolean(resolvedState.bootstrapReady),
+    currentRound: resolvedState.gameRun?.currentRound ?? '',
+    showReconnecting: resolvedState.gameRun?.mode === 'challenge' && resolvedState.sseConnected === false,
+    bagRows: controller.bagRows(),
+    totalRows: controller.effectiveRows(),
+    runRefreshCost: prepRefreshCost(resolvedState.gameRunRefreshCount, refreshPricing),
+    runSellPriceLabel: prepSellPriceLabel({
+      sellDragOver: resolvedState.sellDragOver,
+      draggingArtifactId: resolvedState.draggingArtifactId,
+      freshPurchases: resolvedState.freshPurchases,
+      getArtifact,
+      getArtifactPrice
+    }),
+    activeFusionReveal: resolvedState.fusionRevealQueue?.[0] || null
   };
 }
 

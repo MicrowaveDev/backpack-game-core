@@ -31,11 +31,15 @@ import {
   gachaAdminValidationIssueRows,
   buildOccupiedCellMap,
   formatWalletBundlePrice,
+  createPrepGridController,
   occupiedCellKeys,
   prepareGridProps,
+  prepRefreshCost,
+  prepSellPriceLabel,
   preferredArtifactOrientation,
   projectLoadoutItems,
   resolveWalletBalance,
+  shapePrepScreenViewState,
   shapeGridBagSlotCells,
   shapeGridBoardCells,
   shapeGridBoardPieces,
@@ -127,6 +131,105 @@ test('[client-view-model] prepares grid props with configurable dimensions', () 
   assert.deepEqual(result.items.map((item) => item.id), ['needle']);
   assert.ok(result.bagRows.some((bagRow) => bagRow.artifactId === 'starter_bag' && bagRow.row === 1));
   assert.equal(result.totalRows, 6);
+});
+
+test('[client-view-model] creates a neutral prep grid controller for bag layout and previews', () => {
+  const state = {
+    activeBags: [
+      { id: 'starter_row', artifactId: 'starter_bag', anchorX: 0, anchorY: 0 }
+    ],
+    rotatedBags: [],
+    builderItems: [
+      { id: 'needle_row', artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 }
+    ],
+    containerItems: [
+      { id: 'blade_row', artifactId: 'blade' }
+    ],
+    draggingSource: 'container',
+    draggingArtifactId: 'blade'
+  };
+  const controller = createPrepGridController({ state, getArtifact: artifacts, columns: 6, minRows: 6 });
+
+  assert.equal(controller.effectiveRows(), 6);
+  assert.ok(controller.bagRows().some((entry) => entry.bagId === 'starter_row' && entry.row === 0));
+  assert.deepEqual(controller.findFirstFitAnchor(1, 2), { anchorX: 3, anchorY: 0 });
+  assert.equal(controller.isCellDisabled(0, 0), false);
+  assert.equal(controller.isCellDisabled(5, 5), true);
+
+  const containerPreview = controller.placementPreviewAt(1, 0);
+  assert.deepEqual(containerPreview, {
+    cells: ['1:0', '2:0'],
+    valid: true,
+    artifactId: 'blade',
+    family: 'damage'
+  });
+
+  state.draggingSource = 'inventory';
+  state.draggingItem = { id: 'needle_row', artifactId: 'needle', x: 0, y: 0, width: 1, height: 1 };
+  assert.deepEqual(controller.placementPreviewAt(1, 0), {
+    cells: ['1:0'],
+    valid: true,
+    artifactId: 'needle',
+    family: 'damage'
+  });
+
+  state.activeBags = [
+    ...state.activeBags,
+    { id: 'pouch_row', artifactId: 'pouch', anchorX: 3, anchorY: 0 }
+  ];
+  state.draggingSource = 'bag-chip';
+  state.draggingBagId = 'pouch_row';
+  assert.deepEqual(controller.placementPreviewAt(4, 0), {
+    cells: ['4:0', '5:0'],
+    valid: true,
+    artifactId: 'pouch',
+    family: 'bag'
+  });
+});
+
+test('[client-view-model] shapes prep screen view state without product copy', () => {
+  const state = {
+    bootstrapReady: true,
+    gameRun: { currentRound: 3, mode: 'challenge' },
+    sseConnected: false,
+    gameRunRefreshCount: 4,
+    activeBags: [
+      { id: 'starter_row', artifactId: 'starter_bag', anchorX: 0, anchorY: 0 }
+    ],
+    rotatedBags: [],
+    builderItems: [],
+    containerItems: [],
+    sellDragOver: true,
+    draggingArtifactId: 'blade',
+    freshPurchases: [],
+    fusionRevealQueue: [{ id: 'fusion_1' }]
+  };
+
+  assert.equal(prepRefreshCost(2), 1);
+  assert.equal(prepRefreshCost(3), 2);
+  assert.equal(prepSellPriceLabel({
+    sellDragOver: true,
+    draggingArtifactId: 'blade',
+    freshPurchases: [],
+    getArtifact: artifacts,
+    getArtifactPrice: () => 5
+  }), '2');
+
+  const viewState = shapePrepScreenViewState({
+    state,
+    getArtifact: artifacts,
+    getArtifactPrice: () => 5,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(viewState.ready, true);
+  assert.equal(viewState.currentRound, 3);
+  assert.equal(viewState.showReconnecting, true);
+  assert.equal(viewState.totalRows, 6);
+  assert.equal(viewState.runRefreshCost, 2);
+  assert.equal(viewState.runSellPriceLabel, '2');
+  assert.deepEqual(viewState.activeFusionReveal, { id: 'fusion_1' });
 });
 
 function bagRow({ artifactId = 'moss_pouch', row: y, anchorX, cols, enabledXs, color = '#6b8f5e' }) {

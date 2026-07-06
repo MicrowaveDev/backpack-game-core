@@ -68,6 +68,105 @@ export interface GridPropsOptions {
   minRows?: number;
 }
 
+export interface PrepGridControllerOptions {
+  state?: PrepGridState | null;
+  getState?: (() => PrepGridState | null | undefined) | null;
+  getArtifact?: ((artifactId: string) => Record<string, unknown> | undefined | null) | Map<string, Record<string, unknown>> | null;
+  columns?: number;
+  minRows?: number;
+  bagFamily?: string;
+}
+
+export interface PrepGridState {
+  activeBags?: readonly Record<string, unknown>[];
+  rotatedBags?: readonly Record<string, unknown>[];
+  builderItems?: readonly Record<string, unknown>[];
+  containerItems?: readonly Record<string, unknown>[];
+  draggingSource?: string;
+  draggingArtifactId?: string;
+  draggingBagId?: string | number;
+  draggingItem?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+export interface PrepBagLayout {
+  cols: number;
+  rows: number;
+  shape: number[][];
+  rotation: number;
+}
+
+export interface PrepBagCellInfo {
+  bagRowId?: string | number;
+  bagArtifactId?: string;
+  anchorX: number;
+  anchorY: number;
+  rowCount: number;
+  cols: number;
+  shape: number[][];
+}
+
+export interface PrepPlacementPreview {
+  cells: string[];
+  valid: boolean;
+  artifactId?: string;
+  family: string;
+}
+
+export interface PrepGridController {
+  bagAreaOverlaps(anchorX: number, anchorY: number, cols: number, rows: number, ignoreBagId?: string | number | null, candidateShape?: readonly (readonly unknown[])[] | null): boolean;
+  bagForCell(cx: number, cy: number): PrepBagCellInfo | null;
+  bagLayout(bagArtifactId: string, rowId?: string | number | null): PrepBagLayout;
+  bagRows(): GridBagRow[];
+  bagRotation(bagArtifactId: string, rowId?: string | number | null): number;
+  bagsBottomRow(): number;
+  canMovePlacedItemTo(item: Record<string, unknown>, x: number, y: number): boolean;
+  containerKeyForCell(cx: number, cy: number): string | number | null;
+  effectiveRows(): number;
+  findFirstFitAnchor(cols: number, rows: number, ignoreBagId?: string | number | null, shape?: readonly (readonly unknown[])[] | null): { anchorX: number; anchorY: number };
+  footprintInOneContainer(x: number, y: number, width: number, height: number): boolean;
+  isCellDisabled(cx: number, cy: number): boolean;
+  normalizePlacement(artifact: Record<string, unknown>, x: number, y: number, width?: number, height?: number, rowId?: string | number | null): Record<string, unknown>[] | null;
+  placementPreviewAt(x: number, y: number): PrepPlacementPreview | null;
+  rectCellKeys(x: number, y: number, width: number, height: number): string[];
+  shapeCellsAt(anchorX: number, anchorY: number, shape?: readonly (readonly unknown[])[]): Set<string>;
+  shapeForArtifact(artifact: Record<string, unknown>, rotation?: number): number[][];
+}
+
+export interface PrepRefreshPricingOptions {
+  firstCost?: number;
+  firstCostCount?: number;
+  laterCost?: number;
+}
+
+export interface PrepSellPriceLabelOptions {
+  sellDragOver?: boolean;
+  draggingArtifactId?: string;
+  freshPurchases?: readonly string[];
+  getArtifact?: ((artifactId: string) => Record<string, unknown> | undefined | null) | Map<string, Record<string, unknown>> | null;
+  getArtifactPrice?: ((artifact: Record<string, unknown>) => number) | null;
+}
+
+export interface PrepScreenViewState {
+  ready: boolean;
+  currentRound: string | number;
+  showReconnecting: boolean;
+  bagRows: GridBagRow[];
+  totalRows: number;
+  runRefreshCost: number;
+  runSellPriceLabel: string;
+  activeFusionReveal: unknown | null;
+}
+
+export interface PrepScreenViewStateOptions {
+  state?: (PrepGridState & Record<string, unknown>) | null;
+  getArtifact?: ((artifactId: string) => Record<string, unknown> | undefined | null) | Map<string, Record<string, unknown>> | null;
+  getArtifactPrice?: ((artifact: Record<string, unknown>) => number) | null;
+  columns?: number;
+  minRows?: number;
+  refreshPricing?: PrepRefreshPricingOptions;
+}
+
 export interface GridCellBagRow {
   bagId?: string | number;
   row: number;
@@ -930,6 +1029,14 @@ export function prepareGridProps(
   getArtifact?: ((artifactId: string) => unknown) | Map<string, unknown> | null,
   options?: GridPropsOptions
 ): GridPropsProjection;
+
+export function createPrepGridController(options?: PrepGridControllerOptions): PrepGridController;
+
+export function prepRefreshCost(refreshCount?: number, options?: PrepRefreshPricingOptions): number;
+
+export function prepSellPriceLabel(options?: PrepSellPriceLabelOptions): string;
+
+export function shapePrepScreenViewState(options?: PrepScreenViewStateOptions): PrepScreenViewState;
 
 export function bagRowEntryFor(
   bagRows: readonly GridCellBagRow[] | null | undefined,
