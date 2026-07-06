@@ -12,6 +12,7 @@ export { InventoryZone } from './components/InventoryZone.js';
 export { PrepActions } from './components/PrepActions.js';
 export { RecipeCard } from './components/RecipeCard.js';
 export { RecipeList } from './components/RecipeList.js';
+export { ReplayDuel } from './components/ReplayDuel.js';
 export { RunHud } from './components/RunHud.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';

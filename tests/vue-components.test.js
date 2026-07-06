@@ -18,6 +18,7 @@ import {
   PrepActions,
   RecipeCard,
   RecipeList,
+  ReplayDuel,
   RunHud,
   SellZone,
   SeasonRankEmblem,
@@ -591,6 +592,41 @@ test('[vue] ArtifactCatalogBrowser exposes neutral catalog shell contract', () =
   assert.deepEqual(emitted[1], ['close-details', { event: { type: 'click' } }]);
   assert.equal(emitted[2][0], 'grid-panel-resize');
   assert.equal(emitted[2][1].panelWidth, 320);
+});
+
+test('[vue] ReplayDuel exposes neutral replay duel shell contract', () => {
+  assert.equal(ReplayDuel.name, 'ReplayDuel');
+  assert.match(ReplayDuel.template, /name="fighter"/);
+  assert.match(ReplayDuel.template, /name="loadout-grid"/);
+  assert.ok(ReplayDuel.emits.includes('set-speed'));
+
+  const speedOptions = [{ speed: 3, count: 1 }];
+  const attributionGroups = [{ key: 'damage', role: 'damage', label: 'Damage', total: 4 }];
+  const context = {
+    speedOptions,
+    attributionGroups,
+    leftRoleSummary: [{ role: { id: 'damage', label: 'Damage', color: '#f00' }, count: 2 }],
+    rightRoleSummary: [],
+    labels: {
+      speedBoost: 'Boost',
+      leftRoles: 'Left roles',
+      rightRoles: 'Right roles',
+      attribution: 'Attribution'
+    }
+  };
+
+  assert.deepEqual(ReplayDuel.computed.renderedSpeedOptions.call(context), speedOptions);
+  assert.deepEqual(ReplayDuel.computed.renderedAttributionGroups.call(context), attributionGroups);
+  assert.deepEqual(ReplayDuel.computed.leftRoles.call(context), context.leftRoleSummary);
+  assert.equal(ReplayDuel.computed.speedBoostLabel.call(context), 'Boost');
+  assert.equal(ReplayDuel.methods.attributionValueText({ key: 'stunChance', total: 15 }), '+15%');
+  assert.equal(ReplayDuel.methods.attributionValueText({ total: 2, prefix: '-', suffix: ' hp' }), '-2 hp');
+
+  const emitted = [];
+  ReplayDuel.methods.emitSetSpeed.call({
+    $emit: (event, payload) => emitted.push([event, payload])
+  }, 4);
+  assert.deepEqual(emitted, [['set-speed', 4]]);
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {

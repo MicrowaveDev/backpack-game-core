@@ -16,6 +16,7 @@ export {
   PrepActions,
   RecipeCard,
   RecipeList,
+  ReplayDuel,
   RunHud,
   SellZone,
   SeasonRankEmblem,

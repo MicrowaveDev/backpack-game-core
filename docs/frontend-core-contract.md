@@ -59,6 +59,13 @@ Vue installed.
   event, item select event, resize observation event, data attributes, and class
   hooks; catalog sorting/grouping, recipe sources, artifact previews, and stats
   remain product-local.
+- Replay shells such as `ReplayDuel` should receive already-shaped fighter DTOs,
+  prepared grid props, role summaries, attribution groups, visual-effect DTOs,
+  labels, and replay-speed state from the product app. Core owns the duel
+  layout, replay-speed controls, role/attribution chip structure, neutral
+  `set-speed` event, and fighter/grid slots; product combatant shaping,
+  artifact lookups, visual effects, replay timeline state, and final battle
+  page composition remain product-local.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

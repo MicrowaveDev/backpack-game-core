@@ -18,6 +18,7 @@ export declare const InventoryZone: VueComponentOption;
 export declare const PrepActions: VueComponentOption;
 export declare const RecipeCard: VueComponentOption;
 export declare const RecipeList: VueComponentOption;
+export declare const ReplayDuel: VueComponentOption;
 export declare const RunHud: VueComponentOption;
 export declare const SellZone: VueComponentOption;
 export declare const GachaOddsTable: VueComponentOption;
