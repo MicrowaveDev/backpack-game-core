@@ -57,6 +57,36 @@ test('[battle-simulation] applies speed hooks and equal-base tie hooks', () => {
   assert.equal(firstAction.actorSide, 'right');
 });
 
+test('[battle-simulation] uses neutral character ids in default labels and state', () => {
+  const result = simulateBattle({
+    left: {
+      characterId: 'ruby',
+      side: 'left',
+      maxHealth: 12,
+      attack: 7,
+      speed: 2,
+      defense: 0,
+      stunChance: 0
+    },
+    right: {
+      mushroomId: 'legacy_opponent',
+      side: 'right',
+      maxHealth: 8,
+      attack: 1,
+      speed: 1,
+      defense: 0,
+      stunChance: 0
+    },
+    rng: fixedRng(0),
+    stepCap: 3
+  });
+
+  assert.equal(result.events[0].narration, 'ruby faces legacy_opponent.');
+  assert.equal(result.leftState.characterId, 'ruby');
+  assert.equal(result.rightState.characterId, 'legacy_opponent');
+  assert.equal(result.rightState.mushroomId, 'legacy_opponent');
+});
+
 test('[battle-simulation] exposes action hooks for product abilities and metadata', () => {
   const left = combatant('hooked', {
     side: 'left',

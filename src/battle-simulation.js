@@ -6,12 +6,14 @@ function numberOr(value, fallback = 0) {
 function defaultCombatantLabel(combatant) {
   if (typeof combatant?.name === 'string') return combatant.name;
   if (combatant?.name?.en) return combatant.name.en;
-  return combatant?.id || combatant?.mushroomId || combatant?.side || 'Combatant';
+  return combatant?.id || combatant?.characterId || combatant?.mushroomId || combatant?.side || 'Combatant';
 }
 
 function defaultSummarizeCombatant(combatant) {
-  return {
+  const summary = {
     side: combatant.side,
+    id: combatant.id,
+    characterId: combatant.characterId || combatant.id || combatant.mushroomId,
     playerId: combatant.playerId,
     name: combatant.name,
     currentHealth: combatant.currentHealth,
@@ -23,6 +25,8 @@ function defaultSummarizeCombatant(combatant) {
     stunned: Boolean(combatant.state?.stunned),
     loadout: combatant.loadout
   };
+  if (combatant.mushroomId !== undefined) summary.mushroomId = combatant.mushroomId;
+  return summary;
 }
 
 function combatState(left, right, summarizeCombatant) {

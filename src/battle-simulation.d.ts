@@ -8,6 +8,7 @@ export type BattleEndReason = 'death' | 'step_cap';
 export interface BattleCombatant {
   side?: BattleSide;
   id?: string;
+  characterId?: string;
   mushroomId?: string;
   playerId?: string | number | null;
   name?: string | { en?: string; [key: string]: unknown };
