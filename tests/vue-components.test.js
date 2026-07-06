@@ -7,6 +7,7 @@ import {
   AssetRollResultPanel,
   BackpackGrid,
   BattleLog,
+  FighterCard,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,
@@ -83,6 +84,48 @@ test('[vue] ArtifactTile exposes neutral artifact tile rendering contract', () =
     roleGlyphExtraClass: 'artifact-figure-role-glyph'
   }), ['artifact-role-glyph', 'artifact-role-glyph--damage', 'artifact-figure-role-glyph']);
   assert.equal(ArtifactTile.computed.roleGlyphLabel.call({ tile }), 'Damage role');
+});
+
+test('[vue] FighterCard exposes neutral combatant and grid rendering contract', () => {
+  assert.equal(FighterCard.name, 'FighterCard');
+  assert.match(FighterCard.template, /resolvedCombatant/);
+  assert.match(FighterCard.template, /gridBoardComponent/);
+  assert.equal(FighterCard.computed.resolvedCombatant.call({
+    combatant: { id: 'fighter_1' }
+  }).id, 'fighter_1');
+  assert.equal(FighterCard.computed.portraitSrc.call({
+    imagePath: '',
+    resolvedCombatant: { imagePath: '/fighters/fighter-1.png' }
+  }), '/fighters/fighter-1.png');
+  assert.equal(FighterCard.computed.portraitAlt.call({
+    resolvedCombatant: { name: { en: 'Sienna' } }
+  }), 'Sienna');
+  assert.equal(FighterCard.computed.displayName.call({
+    nameText: '',
+    resolvedCombatant: { displayName: 'Ruby' }
+  }), 'Ruby');
+  assert.equal(FighterCard.computed.hpPercent.call({ healthText: '7 / 10' }), 70);
+  assert.equal(FighterCard.computed.hpPercent.call({ healthText: '-3 / 10' }), 0);
+  const getArtifact = (artifactId) => ({
+    id: artifactId,
+    family: artifactId === 'bag' ? 'bag' : 'damage',
+    width: artifactId === 'bag' ? 2 : 1,
+    height: artifactId === 'bag' ? 2 : 1
+  });
+  const gridProps = FighterCard.computed.gridProps.call({
+    loadout: {
+      items: [
+        { artifactId: 'bag', x: 0, y: 0, width: 2, height: 2, active: 1 },
+        { artifactId: 'blade', x: 0, y: 0, width: 1, height: 1 }
+      ]
+    },
+    getArtifact,
+    bagArtifactIds: null,
+    gridColumns: 4,
+    gridMinRows: 4
+  });
+  assert.equal(gridProps.totalRows >= 4, true);
+  assert.equal(gridProps.items.some((item) => item.artifactId === 'blade'), true);
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {

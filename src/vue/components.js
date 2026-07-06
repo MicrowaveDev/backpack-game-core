@@ -4,6 +4,7 @@ function nonEmptyArray(value) {
 
 export { AchievementBadge } from './components/AchievementBadge.js';
 export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
+export { FighterCard } from './components/FighterCard.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
 
 export const AssetRollResultPanel = {

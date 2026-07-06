@@ -172,6 +172,7 @@ import {
   ArtifactTile,
   BackpackGrid,
   BattleLog,
+  FighterCard,
   createReducedMotionTracker,
   GachaPackCard,
   GachaPackCardList,
@@ -187,6 +188,7 @@ import {
   ArtifactTile as ArtifactTileFromComponents,
   BackpackGrid as BackpackGridFromComponents,
   BattleLog as BattleLogFromComponents,
+  FighterCard as FighterCardFromComponents,
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
   GachaOddsTable as GachaOddsTableFromComponents,
@@ -396,6 +398,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(ArtifactTile.name, 'ArtifactTile');
   assert.equal(BackpackGrid.name, 'BackpackGrid');
   assert.equal(BattleLog.name, 'BattleLog');
+  assert.equal(FighterCard.name, 'FighterCard');
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
   assert.equal(GachaOddsTable.name, 'GachaOddsTable');
@@ -410,6 +413,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(ArtifactTileFromComponents, ArtifactTile);
   assert.equal(BackpackGridFromComponents, BackpackGrid);
   assert.equal(BattleLogFromComponents, BattleLog);
+  assert.equal(FighterCardFromComponents, FighterCard);
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);
   assert.equal(GachaOddsTableFromComponents, GachaOddsTable);

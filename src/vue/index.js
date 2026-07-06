@@ -5,6 +5,7 @@ export {
   ArtifactTile,
   BackpackGrid,
   BattleLog,
+  FighterCard,
   GachaOddsTable,
   GachaPackCard,
   GachaPackCardList,

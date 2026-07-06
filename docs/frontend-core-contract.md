@@ -28,6 +28,9 @@ Vue installed.
   `select`, `buy`, `place`, `remove`, or `open`.
 - Components may expose slots for product copy, visuals, and per-row rendering.
 - Components may ship minimal structural markup and optional class hooks.
+- Battle/replay shells such as `FighterCard` should use neutral combatant
+  naming and receive product grid components, image paths, copy, and class hooks
+  through props or wrappers.
 - Product repos own final CSS, responsive page layout, route callbacks,
   localization, image resolvers, Telegram wrappers, haptics, and policy.
 
