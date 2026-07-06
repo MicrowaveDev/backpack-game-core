@@ -1127,7 +1127,9 @@ export function resolveWalletBalance(input?: {
   wallet?: { balances?: Record<string, unknown> } | null;
   player?: Record<string, unknown> | null;
   currencyCode?: string;
+  profileCurrencyFields?: readonly string[];
   legacyField?: string;
+  legacyFields?: readonly string[] | null;
   fallback?: unknown;
 }): unknown;
 
@@ -1177,7 +1179,9 @@ export function summarizeWalletPurchaseSurface(input?: {
   wallet?: { balances?: Record<string, unknown> } | null;
   player?: Record<string, unknown> | null;
   currencyCode?: string;
+  profileCurrencyFields?: readonly string[];
   legacyField?: string;
+  legacyFields?: readonly string[] | null;
   fallbackBalance?: unknown;
   bundles?: readonly WalletBundleInput[];
   bundleSurface?: string | null;

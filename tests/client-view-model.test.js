@@ -647,6 +647,17 @@ test('[client-view-model] summarizes wallet purchase surfaces', () => {
   });
 
   assert.equal(resolveWalletBalance({ player: { spore: 10 } }), 10);
+  assert.equal(resolveWalletBalance({ player: { profileCurrency: 12, spore: 10 } }), 12);
+  assert.equal(resolveWalletBalance({ player: { profile_currency: 14 } }), 14);
+  assert.equal(resolveWalletBalance({
+    player: { old_balance: 16 },
+    legacyFields: ['old_balance']
+  }), 16);
+  assert.equal(summarizeWalletPurchaseSurface({
+    player: { profileCurrency: 18 },
+    surface: 'web',
+    bundleSurface: 'web'
+  }).balance, 18);
   assert.equal(summary.balance, 125);
   assert.equal(summary.bundles.length, 2);
   assert.equal(summary.statusText, 'Checkout opened.');

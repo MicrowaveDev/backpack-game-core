@@ -1117,14 +1117,29 @@ export function shapeAssetPackCardRows(packs = [], {
   });
 }
 
+function readFirstField(source, fields = []) {
+  if (!source) return undefined;
+  for (const field of fields) {
+    if (field && source[field] !== undefined && source[field] !== null) return source[field];
+  }
+  return undefined;
+}
+
 export function resolveWalletBalance({
   wallet = null,
   player = null,
   currencyCode = 'soft_coin',
+  profileCurrencyFields = ['profileCurrency', 'profile_currency'],
   legacyField = 'spore',
+  legacyFields = null,
   fallback = 0
 } = {}) {
-  return wallet?.balances?.[currencyCode] ?? player?.[legacyField] ?? fallback;
+  const balance = wallet?.balances?.[currencyCode];
+  if (balance !== undefined && balance !== null) return balance;
+  const profileCurrency = readFirstField(player, profileCurrencyFields);
+  if (profileCurrency !== undefined) return profileCurrency;
+  const legacyCurrency = readFirstField(player, legacyFields || [legacyField]);
+  return legacyCurrency ?? fallback;
 }
 
 export function selectWalletBundles({
@@ -1207,7 +1222,9 @@ export function summarizeWalletPurchaseSurface({
   wallet = null,
   player = null,
   currencyCode = 'soft_coin',
+  profileCurrencyFields = ['profileCurrency', 'profile_currency'],
   legacyField = 'spore',
+  legacyFields = null,
   fallbackBalance = 0,
   bundles = [],
   bundleSurface = null,
@@ -1217,7 +1234,15 @@ export function summarizeWalletPurchaseSurface({
   labels = {}
 } = {}) {
   return {
-    balance: resolveWalletBalance({ wallet, player, currencyCode, legacyField, fallback: fallbackBalance }),
+    balance: resolveWalletBalance({
+      wallet,
+      player,
+      currencyCode,
+      profileCurrencyFields,
+      legacyField,
+      legacyFields,
+      fallback: fallbackBalance
+    }),
     bundles: selectWalletBundles({ bundles, bundleSurface, surface }),
     statusText: walletPurchaseStatusText(status, { labels: labels.status || labels }),
     supportEntries: walletSupportEntries({ support, labels })
