@@ -22,6 +22,61 @@ const ROUTE_METHODS = new Set([
   'put'
 ]);
 
+export const AUTH_ROUTE_NAMES = Object.freeze({
+  bootstrap: 'auth.bootstrap',
+  devLogin: 'auth.devLogin',
+  logout: 'auth.logout',
+  providerCode: 'auth.providerCode',
+  providerLogin: 'auth.providerLogin',
+  providerVerifyCode: 'auth.providerVerifyCode',
+  webLogin: 'auth.webLogin'
+});
+
+const AUTH_ROUTE_DEFINITIONS = Object.freeze({
+  bootstrap: Object.freeze({
+    name: AUTH_ROUTE_NAMES.bootstrap,
+    method: 'get',
+    path: '/bootstrap',
+    access: 'auth'
+  }),
+  devLogin: Object.freeze({
+    name: AUTH_ROUTE_NAMES.devLogin,
+    method: 'post',
+    path: '/auth/dev-login',
+    access: 'dev'
+  }),
+  logout: Object.freeze({
+    name: AUTH_ROUTE_NAMES.logout,
+    method: 'post',
+    path: '/auth/logout',
+    access: 'auth'
+  }),
+  providerCode: Object.freeze({
+    name: AUTH_ROUTE_NAMES.providerCode,
+    method: 'post',
+    path: '/auth/provider/code',
+    access: 'public'
+  }),
+  providerLogin: Object.freeze({
+    name: AUTH_ROUTE_NAMES.providerLogin,
+    method: 'post',
+    path: '/auth/provider-login',
+    access: 'public'
+  }),
+  providerVerifyCode: Object.freeze({
+    name: AUTH_ROUTE_NAMES.providerVerifyCode,
+    method: 'post',
+    path: '/auth/provider/verify-code',
+    access: 'public'
+  }),
+  webLogin: Object.freeze({
+    name: AUTH_ROUTE_NAMES.webLogin,
+    method: 'post',
+    path: '/auth/web-login',
+    access: 'public'
+  })
+});
+
 function uniqueStrings(values, label) {
   const seen = new Set();
   const normalized = [];
@@ -176,6 +231,71 @@ export function bindBackpackRouteDescriptors(target, routes = [], {
   return descriptors;
 }
 
+function routeConfigFor(key, routes) {
+  const value = routes?.[key];
+  if (value === false) return { disabled: true };
+  if (typeof value === 'function') return { handler: value };
+  return value && typeof value === 'object' ? value : {};
+}
+
+function asHandlerArray(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function configuredRouteHandlers({ key, definition, routeConfig, handlers, middleware }) {
+  const explicitHandlers = [
+    ...asHandlerArray(routeConfig.handlers),
+    ...(routeConfig.handler ? [routeConfig.handler] : []),
+    ...(handlers?.[key] ? [handlers[key]] : [])
+  ];
+  if (!explicitHandlers.length) return [];
+  return [
+    ...asHandlerArray(middleware?.all),
+    ...asHandlerArray(middleware?.[definition.access]),
+    ...asHandlerArray(middleware?.[key]),
+    ...asHandlerArray(routeConfig.middleware),
+    ...explicitHandlers
+  ];
+}
+
+export function createAuthRouteGroup({
+  name = 'authRoutes',
+  prefix = '/api',
+  routes = {},
+  handlers = {},
+  middleware = {},
+  meta = {}
+} = {}) {
+  const descriptors = Object.entries(AUTH_ROUTE_DEFINITIONS).flatMap(([key, definition]) => {
+    const routeConfig = routeConfigFor(key, routes);
+    if (routeConfig.disabled || routeConfig.enabled === false) return [];
+    const routeHandlers = configuredRouteHandlers({ key, definition, routeConfig, handlers, middleware });
+    if (!routeHandlers.length) return [];
+    return [createBackpackRouteDescriptor({
+      name: routeConfig.name || definition.name,
+      method: routeConfig.method || definition.method,
+      path: routeConfig.path || definition.path,
+      handlers: routeHandlers,
+      meta: {
+        feature: 'auth',
+        access: definition.access,
+        routeKey: key,
+        ...(routeConfig.meta || {})
+      }
+    })];
+  });
+  return createBackpackRouteGroup({
+    name,
+    prefix,
+    routes: descriptors,
+    meta: {
+      feature: 'auth',
+      ...meta
+    }
+  });
+}
+
 export function createBackpackServerModule(definition = {}) {
   if (!definition.name) throw new Error('Backpack server module requires a name');
   if (typeof definition.name !== 'string') throw new Error('Backpack server module name must be a string');
@@ -241,6 +361,63 @@ function providerOptionsFromContext(ctx, providers, providerKeys, names) {
       ])
       .filter(([, provider]) => provider)
   );
+}
+
+function providerMapFromContext(ctx, providers = {}, providerKeys = {}, mapName) {
+  return Object.fromEntries(Object.entries(providerKeys?.[mapName] || {}).map(([key, providerKey]) => [
+    key,
+    providers?.[mapName]?.[key] || ctx.get(providerKey)
+  ]).filter(([, provider]) => provider));
+}
+
+export function createAuthRoutesServerModule({
+  name = 'core.authRoutes',
+  routeKey = 'authRoutes',
+  requires = [],
+  provides = [routeKey],
+  providerKeys = {},
+  providers = {},
+  config = {},
+  ...routeOptions
+} = {}) {
+  const requiredProviderKeys = [
+    ...Object.values(providerKeys.handlers || {}),
+    ...Object.values(providerKeys.middleware || {})
+  ].filter((key) => key);
+  return createBackpackServerModule({
+    name,
+    requires: [...requires, ...requiredProviderKeys],
+    provides,
+    config,
+    setup(ctx) {
+      const moduleConfig = ctx.getConfig(name, {});
+      const routeGroup = createAuthRouteGroup({
+        ...routeOptions,
+        ...moduleConfig,
+        handlers: {
+          ...(routeOptions.handlers || {}),
+          ...(moduleConfig.handlers || {}),
+          ...(providers.handlers || {}),
+          ...providerMapFromContext(ctx, providers, providerKeys, 'handlers')
+        },
+        middleware: {
+          ...(routeOptions.middleware || {}),
+          ...(moduleConfig.middleware || {}),
+          ...(providers.middleware || {}),
+          ...providerMapFromContext(ctx, providers, providerKeys, 'middleware')
+        },
+        routes: {
+          ...(routeOptions.routes || {}),
+          ...(moduleConfig.routes || {})
+        }
+      });
+      return {
+        routes: {
+          [routeKey]: routeGroup
+        }
+      };
+    }
+  });
 }
 
 export function createAssetGachaSimulationServerModule({

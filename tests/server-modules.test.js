@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  AUTH_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
+  createAuthRouteGroup,
+  createAuthRoutesServerModule,
   createBackpackServerContext,
   createBackpackServerModule,
   createBackpackRouteDescriptor,
@@ -239,6 +242,72 @@ test('[server] route descriptors reject incomplete routes', () => {
     () => createBackpackRouteGroup({ name: '', routes: [] }),
     /route group requires a name/
   );
+});
+
+test('[server] auth route group builds product-configurable route descriptors', () => {
+  const publicGate = (_req, _res, next) => next?.();
+  const authGate = (_req, _res, next) => next?.();
+  const providerLogin = () => ({ ok: true });
+  const logout = () => ({ ok: true });
+  const group = createAuthRouteGroup({
+    prefix: '/api',
+    handlers: {
+      providerLogin,
+      logout
+    },
+    middleware: {
+      public: publicGate,
+      auth: authGate
+    },
+    routes: {
+      providerLogin: { path: '/auth/provider' },
+      logout: { path: '/auth/logout' }
+    }
+  });
+
+  const routes = flattenBackpackRouteDescriptors([group]);
+  assert.deepEqual(routes.map((route) => route.name), [
+    AUTH_ROUTE_NAMES.logout,
+    AUTH_ROUTE_NAMES.providerLogin
+  ]);
+  assert.equal(routes[0].path, '/api/auth/logout');
+  assert.deepEqual(routes[0].handlers, [authGate, logout]);
+  assert.equal(routes[1].path, '/api/auth/provider');
+  assert.deepEqual(routes[1].handlers, [publicGate, providerLogin]);
+  assert.equal(routes[1].meta.feature, 'auth');
+  assert.equal(routes[1].meta.routeKey, 'providerLogin');
+});
+
+test('[server] auth route module resolves handlers and middleware from providers', () => {
+  const devGate = () => {};
+  const devLogin = () => ({ ok: true });
+  const installed = setupBackpackServerModules([
+    createAuthRoutesServerModule({
+      providerKeys: {
+        handlers: {
+          devLogin: 'handler.auth.devLogin'
+        },
+        middleware: {
+          dev: 'middleware.auth.dev'
+        }
+      },
+      routes: {
+        devLogin: { path: '/auth/dev-session' }
+      }
+    })
+  ], {
+    services: {
+      'handler.auth.devLogin': devLogin,
+      'middleware.auth.dev': devGate
+    }
+  });
+
+  assert.deepEqual(installed.installed, ['core.authRoutes']);
+  const routes = flattenBackpackRouteDescriptors(installed.routes);
+  assert.equal(routes.length, 1);
+  assert.equal(routes[0].name, AUTH_ROUTE_NAMES.devLogin);
+  assert.equal(routes[0].path, '/api/auth/dev-session');
+  assert.deepEqual(routes[0].handlers, [devGate, devLogin]);
 });
 
 test('[server] gacha simulation module registers provider-driven service', () => {

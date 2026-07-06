@@ -156,10 +156,13 @@ import {
 } from '@microwavedev/backpack-game-core/modules/battle';
 import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusion';
 import {
+  AUTH_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   clearIdempotencyCache,
   clearRateLimitBuckets,
   createAssetGachaSimulationServerModule,
+  createAuthRouteGroup,
+  createAuthRoutesServerModule,
   createKeyedAsyncMutex,
   createBackpackServerContext,
   createBackpackServerModule,
@@ -612,6 +615,9 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof createBackpackRouteGroup, 'function');
   assert.equal(typeof flattenBackpackRouteDescriptors, 'function');
   assert.equal(typeof bindBackpackRouteDescriptors, 'function');
+  assert.equal(AUTH_ROUTE_NAMES.providerLogin, 'auth.providerLogin');
+  assert.equal(typeof createAuthRouteGroup, 'function');
+  assert.equal(typeof createAuthRoutesServerModule, 'function');
   assert.equal(typeof createAssetGachaSimulationServerModule, 'function');
   assert.equal(typeof createSocialPreviewCacheServerModule, 'function');
   assert.equal(typeof createKeyedAsyncMutex, 'function');

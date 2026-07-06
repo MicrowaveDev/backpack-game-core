@@ -87,6 +87,31 @@ export interface BackpackRouteGroup {
   meta: Record<string, unknown>;
 }
 
+export declare const AUTH_ROUTE_NAMES: Readonly<{
+  bootstrap: 'auth.bootstrap';
+  devLogin: 'auth.devLogin';
+  logout: 'auth.logout';
+  providerCode: 'auth.providerCode';
+  providerLogin: 'auth.providerLogin';
+  providerVerifyCode: 'auth.providerVerifyCode';
+  webLogin: 'auth.webLogin';
+}>;
+
+export type BackpackAuthRouteKey = keyof typeof AUTH_ROUTE_NAMES;
+
+export interface BackpackAuthRouteConfig extends Partial<BackpackRouteDescriptorInput> {
+  enabled?: boolean;
+}
+
+export interface AuthRouteGroupOptions {
+  name?: string;
+  prefix?: string;
+  routes?: Partial<Record<BackpackAuthRouteKey, BackpackAuthRouteConfig | BackpackRouteHandler | false>>;
+  handlers?: Partial<Record<BackpackAuthRouteKey, BackpackRouteHandler>>;
+  middleware?: Partial<Record<BackpackAuthRouteKey | 'all' | 'auth' | 'dev' | 'public', BackpackRouteHandler | BackpackRouteHandler[]>>;
+  meta?: Record<string, unknown>;
+}
+
 export declare function createBackpackServerModule(definition?: BackpackServerModuleDefinition): BackpackServerModule;
 export declare function createBackpackServerContext(options?: {
   adapters?: Record<string, unknown>;
@@ -114,6 +139,28 @@ export declare function bindBackpackRouteDescriptors(
     mountRoute?: (target: unknown, route: BackpackRouteDescriptor) => unknown;
   }
 ): BackpackRouteDescriptor[];
+export declare function createAuthRouteGroup(options?: AuthRouteGroupOptions): BackpackRouteGroup;
+
+export interface AuthRoutesServerModuleOptions extends AuthRouteGroupOptions {
+  name?: string;
+  routeKey?: string;
+  requires?: string[];
+  provides?: string[];
+  providerKeys?: {
+    handlers?: Partial<Record<BackpackAuthRouteKey, string>>;
+    middleware?: Partial<Record<BackpackAuthRouteKey | 'all' | 'auth' | 'dev' | 'public', string>>;
+  };
+  providers?: {
+    handlers?: Partial<Record<BackpackAuthRouteKey, BackpackRouteHandler>>;
+    middleware?: Partial<Record<BackpackAuthRouteKey | 'all' | 'auth' | 'dev' | 'public', BackpackRouteHandler | BackpackRouteHandler[]>>;
+  };
+  config?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export declare function createAuthRoutesServerModule(
+  options?: AuthRoutesServerModuleOptions
+): BackpackServerModule;
 
 export interface AssetGachaSimulationServerModuleOptions {
   name?: string;

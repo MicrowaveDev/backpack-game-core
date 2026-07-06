@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-neutral auth/bootstrap route-group and server-module factories
+  under `server`, so apps can share auth route shape while keeping provider
+  verification, sessions, player lookup, middleware policy, and final paths
+  local.
 - Added provider-neutral auth user/session/logout response shapers under
   `modules/auth`, so apps can share login payload envelopes while keeping
   auth verification, session storage, and player lookup local.

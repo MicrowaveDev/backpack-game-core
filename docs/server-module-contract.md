@@ -134,6 +134,10 @@ into core, so product-specific assumptions fail near the module boundary.
 The stable server facade also exposes provider-driven module factories for
 low-risk shared services:
 
+- `createAuthRouteGroup()` and `createAuthRoutesServerModule()`: build the
+  provider-neutral auth/bootstrap route family over injected handlers and
+  middleware. Product repos still own auth verification, sessions, player
+  lookup, provider naming, public/dev/auth rate limits, and final route paths.
 - `createLoadoutValidationServerModule()`: registers
   `loadoutValidationService` over injected artifact lookup, pricing, family,
   placement, and stat policy providers.
