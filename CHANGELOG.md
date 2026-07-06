@@ -8,6 +8,8 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Hardened `client` error-message extraction so shared route clients preserve
+  API errors shaped as either strings or `{ message }` objects.
 - Added provider-neutral runtime config validation result, assertion, and CLI
   summary line shapers under `modules/config`, so apps can share deploy-check
   response formatting while keeping environment policy local.

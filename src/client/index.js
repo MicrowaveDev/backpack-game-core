@@ -14,6 +14,23 @@ function payloadField(payload, key) {
   return payload[key];
 }
 
+function payloadMessage(value) {
+  if (typeof value === 'string' && value.trim()) return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
+  if (typeof value.message === 'string' && value.message.trim()) return value.message;
+  if (typeof value.code === 'string' && value.code.trim()) return value.code;
+  return '';
+}
+
+function payloadErrorMessage(payload, {
+  errorKey = 'error',
+  fallback = 'Backpack request failed'
+} = {}) {
+  const errorMessage = payloadMessage(payloadField(payload, errorKey));
+  if (errorMessage) return errorMessage;
+  return payloadMessage(payloadField(payload, 'message')) || fallback;
+}
+
 function trimSlashes(value, side = 'both') {
   let result = String(value || '');
   if (side === 'left' || side === 'both') result = result.replace(/^\/+/, '');
@@ -145,7 +162,10 @@ export class BackpackGameClient {
     const payload = await parseResponsePayload(response);
 
     if (!response.ok) {
-      const message = payload?.error || payload?.message || `Backpack request failed with ${response.status}`;
+      const message = payloadErrorMessage(payload, {
+        errorKey: this.envelopeErrorKey,
+        fallback: `Backpack request failed with ${response.status}`
+      });
       throw new BackpackGameClientError(message, {
         status: response.status,
         statusText: response.statusText,
@@ -166,7 +186,7 @@ export class BackpackGameClient {
 
     if (payloadField(payload, successKey) === false) {
       const errorKey = options.envelopeErrorKey || this.envelopeErrorKey;
-      const message = payloadField(payload, errorKey) || payload?.message || 'Backpack request failed';
+      const message = payloadErrorMessage(payload, { errorKey });
       throw new BackpackGameClientError(message, {
         status: response.status ?? 200,
         statusText: response.statusText ?? '',

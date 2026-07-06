@@ -61,7 +61,9 @@ test('[client] sends JSON requests through route adapters', async () => {
 
 test('[client] throws structured errors for failed responses', async () => {
   const client = createBackpackGameClient({
-    fetchImpl: async () => response({ error: 'nope' }, { ok: false, status: 409, statusText: 'Conflict' })
+    fetchImpl: async () => response({
+      error: { message: 'nope', code: 'conflict' }
+    }, { ok: false, status: 409, statusText: 'Conflict' })
   });
 
   await assert.rejects(
@@ -69,7 +71,8 @@ test('[client] throws structured errors for failed responses', async () => {
     (error) => {
       assert.equal(error instanceof BackpackGameClientError, true);
       assert.equal(error.status, 409);
-      assert.equal(error.payload.error, 'nope');
+      assert.equal(error.message, 'nope');
+      assert.deepEqual(error.payload.error, { message: 'nope', code: 'conflict' });
       return true;
     }
   );
@@ -92,7 +95,7 @@ test('[client] treats success=false response envelopes as structured errors', as
     unwrapDataEnvelope: true,
     fetchImpl: async () => response({
       success: false,
-      error: 'wallet closed'
+      error: { message: 'wallet closed' }
     })
   });
 
@@ -102,7 +105,7 @@ test('[client] treats success=false response envelopes as structured errors', as
       assert.equal(error instanceof BackpackGameClientError, true);
       assert.equal(error.status, 200);
       assert.equal(error.message, 'wallet closed');
-      assert.deepEqual(error.payload, { success: false, error: 'wallet closed' });
+      assert.deepEqual(error.payload, { success: false, error: { message: 'wallet closed' } });
       return true;
     }
   );
