@@ -109,6 +109,10 @@
       "types": "./src/modules/gacha/simulation-service.d.ts",
       "import": "./src/modules/gacha/simulation-service.js"
     },
+    "./modules/config": {
+      "types": "./src/modules/config/index.d.ts",
+      "import": "./src/modules/config/index.js"
+    },
     "./modules/wallet": {
       "types": "./src/modules/wallet/index.d.ts",
       "import": "./src/modules/wallet/index.js"

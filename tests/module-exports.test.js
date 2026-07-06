@@ -28,6 +28,10 @@ import {
   createAssetGachaSimulationService
 } from '@microwavedev/backpack-game-core/modules/gacha/simulation-service';
 import {
+  formatRuntimeConfigValidationLines,
+  shapeRuntimeConfigValidationResult
+} from '@microwavedev/backpack-game-core/modules/config';
+import {
   applyWalletBalanceDelta,
   createProviderSettlementAdapterRegistry,
   createWalletPurchaseCompletionPlan,
@@ -249,6 +253,9 @@ test('[modules] gacha facade exposes existing asset-gacha behavior', () => {
     runtimePack: pack,
     validation: { ok: true, errors: [], warnings: [] }
   }).ok, false);
+  assert.equal(formatRuntimeConfigValidationLines(shapeRuntimeConfigValidationResult(), {
+    readyMessage: 'ok'
+  })[0], 'ok');
   assert.equal(normalizeGachaAdminFixture({ packs: [{ id: 'fixture_pack' }] }).packs[0].id, 'fixture_pack');
   assert.equal(gachaAdminPackSnapshot({ id: 'pack', roll_price_amount: '5' }).rollPriceAmount, 5);
   assert.equal(buildGachaAdminPackDraftDiff({

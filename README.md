@@ -48,6 +48,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 - `modules/gacha/simulation-service`: provider-driven service factories for
   static/runtime pack odds simulation, plus a server module factory for app
   module lists.
+- `modules/config`: provider-neutral runtime config validation result,
+  assertion, and CLI summary line shapers over product-owned validation rules.
 - `wallet-accounting`: reusable profile-wallet delta validation, balance math,
   purchase grant/reversal mutation shaping, status classification, and
   settlement invariants over injected persistence snapshots, plus

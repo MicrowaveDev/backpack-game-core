@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added provider-neutral runtime config validation result, assertion, and CLI
+  summary line shapers under `modules/config`, so apps can share deploy-check
+  response formatting while keeping environment policy local.
 - Added provider-neutral support lookup bundle and support mutation result DTO
   shaping under `modules/support`, so apps can share support/admin response
   envelopes while keeping permissions, audit persistence, and mutations local.
