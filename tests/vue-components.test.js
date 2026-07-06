@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AchievementBadge,
+  ArtifactCatalogBrowser,
   ArtifactStatSummary,
   ArtifactTile,
   AssetRollResultPanel,
@@ -530,6 +531,66 @@ test('[vue] RecipeList exposes neutral repeated recipe shell', () => {
     $emit: (event, payload) => emitted.push([event, payload])
   }, { recipe: recipes[0], index: 0 });
   assert.deepEqual(emitted, [['select', { recipe: recipes[0], index: 0 }]]);
+});
+
+test('[vue] ArtifactCatalogBrowser exposes neutral catalog shell contract', () => {
+  assert.equal(ArtifactCatalogBrowser.name, 'ArtifactCatalogBrowser');
+  assert.match(ArtifactCatalogBrowser.template, /name="group-board"/);
+  assert.match(ArtifactCatalogBrowser.template, /name="detail-visual"/);
+  assert.ok(ArtifactCatalogBrowser.emits.includes('grid-panel-resize'));
+
+  const group = { id: 'damage', label: 'Damage', artifacts: [{ id: 'a' }] };
+  const selectedItem = {
+    id: 'result',
+    title: 'Result',
+    description: 'Description',
+    kicker: 'Fusion',
+    facts: [
+      { key: 'footprint', label: 'Footprint', value: '1x1' },
+      { key: 'hidden', label: 'Hidden', value: '-', visible: false }
+    ]
+  };
+  const recipe = {
+    resultArtifactId: 'result',
+    ingredients: [{ id: 'a' }],
+    result: { id: 'result' }
+  };
+  const context = {
+    groups: [group],
+    selectedItem,
+    selectedRecipe: recipe,
+    labels: {
+      all: 'All',
+      gridTitle: 'Catalog',
+      closeDetails: 'Close',
+      ingredients: 'Ingredients'
+    },
+    rootClass: 'catalog',
+    hasSelectionClass: 'has-selection'
+  };
+
+  assert.deepEqual(ArtifactCatalogBrowser.computed.rootClasses.call(context), ['catalog', 'has-selection']);
+  assert.deepEqual(ArtifactCatalogBrowser.computed.renderedGroups.call(context), [group]);
+  assert.deepEqual(ArtifactCatalogBrowser.computed.renderedFacts.call(context), [selectedItem.facts[0]]);
+  assert.deepEqual(ArtifactCatalogBrowser.computed.recipeIngredients.call(context), recipe.ingredients);
+  assert.equal(ArtifactCatalogBrowser.computed.recipeResultId.call({
+    ...context,
+    recipeResult: recipe.result
+  }), 'result');
+  assert.equal(ArtifactCatalogBrowser.methods.artifactKey({ id: 'needle' }, 0, 'ingredient'), 'needle');
+
+  const emitted = [];
+  const emitContext = {
+    $refs: { gridPanel: { clientWidth: 320 } },
+    $emit: (event, payload) => emitted.push([event, payload])
+  };
+  ArtifactCatalogBrowser.methods.emitSelectItem.call(emitContext, 'needle', { type: 'click' });
+  ArtifactCatalogBrowser.methods.emitCloseDetails.call(emitContext, { type: 'click' });
+  ArtifactCatalogBrowser.methods.updateGridPanelMetrics.call(emitContext);
+  assert.deepEqual(emitted[0], ['select-item', { artifactId: 'needle', event: { type: 'click' } }]);
+  assert.deepEqual(emitted[1], ['close-details', { event: { type: 'click' } }]);
+  assert.equal(emitted[2][0], 'grid-panel-resize');
+  assert.equal(emitted[2][1].panelWidth, 320);
 });
 
 test('[vue] AchievementBadge exposes neutral image badge path hooks', () => {

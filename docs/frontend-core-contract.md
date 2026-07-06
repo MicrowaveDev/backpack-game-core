@@ -53,6 +53,12 @@ Vue installed.
   from the product app. Core owns repeated recipe structure, active/interactive
   state, keyboard selection, data attributes, and class hooks; catalog lookup,
   fusion recipe sources, artifact grid rendering, and stats remain product-local.
+- Catalog shells such as `ArtifactCatalogBrowser` should receive already-shaped
+  group rows, selected-detail facts, selected recipe DTOs, labels, and
+  visual/stat slots from the product app. Core owns the layout, detail close
+  event, item select event, resize observation event, data attributes, and class
+  hooks; catalog sorting/grouping, recipe sources, artifact previews, and stats
+  remain product-local.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

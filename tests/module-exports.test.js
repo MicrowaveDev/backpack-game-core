@@ -169,6 +169,7 @@ import {
   ArtifactStatSummary,
   bindReducedMotionTracker,
   AssetRollResultPanel,
+  ArtifactCatalogBrowser,
   ArtifactTile,
   BackpackGrid,
   BackpackZone,
@@ -192,6 +193,7 @@ import {
 } from '@microwavedev/backpack-game-core/vue';
 import {
   AchievementBadge as AchievementBadgeFromComponents,
+  ArtifactCatalogBrowser as ArtifactCatalogBrowserFromComponents,
   ArtifactStatSummary as ArtifactStatSummaryFromComponents,
   AssetRollResultPanel as AssetRollResultPanelFromComponents,
   ArtifactTile as ArtifactTileFromComponents,
@@ -410,6 +412,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(gachaAdminFixtureOperationRows({ operations: [{ type: 'pack' }] })[0].afterCountText, '-');
   assert.equal(gachaAdminSimulationItemRows({ items: [{ assetId: 'skin.a', observedPerRoll: 0.25 }] })[0].observedPerRollText, '25.0%');
   assert.equal(AchievementBadge.name, 'AchievementBadge');
+  assert.equal(ArtifactCatalogBrowser.name, 'ArtifactCatalogBrowser');
   assert.equal(ArtifactStatSummary.name, 'ArtifactStatSummary');
   assert.equal(SeasonRankEmblem.name, 'SeasonRankEmblem');
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
@@ -434,6 +437,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createReducedMotionTracker, 'function');
   assert.equal(typeof bindReducedMotionTracker, 'function');
   assert.equal(AchievementBadgeFromComponents, AchievementBadge);
+  assert.equal(ArtifactCatalogBrowserFromComponents, ArtifactCatalogBrowser);
   assert.equal(ArtifactStatSummaryFromComponents, ArtifactStatSummary);
   assert.equal(SeasonRankEmblemFromComponents, SeasonRankEmblem);
   assert.equal(AssetRollResultPanelFromComponents, AssetRollResultPanel);

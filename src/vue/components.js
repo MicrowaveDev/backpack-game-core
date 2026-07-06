@@ -3,6 +3,7 @@ function nonEmptyArray(value) {
 }
 
 export { AchievementBadge } from './components/AchievementBadge.js';
+export { ArtifactCatalogBrowser } from './components/ArtifactCatalogBrowser.js';
 export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
 export { BackpackZone } from './components/BackpackZone.js';
 export { FighterCard } from './components/FighterCard.js';
