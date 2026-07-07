@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added the second quarantined gameplay port at
+  `server/ports/mushroom/gameplay`: `artifact-fusion-service.js` was
+  physically moved from Mushroom and wrapped as `createArtifactFusionPort()`
+  over injected DB query, catalog, fusion matcher, loadout row mutation, clock,
+  and ID providers. It preserves current `game_run_fusions` SQL until fusion
+  repositories/config contracts replace table details.
 - Added the first aggressive quarantined gameplay port at
   `server/ports/mushroom/gameplay`: `game-run-loadout.js` was physically moved
   from Mushroom and wrapped as `createGameRunLoadoutPort()` over injected DB,

@@ -177,9 +177,10 @@ routes call the registered services.
 Large product service files may move into explicit quarantine subpaths before
 they are neutral enough for stable modules. The current quarantine is:
 
-- `server/ports/mushroom/gameplay`: starts with `createGameRunLoadoutPort()`,
-  the moved Mushroom game-run loadout service over injected query, catalog,
-  grid, validation, clock, and ID providers.
+- `server/ports/mushroom/gameplay`: starts with `createGameRunLoadoutPort()`
+  and `createArtifactFusionPort()`, the moved Mushroom game-run loadout and
+  artifact-fusion services over injected query, catalog, grid, validation,
+  fusion matcher, loadout row mutation, clock, and ID providers.
 
 Rules for quarantine:
 

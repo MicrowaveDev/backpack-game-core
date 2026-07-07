@@ -1,3 +1,20 @@
+export interface ArtifactFusionPortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  getArtifactById: (artifactId: string) => unknown;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  findArtifactFusionMatches: (rows: unknown[], getArtifactById: (artifactId: string) => unknown) => unknown[];
+  readCurrentRoundItems: (client: unknown, gameRunId: string, playerId: string, roundNumber: number) => Promise<unknown[]>;
+  nextSortOrder: (client: unknown, gameRunId: string, playerId: string, roundNumber: number) => Promise<number>;
+  deleteLoadoutItem: (client: unknown, itemId: string) => Promise<void>;
+  insertLoadoutItem: (client: unknown, params: Record<string, unknown>) => Promise<string>;
+}
+
+export interface ArtifactFusionPort {
+  applyRoundStartFusions(client: unknown, gameRunId: string, playerId: string, roundNumber: number): Promise<unknown[]>;
+  readFusionReveals(client: unknown, gameRunId: string, playerId: string, resultRoundNumber: number): Promise<unknown[]>;
+}
+
 export interface GameRunLoadoutPortOptions {
   query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
   bagColumns: number;
@@ -31,4 +48,5 @@ export interface GameRunLoadoutPort {
   readCurrentRoundItems(client: unknown, gameRunId: string, playerId: string, roundNumber: number): Promise<unknown[]>;
 }
 
+export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
 export function createGameRunLoadoutPort(options: GameRunLoadoutPortOptions): GameRunLoadoutPort;

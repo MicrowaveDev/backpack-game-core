@@ -106,7 +106,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 - `server/ports/mushroom/gameplay`: quarantined move-first ports for Mushroom
   gameplay service files that are not neutral yet. These exports are migration
   surfaces, not stable cross-game APIs; use them through product wrappers while
-  repository/config contracts are extracted.
+  repository/config contracts are extracted. Current ports include
+  `createGameRunLoadoutPort()` and `createArtifactFusionPort()`.
 
 ## Stable Layered Exports
 
