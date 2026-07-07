@@ -37,6 +37,10 @@
       "types": "./src/artifact-capabilities.d.ts",
       "import": "./src/artifact-capabilities.js"
     },
+    "./artifact-visual-classification": {
+      "types": "./src/artifact-visual-classification.d.ts",
+      "import": "./src/artifact-visual-classification.js"
+    },
     "./loadout-validation": {
       "types": "./src/loadout-validation.d.ts",
       "import": "./src/loadout-validation.js"

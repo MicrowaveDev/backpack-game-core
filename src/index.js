@@ -39,6 +39,7 @@ export {
 } from './backpack-loadout.js';
 
 export * from './artifact-capabilities.js';
+export * from './artifact-visual-classification.js';
 export * from './run-lifecycle.js';
 
 export {

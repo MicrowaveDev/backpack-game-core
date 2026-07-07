@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `artifact-visual-classification`, a product-configurable artifact
+  visual taxonomy engine moved from Mushroom's `app/shared` layer. Core now
+  owns role/shine/stat/footprint classification helpers and a classifier
+  factory over injected role classes, shine tiers, owner adapters, and shape
+  hooks, while products keep visual labels, prompts, CSS taxonomy, art
+  assumptions, and legacy owner fields local.
 - Moved Mushroom's full Sequelize model definition set from
   `app/server/models` into the quarantined `server/models/mushroom` package
   subpath. Mushroom now keeps only a local `models/index.js` wrapper, while

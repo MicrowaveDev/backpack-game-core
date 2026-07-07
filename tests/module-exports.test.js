@@ -72,6 +72,10 @@ import {
   isContainerItem
 } from '@microwavedev/backpack-game-core/artifact-capabilities';
 import {
+  artifactVisualClassification,
+  createArtifactVisualClassifier
+} from '@microwavedev/backpack-game-core/artifact-visual-classification';
+import {
   createRunGhostBudgetPlan,
   createRunGroupCompletionPlan,
   createRunRoundResolutionPlan,
@@ -418,6 +422,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(isCombatArtifact({ family: 'damage' }), true);
   assert.equal(isContainerItem({ x: -1, y: 0 }), true);
   assert.equal(contributesStats({ family: 'damage' }, { x: 0, y: 0 }), true);
+  assert.equal(artifactVisualClassification({ family: 'damage', width: 1, height: 1 }).role.id, 'damage');
+  assert.equal(typeof createArtifactVisualClassifier, 'function');
   assert.equal(familyCapsFromLoadout, familyCaps);
   assert.equal(isBagFromLoadout, isBag);
   assert.equal(createLoadoutValidationServiceFromLoadout, createLoadoutValidationService);

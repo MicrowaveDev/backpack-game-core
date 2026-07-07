@@ -35,6 +35,10 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 - `artifact-capabilities`: default backpack family capability helpers plus
   override hooks for game-specific item families, bag/container semantics, and
   stat contribution checks.
+- `artifact-visual-classification`: product-configurable role/shine/stat/
+  footprint classification helpers and classifier factory over injected visual
+  taxonomy, owner, and shape adapters. Product repos keep copy, prompts,
+  visual labels, CSS taxonomy, and art assumptions local.
 - `loadout-validation`: provider-driven flat-grid and bag-coverage validation
   over injected catalog, pricing, bag policy, and stat rules.
 - `modules/loadout/validation-service`: provider-driven loadout validation
