@@ -25,6 +25,10 @@
       "types": "./src/fusion-matching.d.ts",
       "import": "./src/fusion-matching.js"
     },
+    "./artifact-fusion-recipes": {
+      "types": "./src/artifact-fusion-recipes.d.ts",
+      "import": "./src/artifact-fusion-recipes.js"
+    },
     "./shop-offer": {
       "types": "./src/shop-offer.d.ts",
       "import": "./src/shop-offer.js"

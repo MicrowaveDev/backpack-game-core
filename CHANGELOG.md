@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `artifact-fusion-recipes` and expanded `modules/fusion` with
+  product-configurable recipe normalization, recipe lookup, ingredient-policy,
+  and fusion evaluator helpers. Product repos keep authored recipe tables,
+  artifact ids, unlock/balance policy, and catalog ownership local.
 - Added `artifact-visual-classification`, a product-configurable artifact
   visual taxonomy engine moved from Mushroom's `app/shared` layer. Core now
   owns role/shine/stat/footprint classification helpers and a classifier

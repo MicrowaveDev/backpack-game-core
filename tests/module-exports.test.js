@@ -76,6 +76,10 @@ import {
   createArtifactVisualClassifier
 } from '@microwavedev/backpack-game-core/artifact-visual-classification';
 import {
+  createArtifactFusionEvaluator,
+  normalizeArtifactFusionRecipes
+} from '@microwavedev/backpack-game-core/artifact-fusion-recipes';
+import {
   createRunGhostBudgetPlan,
   createRunGroupCompletionPlan,
   createRunRoundResolutionPlan,
@@ -158,7 +162,10 @@ import {
   createSeededRng,
   simulateBattle
 } from '@microwavedev/backpack-game-core/modules/battle';
-import { findFusionMatches } from '@microwavedev/backpack-game-core/modules/fusion';
+import {
+  createArtifactFusionEvaluator as createArtifactFusionEvaluatorFromModule,
+  findFusionMatches
+} from '@microwavedev/backpack-game-core/modules/fusion';
 import {
   AUTH_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
@@ -424,6 +431,12 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(contributesStats({ family: 'damage' }, { x: 0, y: 0 }), true);
   assert.equal(artifactVisualClassification({ family: 'damage', width: 1, height: 1 }).role.id, 'damage');
   assert.equal(typeof createArtifactVisualClassifier, 'function');
+  assert.equal(normalizeArtifactFusionRecipes([{
+    id: 'recipe',
+    resultArtifactId: 'result',
+    ingredientArtifactIds: ['a', 'b']
+  }]).length, 1);
+  assert.equal(typeof createArtifactFusionEvaluator, 'function');
   assert.equal(familyCapsFromLoadout, familyCaps);
   assert.equal(isBagFromLoadout, isBag);
   assert.equal(createLoadoutValidationServiceFromLoadout, createLoadoutValidationService);
@@ -601,6 +614,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     ingredientArtifactIds: ['a', 'b']
   }]);
   assert.equal(matches[0].resultArtifactId, 'ab');
+  assert.equal(createArtifactFusionEvaluatorFromModule, createArtifactFusionEvaluator);
 });
 
 test('[modules] asset facade exposes profile asset result DTO shapers', () => {

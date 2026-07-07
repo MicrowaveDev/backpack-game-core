@@ -2,6 +2,7 @@ export * from './bag-shape.js';
 export * from './grid-geometry.js';
 export * from './rng.js';
 export * from './fusion-matching.js';
+export * from './artifact-fusion-recipes.js';
 export * from './shop-offer.js';
 export * from './backpack-loadout.js';
 export * from './artifact-capabilities.js';

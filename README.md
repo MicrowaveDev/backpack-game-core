@@ -24,6 +24,9 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   non-mutating seeded shuffle helpers.
 - `fusion-matching`: pure adjacent-ingredient matching with product policy
   hooks.
+- `artifact-fusion-recipes`: recipe normalization, lookup, ingredient-policy,
+  and evaluator helpers over product-provided fusion recipes and artifact
+  catalogs.
 - `shop-offer`: deterministic offer generation over injected item pools, plus
   run-shop buy/refresh/sell state planners over injected offer/currency
   snapshots.
