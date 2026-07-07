@@ -144,6 +144,13 @@ low-risk shared services:
   product service shapes as provider-driven factories while product repos keep
   catalogs, characters, starter presets, image paths, runtime pack providers,
   validation policy, readiness config, and legacy response aliases local.
+- `nowIso()`, `createId()`, `createShortCode()`, `createSessionKey()`,
+  `normalizeLanguage()`, `createRng()`, `computeProgressLevel()`,
+  `computeCharacterLevel()`, `currencyFields()`, `runCurrencyFields()`,
+  `createStructuredLogger()`, and `createRequestLogger()`: the second small
+  server-file cluster. Core owns neutral helper behavior and logging
+  middleware shape; product repos keep legacy aliases, product-specific field
+  names, and final log routing/configuration.
 - `createLoadoutValidationServerModule()`: registers
   `loadoutValidationService` over injected artifact lookup, pricing, family,
   placement, and stat policy providers.

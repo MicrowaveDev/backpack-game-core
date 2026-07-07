@@ -169,16 +169,29 @@ import {
   createBackpackServerModule,
   createBackpackRouteDescriptor,
   createBackpackRouteGroup,
+  createId,
+  createRequestLogger,
+  createRng,
+  createSessionKey,
+  createShortCode,
+  createStructuredLogger,
   createLoadoutValidationServerModule,
+  computeCharacterLevel,
+  computeProgressLevel,
   createReadyManagerExports,
   createRunReadinessServerModule,
   createRunReadinessManager,
   createServerGachaSimulationService,
   createServerLoadoutUtils,
   createSocialPreviewCacheServerModule,
+  currencyFields,
   flattenBackpackRouteDescriptors,
   idempotency,
+  log,
+  normalizeLanguage,
+  parseJson,
   rateLimit,
+  runCurrencyFields,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
 import {
@@ -404,6 +417,19 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createLoadoutValidationService, 'function');
   assert.equal(typeof createLoadoutValidationServerModule, 'function');
   assert.equal(typeof createRunReadinessServerModule, 'function');
+  assert.equal(typeof createId, 'function');
+  assert.equal(typeof createShortCode, 'function');
+  assert.equal(typeof createSessionKey, 'function');
+  assert.equal(typeof createRng, 'function');
+  assert.equal(typeof parseJson, 'function');
+  assert.equal(normalizeLanguage('ru-RU', { fallback: 'en', supportedLanguages: ['en', 'ru'] }), 'ru');
+  assert.equal(computeProgressLevel(100).level, 2);
+  assert.equal(computeCharacterLevel(4000).level, 20);
+  assert.equal(currencyFields(3, { primaryField: 'energy', aliasFields: ['energyPoints'], legacyField: null }).energy, 3);
+  assert.equal(runCurrencyFields(3).runCoins, 3);
+  assert.equal(typeof createStructuredLogger, 'function');
+  assert.equal(typeof createRequestLogger, 'function');
+  assert.equal(typeof log.info, 'function');
   assert.equal(typeof createProviderSettlementAdapterRegistry, 'function');
   assert.equal(shapeSupportLookupResult({ players: [{}] }, { includeCounts: true }).counts.players, 1);
   assert.equal(shapeSupportWalletMutationResult({

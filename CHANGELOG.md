@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Moved the second small server-file cluster into the `server` facade:
+  neutral time/id/JSON/language/RNG/progression/currency helpers plus
+  adapter-driven structured logging and request logging. Product repos keep
+  legacy naming aliases and product-specific log context locally.
 - Moved the first server-file cluster into core-backed factories:
   `createGhostLoadoutService`, `createServerLoadoutUtils`,
   `createServerGachaSimulationService`, and `createReadyManagerExports`.

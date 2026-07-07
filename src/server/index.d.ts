@@ -103,6 +103,74 @@ export interface BackpackAuthRouteConfig extends Partial<BackpackRouteDescriptor
   enabled?: boolean;
 }
 
+export type Rng = () => number;
+
+export declare const DEFAULT_CHARACTER_XP_LEVEL_CURVE: readonly number[];
+export declare const CHARACTER_XP_LEVEL_CURVE: readonly number[];
+
+export declare function nowIso(): string;
+export declare function createId(prefix?: string): string;
+export declare function createShortCode(length?: number): string;
+export declare function createSessionKey(options?: { prefix?: string; bytes?: number }): string;
+export declare function normalizeLanguage(
+  value: unknown,
+  options?: string | { fallback?: string; supportedLanguages?: readonly string[] }
+): string;
+export declare function startOfUtcDay(input?: Date | string | number): Date;
+export declare function nextUtcReset(input?: Date | string | number): Date;
+export declare function dayKey(input?: Date | string | number): string;
+export declare function parseJson<T = unknown>(text: unknown, fallback?: T): T;
+export declare function hashToSeed(input: unknown): number;
+export declare function createRng(seedInput: unknown): Rng;
+export declare function clamp(value: number, min: number, max: number): number;
+export declare function expectedScore(playerRating: number, opponentRating: number): number;
+export declare function kFactor(rating: number, ratedBattles: number, mode?: string): number;
+export declare function computeProgressLevel(
+  progress: unknown,
+  options?: { curve?: readonly number[] }
+): { level: number; current: number; next: number | null };
+export declare function computeCharacterLevel(
+  characterXp: unknown,
+  options?: { curve?: readonly number[] }
+): { level: number; current: number; next: number | null };
+export declare function currencyFields(
+  amount: unknown,
+  options?: {
+    primaryField?: string;
+    aliasFields?: readonly string[];
+    legacyField?: string | null;
+  }
+): Record<string, number>;
+export declare function runCurrencyFields(
+  amount: unknown,
+  options?: Parameters<typeof currencyFields>[1]
+): Record<string, number>;
+
+export interface StructuredLogger {
+  info(payload?: unknown): void;
+  warn(payload?: unknown): void;
+  error(payload?: unknown): void;
+}
+
+export declare const log: StructuredLogger;
+
+export declare function createStructuredLogger(options?: {
+  disabled?: boolean;
+  now?: () => string;
+  writeInfo?: (line: string) => unknown;
+  writeError?: (line: string) => unknown;
+}): StructuredLogger;
+
+export declare function createRequestLogger(options?: {
+  logger?: StructuredLogger;
+  createRequestId?: (req?: unknown) => string;
+  nowHrtime?: () => bigint;
+  routeFromRequest?: (req: any) => string;
+  contextFromRequest?: (req: any) => Record<string, unknown>;
+}): BackpackRouteHandler;
+
+export declare function requestLogger(options?: Parameters<typeof createRequestLogger>[0]): BackpackRouteHandler;
+
 export interface AuthRouteGroupOptions {
   name?: string;
   prefix?: string;

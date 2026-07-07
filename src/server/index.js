@@ -9,6 +9,34 @@ import { createRunReadinessManager } from './readiness.js';
 export { createGhostLoadoutService } from './modules/bot-loadout.js';
 export { createServerGachaSimulationService } from './modules/gacha-simulation-service.js';
 export { createServerLoadoutUtils } from './modules/loadout-utils.js';
+export {
+  CHARACTER_XP_LEVEL_CURVE,
+  DEFAULT_CHARACTER_XP_LEVEL_CURVE,
+  clamp,
+  computeCharacterLevel,
+  computeProgressLevel,
+  createId,
+  createRng,
+  createSessionKey,
+  createShortCode,
+  currencyFields,
+  dayKey,
+  expectedScore,
+  hashToSeed,
+  kFactor,
+  nextUtcReset,
+  normalizeLanguage,
+  nowIso,
+  parseJson,
+  runCurrencyFields,
+  startOfUtcDay
+} from './modules/utils.js';
+export {
+  createRequestLogger,
+  createStructuredLogger,
+  log,
+  requestLogger
+} from './modules/observability.js';
 export { createReadyManagerExports } from './modules/ready-manager.js';
 
 function asArray(value) {

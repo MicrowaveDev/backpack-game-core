@@ -99,6 +99,7 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   module setup, auth/bootstrap route-group factories, moved server-file
   factories for ghost loadouts, loadout validation wrappers, gacha simulation
   wrappers, readiness singleton exports, reusable run readiness/lock helpers,
+  neutral server utility helpers, adapter-driven structured/request logging,
   server module factories for shared services, and shared middleware.
   The module contract is documented in
   [`docs/server-module-contract.md`](docs/server-module-contract.md).
