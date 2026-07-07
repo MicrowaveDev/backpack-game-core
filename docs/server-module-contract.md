@@ -172,6 +172,24 @@ low-risk shared services:
 Apps still decide which providers exist, which module order to use, and how
 routes call the registered services.
 
+## Quarantined Ports
+
+Large product service files may move into explicit quarantine subpaths before
+they are neutral enough for stable modules. The current quarantine is:
+
+- `server/ports/mushroom/gameplay`: starts with `createGameRunLoadoutPort()`,
+  the moved Mushroom game-run loadout service over injected query, catalog,
+  grid, validation, clock, and ID providers.
+
+Rules for quarantine:
+
+- A quarantine subpath is a migration surface, not a stable cross-game API.
+- Every quarantine file must be listed in the import-boundary allowlist test.
+- Product repos must keep compatibility wrappers at old paths.
+- The port graduates only after table/query details, product field names,
+  catalogs, route errors, and validation policy become explicit repositories or
+  config providers.
+
 ## Target App Composition
 
 The long-term app shape should be a product-declared module list:

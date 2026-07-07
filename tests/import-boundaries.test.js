@@ -20,6 +20,12 @@ function rel(file) {
   return path.relative(repoRoot, file);
 }
 
+const quarantinedMushroomPortFiles = new Set([
+  'src/server/ports/mushroom/gameplay/game-run-loadout.js',
+  'src/server/ports/mushroom/gameplay/index.d.ts',
+  'src/server/ports/mushroom/gameplay/index.js'
+]);
+
 const forbiddenProductPatterns = [
   /\bmushroom-master\b/i,
   /\bmeat-master\b/i,
@@ -48,6 +54,14 @@ test('[boundaries] core source does not import product or provider code', () => 
       assert.doesNotMatch(content, pattern, `${rel(file)} should not match forbidden product/provider pattern ${pattern}`);
     }
   }
+});
+
+test('[boundaries] quarantined Mushroom ports stay explicitly allowlisted', () => {
+  const portFiles = sourceFiles()
+    .map(rel)
+    .filter((file) => file.startsWith('src/server/ports/mushroom/'));
+
+  assert.deepEqual(portFiles.sort(), Array.from(quarantinedMushroomPortFiles).sort());
 });
 
 test('[boundaries] browser-safe core exports avoid Node-only imports', () => {

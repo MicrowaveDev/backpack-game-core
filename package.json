@@ -73,6 +73,10 @@
       "types": "./src/server/middleware/index.d.ts",
       "import": "./src/server/middleware/index.js"
     },
+    "./server/ports/mushroom/gameplay": {
+      "types": "./src/server/ports/mushroom/gameplay/index.d.ts",
+      "import": "./src/server/ports/mushroom/gameplay/index.js"
+    },
     "./vue": {
       "types": "./src/vue/index.d.ts",
       "import": "./src/vue/index.js"

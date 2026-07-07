@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added the first aggressive quarantined gameplay port at
+  `server/ports/mushroom/gameplay`: `game-run-loadout.js` was physically moved
+  from Mushroom and wrapped as `createGameRunLoadoutPort()` over injected DB,
+  catalog, grid, validation, clock, and ID providers. This is intentionally
+  not a stable neutral module yet; the explicit import-boundary allowlist must
+  shrink as repository contracts replace table/query details.
 - Moved the second small server-file cluster into the `server` facade:
   neutral time/id/JSON/language/RNG/progression/currency helpers plus
   adapter-driven structured logging and request logging. Product repos keep

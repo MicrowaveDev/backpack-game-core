@@ -103,6 +103,10 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   server module factories for shared services, and shared middleware.
   The module contract is documented in
   [`docs/server-module-contract.md`](docs/server-module-contract.md).
+- `server/ports/mushroom/gameplay`: quarantined move-first ports for Mushroom
+  gameplay service files that are not neutral yet. These exports are migration
+  surfaces, not stable cross-game APIs; use them through product wrappers while
+  repository/config contracts are extracted.
 
 ## Stable Layered Exports
 
@@ -133,6 +137,11 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/vue`
 - `@microwavedev/backpack-game-core/vue/components`
 - `@microwavedev/backpack-game-core/vue/composables`
+
+Quarantined migration subpaths are public only for wrapped product adoption
+while they are being neutralized:
+
+- `@microwavedev/backpack-game-core/server/ports/mushroom/gameplay`
 
 Consumers should import only the package root or these public subpaths. Do not
 import `src/*` or nested submodule paths from game code.

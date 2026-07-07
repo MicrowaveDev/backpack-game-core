@@ -195,6 +195,9 @@ import {
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
 import {
+  createGameRunLoadoutPort
+} from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
+import {
   idempotency as idempotencyFromMiddleware,
   rateLimit as rateLimitFromMiddleware
 } from '@microwavedev/backpack-game-core/server/middleware';
@@ -430,6 +433,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createStructuredLogger, 'function');
   assert.equal(typeof createRequestLogger, 'function');
   assert.equal(typeof log.info, 'function');
+  assert.equal(typeof createGameRunLoadoutPort, 'function');
   assert.equal(typeof createProviderSettlementAdapterRegistry, 'function');
   assert.equal(shapeSupportLookupResult({ players: [{}] }, { includeCounts: true }).counts.players, 1);
   assert.equal(shapeSupportWalletMutationResult({
