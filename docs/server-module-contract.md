@@ -191,6 +191,21 @@ Rules for quarantine:
   catalogs, route errors, and validation policy become explicit repositories or
   config providers.
 
+## Quarantined Model Definitions
+
+`server/models/mushroom` contains the moved Mushroom Sequelize model definition
+functions and association setup. This is intentionally different from a stable
+repository layer:
+
+- Core may expose the model definitions so Mushroom and Meat can share the same
+  temporary schema package while the backend is being split.
+- Product repos still create the Sequelize instance, choose Postgres or SQLite,
+  run sync/migrations/backfills, own transactions, and execute queries.
+- The model package graduates only after product field names and table
+  ownership are neutralized or replaced by repository interfaces.
+- The import-boundary allowlist is the guardrail: `sequelize` imports are
+  permitted only inside this explicit quarantine.
+
 ## Target App Composition
 
 The long-term app shape should be a product-declared module list:

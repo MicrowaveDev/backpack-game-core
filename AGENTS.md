@@ -9,9 +9,14 @@ Battles and Meat Master. Keep it product-neutral.
 - Do not add product catalogs, art paths, copy, themes, product route maps,
   Telegram helpers, payment SDKs, support/admin policy, or provider
   credentials here.
-- Do not add Sequelize models, migrations, database clients, Postgres code, or
-  SQLite code to core. Product repos own persistence, transactions, deployment,
-  and repository implementations.
+- Do not add migrations, database clients, Postgres code, or SQLite code to
+  core. Product repos own persistence, transactions, deployment, and repository
+  implementations.
+- The only current Sequelize exception is the quarantined legacy model
+  definition package at `src/server/models/mushroom`. It is a migration surface
+  for Mushroom table definitions, not a stable cross-game repository layer.
+  Keep dialect setup, sync/backfill code, queries, transactions, and migrations
+  in product repos.
 - Core helpers should accept plain rows, snapshots, config objects, callbacks,
   or repository/service adapters from the consuming game.
 - Core server modules may expose neutral route descriptors and route factories,

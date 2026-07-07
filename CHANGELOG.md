@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Moved Mushroom's full Sequelize model definition set from
+  `app/server/models` into the quarantined `server/models/mushroom` package
+  subpath. Mushroom now keeps only a local `models/index.js` wrapper, while
+  product repos still own Sequelize instances, dialect config, sync/backfill
+  logic, queries, transactions, and migrations.
 - Added the second quarantined gameplay port at
   `server/ports/mushroom/gameplay`: `artifact-fusion-service.js` was
   physically moved from Mushroom and wrapped as `createArtifactFusionPort()`

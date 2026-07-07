@@ -73,6 +73,10 @@
       "types": "./src/server/middleware/index.d.ts",
       "import": "./src/server/middleware/index.js"
     },
+    "./server/models/mushroom": {
+      "types": "./src/server/models/mushroom/index.d.ts",
+      "import": "./src/server/models/mushroom/index.js"
+    },
     "./server/ports/mushroom/gameplay": {
       "types": "./src/server/ports/mushroom/gameplay/index.d.ts",
       "import": "./src/server/ports/mushroom/gameplay/index.js"
@@ -188,9 +192,13 @@
     "CHANGELOG.md"
   ],
   "peerDependencies": {
+    "sequelize": "^6.37.0",
     "vue": "^3.3.0 || ^3.4.0 || ^3.5.0"
   },
   "peerDependenciesMeta": {
+    "sequelize": {
+      "optional": true
+    },
     "vue": {
       "optional": true
     }

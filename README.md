@@ -108,6 +108,9 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   surfaces, not stable cross-game APIs; use them through product wrappers while
   repository/config contracts are extracted. Current ports include
   `createGameRunLoadoutPort()` and `createArtifactFusionPort()`.
+- `server/models/mushroom`: quarantined Mushroom Sequelize model definitions
+  moved from `app/server/models`. Products still own the Sequelize instance,
+  dialect config, sync/backfill logic, queries, transactions, and migrations.
 
 ## Stable Layered Exports
 
@@ -143,6 +146,7 @@ Quarantined migration subpaths are public only for wrapped product adoption
 while they are being neutralized:
 
 - `@microwavedev/backpack-game-core/server/ports/mushroom/gameplay`
+- `@microwavedev/backpack-game-core/server/models/mushroom`
 
 Consumers should import only the package root or these public subpaths. Do not
 import `src/*` or nested submodule paths from game code.
