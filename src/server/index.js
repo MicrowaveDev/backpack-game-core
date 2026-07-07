@@ -6,6 +6,10 @@ import {
   LOADOUT_VALIDATION_PROVIDER_NAMES
 } from '../modules/loadout/validation-service.js';
 import { createRunReadinessManager } from './readiness.js';
+export { createGhostLoadoutService } from './modules/bot-loadout.js';
+export { createServerGachaSimulationService } from './modules/gacha-simulation-service.js';
+export { createServerLoadoutUtils } from './modules/loadout-utils.js';
+export { createReadyManagerExports } from './modules/ready-manager.js';
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];

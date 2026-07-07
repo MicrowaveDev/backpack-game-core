@@ -138,6 +138,12 @@ low-risk shared services:
   provider-neutral auth/bootstrap route family over injected handlers and
   middleware. Product repos still own auth verification, sessions, player
   lookup, provider naming, public/dev/auth rate limits, and final route paths.
+- `createGhostLoadoutService()`, `createServerLoadoutUtils()`,
+  `createServerGachaSimulationService()`, and `createReadyManagerExports()`:
+  the first physically moved server-file cluster. These expose the former
+  product service shapes as provider-driven factories while product repos keep
+  catalogs, characters, starter presets, image paths, runtime pack providers,
+  validation policy, readiness config, and legacy response aliases local.
 - `createLoadoutValidationServerModule()`: registers
   `loadoutValidationService` over injected artifact lookup, pricing, family,
   placement, and stat policy providers.

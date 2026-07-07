@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Moved the first server-file cluster into core-backed factories:
+  `createGhostLoadoutService`, `createServerLoadoutUtils`,
+  `createServerGachaSimulationService`, and `createReadyManagerExports`.
+  Product repos now wire catalogs, characters, validation, pack providers,
+  readiness config, image paths, and legacy aliases locally.
 - Added provider-neutral auth/bootstrap route-group and server-module factories
   under `server`, so apps can share auth route shape while keeping provider
   verification, sessions, player lookup, middleware policy, and final paths

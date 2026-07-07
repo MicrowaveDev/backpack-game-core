@@ -112,6 +112,68 @@ export interface AuthRouteGroupOptions {
   meta?: Record<string, unknown>;
 }
 
+export interface GhostLoadoutServiceOptions {
+  artifacts?: unknown[] | (() => unknown[]);
+  characters?: unknown[] | (() => unknown[]);
+  getArtifactById?: (artifactId: string) => unknown;
+  getArtifactPrice?: (artifact: unknown) => number;
+  getCharacterById?: (characterId: string) => unknown;
+  getStarterPreset?: (characterId: string) => unknown[];
+  getStarterPresetCost?: (characterId: string) => number;
+  gridColumns?: number;
+  gridRows?: number;
+  defaultBudget?: number;
+  starterBagId?: string;
+  starterBagPlacement?: Record<string, unknown>;
+  attempts?: number;
+  createRng?: (seedInput: string) => () => number;
+  isBag?: (artifact: unknown) => boolean;
+  getBagShape?: (artifact: unknown, rotation?: unknown) => unknown;
+  validateLoadout?: (placements: unknown[], ceiling?: number) => unknown;
+  weightForItem?: (character: unknown, artifact: unknown) => number;
+  imagePathForCharacter?: (characterId: string, context?: Record<string, unknown>) => string | null;
+  defaultPortraitId?: string;
+  defaultActivePortrait?: string;
+  failureMessage?: string;
+}
+
+export interface GhostLoadoutService {
+  createBotLoadout(character: unknown, rng: () => number, budget?: number): unknown;
+  createBotGhostSnapshot(seedInput: string, characterId?: string | null, budget?: number): Record<string, unknown>;
+}
+
+export declare function createGhostLoadoutService(options?: GhostLoadoutServiceOptions): GhostLoadoutService;
+
+export interface ServerLoadoutUtilsOptions {
+  gridWidth?: number;
+  gridHeight?: number;
+  defaultCoinBudget?: number;
+  maxStunChance?: number;
+  getArtifact?: (artifactId: string) => unknown;
+  getArtifactPrice?: (artifact: unknown) => number;
+  isBag?: (artifact: unknown) => boolean;
+  isContainerItem?: (item: unknown) => boolean;
+  contributesStats?: (artifact: unknown, item?: unknown) => boolean;
+  statClamps?: Record<string, unknown>;
+}
+
+export declare function createServerLoadoutUtils(options?: ServerLoadoutUtilsOptions): Record<string, unknown>;
+
+export interface ServerGachaSimulationServiceOptions {
+  defaultPlanAssetVisibility?: string;
+  [key: string]: unknown;
+}
+
+export declare function createServerGachaSimulationService(options?: ServerGachaSimulationServiceOptions): {
+  simulateAssetPackOdds(packId: string, options?: Record<string, unknown>): unknown;
+  simulateRuntimeAssetPackOdds(packId: string, options?: Record<string, unknown>): Promise<unknown>;
+};
+
+export declare function createReadyManagerExports(options?: {
+  now?: () => number;
+  requiredReadyCount?: number;
+}): Record<string, unknown>;
+
 export declare function createBackpackServerModule(definition?: BackpackServerModuleDefinition): BackpackServerModule;
 export declare function createBackpackServerContext(options?: {
   adapters?: Record<string, unknown>;

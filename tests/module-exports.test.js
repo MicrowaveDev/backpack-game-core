@@ -163,14 +163,18 @@ import {
   createAssetGachaSimulationServerModule,
   createAuthRouteGroup,
   createAuthRoutesServerModule,
+  createGhostLoadoutService,
   createKeyedAsyncMutex,
   createBackpackServerContext,
   createBackpackServerModule,
   createBackpackRouteDescriptor,
   createBackpackRouteGroup,
   createLoadoutValidationServerModule,
+  createReadyManagerExports,
   createRunReadinessServerModule,
   createRunReadinessManager,
+  createServerGachaSimulationService,
+  createServerLoadoutUtils,
   createSocialPreviewCacheServerModule,
   flattenBackpackRouteDescriptors,
   idempotency,
@@ -618,6 +622,10 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(AUTH_ROUTE_NAMES.providerLogin, 'auth.providerLogin');
   assert.equal(typeof createAuthRouteGroup, 'function');
   assert.equal(typeof createAuthRoutesServerModule, 'function');
+  assert.equal(typeof createGhostLoadoutService, 'function');
+  assert.equal(typeof createServerLoadoutUtils, 'function');
+  assert.equal(typeof createServerGachaSimulationService, 'function');
+  assert.equal(typeof createReadyManagerExports, 'function');
   assert.equal(typeof createAssetGachaSimulationServerModule, 'function');
   assert.equal(typeof createSocialPreviewCacheServerModule, 'function');
   assert.equal(typeof createKeyedAsyncMutex, 'function');

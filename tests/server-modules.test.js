@@ -10,11 +10,15 @@ import {
   createBackpackServerModule,
   createBackpackRouteDescriptor,
   createBackpackRouteGroup,
-  flattenBackpackRouteDescriptors,
+  createGhostLoadoutService,
   createHostedCommunityClientServerModule,
   createLoadoutValidationServerModule,
+  createReadyManagerExports,
   createRunReadinessServerModule,
+  createServerGachaSimulationService,
+  createServerLoadoutUtils,
   createSocialPreviewCacheServerModule,
+  flattenBackpackRouteDescriptors,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
 
@@ -308,6 +312,87 @@ test('[server] auth route module resolves handlers and middleware from providers
   assert.equal(routes[0].name, AUTH_ROUTE_NAMES.devLogin);
   assert.equal(routes[0].path, '/api/auth/dev-session');
   assert.deepEqual(routes[0].handlers, [devGate, devLogin]);
+});
+
+test('[server] moved loadout utils build a provider-backed validator', () => {
+  const artifacts = new Map([
+    ['bag', { id: 'bag', family: 'bag', width: 2, height: 2, price: 1 }],
+    ['blade', { id: 'blade', family: 'damage', width: 1, height: 1, price: 2, bonus: { damage: 1 } }]
+  ]);
+  const utils = createServerLoadoutUtils({
+    gridWidth: 4,
+    gridHeight: 4,
+    defaultCoinBudget: 5,
+    maxStunChance: 40,
+    getArtifact: (id) => artifacts.get(id),
+    getArtifactPrice: (artifact) => artifact.price,
+    isBag: (artifact) => artifact?.family === 'bag',
+    isContainerItem: (item) => Number(item.x) < 0 || Number(item.y) < 0,
+    contributesStats: (artifact, item) => artifact?.family !== 'bag' && Number(item?.x) >= 0 && Number(item?.y) >= 0
+  });
+
+  assert.equal(typeof utils.validateLoadoutItems, 'function');
+  const result = utils.validateLoadoutItems([
+    { artifactId: 'bag', x: 0, y: 0, width: 2, height: 2, active: true },
+    { artifactId: 'blade', x: 0, y: 0, width: 1, height: 1 }
+  ]);
+  assert.equal(result.totalCoins, 3);
+  assert.equal(result.totals.damage, 1);
+});
+
+test('[server] moved gacha simulation service delegates through injected providers', async () => {
+  const pack = { id: 'pack_1', active: true, rollSize: 1, items: [{ assetId: 'skin_1', rarity: 'common', dropWeight: 1 }] };
+  const catalog = [{ assetId: 'skin_1', rarity: 'common' }];
+  const service = createServerGachaSimulationService({
+    getStaticPack: () => pack,
+    getStaticCatalog: () => catalog,
+    getStaticPackOdds: () => ({ common: 1 }),
+    getRuntimePack: () => ({ ...pack, source: 'runtime' }),
+    getRuntimeCatalog: () => catalog,
+    shapeRuntimePackOdds: (runtimePack, context) => ({ id: runtimePack.id, context })
+  });
+
+  const staticResult = service.simulateAssetPackOdds('pack_1', { trials: 1, rng: () => 0 });
+  assert.equal(staticResult.packId, 'pack_1');
+  const runtimeResult = await service.simulateRuntimeAssetPackOdds('pack_1', { planAssetVisibility: 'review' });
+  assert.equal(runtimeResult.packId, 'pack_1');
+  assert.equal(runtimeResult.source, 'runtime');
+});
+
+test('[server] moved ready manager exports configured readiness helpers', () => {
+  const ready = createReadyManagerExports({ requiredReadyCount: 1 });
+  ready.setReady('run_1', 'player_1');
+  assert.equal(ready.isReady('run_1', 'player_1'), true);
+  assert.deepEqual(ready.areBothReady('run_1'), { ready: true, playerIds: ['player_1'] });
+  assert.equal(typeof ready.withRunLock, 'function');
+});
+
+test('[server] moved ghost loadout service is product-data driven', () => {
+  const artifacts = [
+    { id: 'starter_bag', family: 'bag', width: 2, height: 2, price: 0 },
+    { id: 'blade', family: 'damage', width: 1, height: 1, price: 1, bonus: { damage: 1 } }
+  ];
+  const characters = [{ id: 'hero_1', affinity: { strong: ['damage'], medium: [], weak: [] } }];
+  const service = createGhostLoadoutService({
+    artifacts,
+    characters,
+    getArtifactById: (id) => artifacts.find((artifact) => artifact.id === id),
+    getArtifactPrice: (artifact) => artifact.price,
+    getStarterPreset: () => [],
+    getStarterPresetCost: () => 0,
+    gridColumns: 4,
+    gridRows: 4,
+    defaultBudget: 3,
+    createRng: () => () => 0.1,
+    isBag: (artifact) => artifact?.family === 'bag',
+    validateLoadout: () => ({ valid: true }),
+    imagePathForCharacter: (characterId) => `/characters/${characterId}.png`
+  });
+
+  const snapshot = service.createBotGhostSnapshot('seed');
+  assert.equal(snapshot.characterId, 'hero_1');
+  assert.equal(snapshot.imagePath, '/characters/hero_1.png');
+  assert.ok(snapshot.loadout.items.length >= 1);
 });
 
 test('[server] gacha simulation module registers provider-driven service', () => {
