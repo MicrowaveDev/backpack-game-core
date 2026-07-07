@@ -242,6 +242,34 @@ export declare function createReadyManagerExports(options?: {
   requiredReadyCount?: number;
 }): Record<string, unknown>;
 
+export interface MutationClaim {
+  scope: string;
+  claimKey: string;
+  claimToken: string;
+  acquiredAt: string;
+  reclaimed: boolean;
+}
+
+export interface MutationClaimServiceOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows?: unknown[]; rowCount?: number }>;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  nowMs?: () => number;
+  sleep?: (ms: number) => Promise<unknown>;
+  httpError?: (message: string, statusCode?: number) => Error;
+  claimTtlMs?: number | (() => number);
+  waitTimeoutMs?: number | (() => number);
+  waitIntervalMs?: number | (() => number);
+}
+
+export interface MutationClaimService {
+  acquireMutationClaim(scope: string, claimKey: string): Promise<MutationClaim>;
+  releaseMutationClaim(claim?: Partial<MutationClaim> | null): Promise<void>;
+  withMutationClaim<T>(scope: string, claimKey: string, work: (claim: MutationClaim) => T | Promise<T>): Promise<T>;
+}
+
+export declare function createMutationClaimService(options?: MutationClaimServiceOptions): MutationClaimService;
+
 export declare function createBackpackServerModule(definition?: BackpackServerModuleDefinition): BackpackServerModule;
 export declare function createBackpackServerContext(options?: {
   adapters?: Record<string, unknown>;

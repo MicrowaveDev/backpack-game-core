@@ -1,0 +1,274 @@
+export function createSeasonProgressPort(options = {}) {
+  const seasonId = options.currentSeasonId || 'season_1';
+  const createId = options.createId;
+  const nowIso = options.nowIso;
+  const calculateRawSeasonPoints = options.calculateRawSeasonPoints;
+  const getSeasonPointsBreakdown = options.getSeasonPointsBreakdown;
+  const getSeasonLevel = options.getSeasonLevel;
+  const applySeasonPointProtection = options.applySeasonPointProtection;
+  const seasonLevelRank = options.seasonLevelRank;
+  const getAwardableRunAchievements = options.getAwardableRunAchievements;
+
+  if (typeof createId !== 'function') throw new Error('createSeasonProgressPort requires createId');
+  if (typeof nowIso !== 'function') throw new Error('createSeasonProgressPort requires nowIso');
+  if (typeof calculateRawSeasonPoints !== 'function') {
+    throw new Error('createSeasonProgressPort requires calculateRawSeasonPoints');
+  }
+  if (typeof getSeasonPointsBreakdown !== 'function') {
+    throw new Error('createSeasonProgressPort requires getSeasonPointsBreakdown');
+  }
+  if (typeof getSeasonLevel !== 'function') throw new Error('createSeasonProgressPort requires getSeasonLevel');
+  if (typeof applySeasonPointProtection !== 'function') {
+    throw new Error('createSeasonProgressPort requires applySeasonPointProtection');
+  }
+  if (typeof seasonLevelRank !== 'function') throw new Error('createSeasonProgressPort requires seasonLevelRank');
+  if (typeof getAwardableRunAchievements !== 'function') {
+    throw new Error('createSeasonProgressPort requires getAwardableRunAchievements');
+  }
+
+  async function readSeasonProgress(client, playerId, candidateSeasonId = seasonId) {
+    const result = await client.query(
+      `SELECT * FROM player_season_progress WHERE player_id = $1 AND season_id = $2`,
+      [playerId, candidateSeasonId]
+    );
+    return result.rowCount ? result.rows[0] : null;
+  }
+
+  async function readSourceAchievements(client, playerId, gameRunId) {
+    const result = await client.query(
+      `SELECT achievement_id FROM player_achievements WHERE player_id = $1 AND source_id = $2 ORDER BY earned_at ASC`,
+      [playerId, gameRunId]
+    );
+    return result.rows.map((row) => ({ id: row.achievement_id, isNew: true }));
+  }
+
+  async function persistSeasonProgress(client, {
+    playerId,
+    gameRunId,
+    candidateSeasonId,
+    runPoints,
+    levelId,
+    wins,
+    losses,
+    completedRounds,
+    endReason,
+    now
+  }) {
+    const existingRun = await client.query(
+      `SELECT * FROM player_season_runs WHERE player_id = $1 AND game_run_id = $2`,
+      [playerId, gameRunId]
+    );
+    if (existingRun.rowCount) {
+      const progress = await readSeasonProgress(client, playerId, candidateSeasonId);
+      const totalPoints = progress?.total_points ?? existingRun.rows[0].points;
+      const peakPoints = Math.max(progress?.peak_points ?? totalPoints, totalPoints);
+      return {
+        alreadyProcessed: true,
+        runRow: existingRun.rows[0],
+        totalPoints,
+        levelId: progress?.level_id ?? existingRun.rows[0].level_id,
+        peakPoints,
+        peakLevelId: getSeasonLevel(peakPoints).id
+      };
+    }
+
+    const progress = await readSeasonProgress(client, playerId, candidateSeasonId);
+    const previousPoints = progress?.total_points ?? 0;
+    const previousLevelId = progress?.level_id ?? getSeasonLevel(previousPoints).id;
+    const protectedRunPoints = applySeasonPointProtection({ runPoints });
+    const totalPoints = Math.max(0, previousPoints + protectedRunPoints);
+    const totalLevelId = getSeasonLevel(totalPoints).id;
+    const previousPeakPoints = Math.max(progress?.peak_points ?? previousPoints, previousPoints);
+    const previousPeakLevelId = getSeasonLevel(previousPeakPoints).id;
+    const peakPoints = Math.max(previousPeakPoints, totalPoints);
+    const peakLevelId = getSeasonLevel(peakPoints).id;
+
+    await client.query(
+      `INSERT INTO player_season_runs (id, player_id, game_run_id, season_id, points, level_id, wins, losses, completed_rounds, end_reason, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [
+        createId('seasonrun'),
+        playerId,
+        gameRunId,
+        candidateSeasonId,
+        protectedRunPoints,
+        levelId,
+        wins,
+        losses,
+        completedRounds,
+        endReason,
+        now
+      ]
+    );
+
+    if (progress) {
+      await client.query(
+        `UPDATE player_season_progress
+         SET total_points = $3, level_id = $4, peak_points = $5, peak_level_id = $6, updated_at = $7
+         WHERE player_id = $1 AND season_id = $2`,
+        [playerId, candidateSeasonId, totalPoints, totalLevelId, peakPoints, peakLevelId, now]
+      );
+    } else {
+      await client.query(
+        `INSERT INTO player_season_progress (player_id, season_id, total_points, level_id, peak_points, peak_level_id, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [playerId, candidateSeasonId, totalPoints, totalLevelId, peakPoints, peakLevelId, now]
+      );
+    }
+
+    return {
+      alreadyProcessed: false,
+      runRow: null,
+      runPoints: protectedRunPoints,
+      totalPoints,
+      previousLevelId,
+      levelId: totalLevelId,
+      peakPoints,
+      peakLevelId,
+      previousPeakLevelId,
+      leveledUp: seasonLevelRank(totalLevelId) > seasonLevelRank(previousLevelId),
+      leveledDown: seasonLevelRank(totalLevelId) < seasonLevelRank(previousLevelId),
+      levelChanged: previousLevelId !== totalLevelId
+    };
+  }
+
+  async function persistAchievements(client, {
+    playerId,
+    gameRunId,
+    candidateSeasonId,
+    achievements,
+    now
+  }) {
+    const unlocked = [];
+    for (const achievement of achievements) {
+      const existing = await client.query(
+        `SELECT source_id FROM player_achievements WHERE player_id = $1 AND achievement_id = $2`,
+        [playerId, achievement.id]
+      );
+      if (existing.rowCount) {
+        if (existing.rows[0].source_id === gameRunId) {
+          unlocked.push({ id: achievement.id, isNew: true });
+        } else {
+          unlocked.push({ id: achievement.id, isNew: false });
+        }
+        continue;
+      }
+
+      await client.query(
+        `INSERT INTO player_achievements (id, player_id, achievement_id, source_type, source_id, season_id, earned_at)
+         VALUES ($1, $2, $3, 'run', $4, $5, $6)`,
+        [createId('ach'), playerId, achievement.id, gameRunId, candidateSeasonId, now]
+      );
+      unlocked.push({ id: achievement.id, isNew: true });
+    }
+    return unlocked;
+  }
+
+  async function awardRunSeasonProgress(client, {
+    playerId,
+    gameRunId,
+    characterId = null,
+    mushroomId = null,
+    endReason = null,
+    lastOutcome = null,
+    wins = 0,
+    losses = 0,
+    completedRounds = 0,
+    livesRemaining = 0
+  }) {
+    const now = nowIso();
+    const runPoints = calculateRawSeasonPoints({ wins, losses, roundsCompleted: completedRounds, endReason });
+    let breakdown = getSeasonPointsBreakdown({ wins, losses, roundsCompleted: completedRounds, endReason });
+    const runLevelId = getSeasonLevel(Math.max(0, runPoints)).id;
+
+    const persisted = await persistSeasonProgress(client, {
+      playerId,
+      gameRunId,
+      candidateSeasonId: seasonId,
+      runPoints,
+      levelId: runLevelId,
+      wins,
+      losses,
+      completedRounds,
+      endReason,
+      now
+    });
+    if (!persisted.alreadyProcessed) {
+      breakdown = {
+        ...breakdown,
+        total: persisted.runPoints,
+        protectionAdjustment: persisted.runPoints - runPoints
+      };
+    }
+
+    if (persisted.alreadyProcessed) {
+      return {
+        season: {
+          seasonId,
+          runPoints: persisted.runRow.points,
+          totalPoints: persisted.totalPoints,
+          previousLevelId: persisted.levelId,
+          levelId: persisted.levelId,
+          peakPoints: persisted.peakPoints,
+          peakLevelId: persisted.peakLevelId,
+          leveledUp: false,
+          leveledDown: false,
+          levelChanged: false,
+          breakdown
+        },
+        achievements: await readSourceAchievements(client, playerId, gameRunId)
+      };
+    }
+
+    const totalLevelId = persisted.levelId;
+    const totalPoints = persisted.totalPoints;
+    const winRate = completedRounds ? Math.round((wins / completedRounds) * 100) : 0;
+    const existingAchievements = await client.query(
+      `SELECT achievement_id FROM player_achievements WHERE player_id = $1`,
+      [playerId]
+    );
+    const earned = getAwardableRunAchievements({
+      characterId: characterId || mushroomId,
+      mushroomId: mushroomId || characterId,
+      endReason,
+      lastOutcome,
+      wins,
+      losses,
+      roundsCompleted: completedRounds,
+      livesRemaining,
+      winRate,
+      seasonLevel: totalLevelId,
+      seasonPoints: totalPoints
+    }, 'en', {
+      alreadyEarnedIds: existingAchievements.rows.map((row) => row.achievement_id)
+    });
+
+    return {
+      season: {
+        seasonId,
+        runPoints: persisted.runPoints,
+        totalPoints,
+        previousLevelId: persisted.previousLevelId,
+        levelId: totalLevelId,
+        peakPoints: persisted.peakPoints,
+        peakLevelId: persisted.peakLevelId,
+        previousPeakLevelId: persisted.previousPeakLevelId,
+        leveledUp: persisted.leveledUp,
+        leveledDown: persisted.leveledDown,
+        levelChanged: persisted.levelChanged,
+        breakdown
+      },
+      achievements: await persistAchievements(client, {
+        playerId,
+        gameRunId,
+        candidateSeasonId: seasonId,
+        achievements: earned,
+        now
+      })
+    };
+  }
+
+  return {
+    awardRunSeasonProgress
+  };
+}

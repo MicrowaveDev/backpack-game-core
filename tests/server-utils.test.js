@@ -4,6 +4,7 @@ import {
   CHARACTER_XP_LEVEL_CURVE,
   computeCharacterLevel,
   computeProgressLevel,
+  createMutationClaimService,
   createRequestLogger,
   createRng,
   createSessionKey,
@@ -120,4 +121,41 @@ test('[server-utils] structured logger and request logger are adapter-driven', (
   assert.equal(records[0].outcome, 'ok');
   assert.equal(records[0].playerId, 'player_1');
   assert.equal(records[0].gameRunId, 'run_1');
+});
+
+test('[server-utils] mutation claim service uses injected repository and timing adapters', async () => {
+  const calls = [];
+  const service = createMutationClaimService({
+    query: async (sql, params) => {
+      calls.push({ sql, params });
+      if (/INSERT INTO mutation_claims/.test(sql)) return { rowCount: 1, rows: [] };
+      return { rowCount: 1, rows: [] };
+    },
+    createId: (prefix) => `${prefix}_test`,
+    nowIso: () => '2026-07-07T00:00:00.000Z',
+    nowMs: () => 1000,
+    sleep: async () => undefined
+  });
+
+  const result = await service.withMutationClaim('asset_roll', 'player:pack', (claim) => claim.claimToken);
+
+  assert.equal(result, 'mutation_claim_test');
+  assert.match(calls[0].sql, /INSERT INTO mutation_claims/);
+  assert.match(calls.at(-1).sql, /DELETE FROM mutation_claims/);
+});
+
+test('[server-utils] mutation claim service times out through injected error factory', async () => {
+  const service = createMutationClaimService({
+    query: async () => ({ rowCount: 0, rows: [] }),
+    createId: (prefix) => `${prefix}_test`,
+    nowIso: () => '2026-07-07T00:00:00.000Z',
+    nowMs: () => 1000,
+    sleep: async () => undefined,
+    waitTimeoutMs: 0
+  });
+
+  await assert.rejects(
+    () => service.acquireMutationClaim('asset_roll', 'player:pack'),
+    /Another mutation is already in progress/
+  );
 });

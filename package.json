@@ -161,6 +161,10 @@
       "types": "./src/modules/run/index.d.ts",
       "import": "./src/modules/run/index.js"
     },
+    "./modules/season": {
+      "types": "./src/modules/season/index.d.ts",
+      "import": "./src/modules/season/index.js"
+    },
     "./modules/support": {
       "types": "./src/modules/support/index.d.ts",
       "import": "./src/modules/support/index.js"

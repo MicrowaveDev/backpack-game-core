@@ -48,5 +48,37 @@ export interface GameRunLoadoutPort {
   readCurrentRoundItems(client: unknown, gameRunId: string, playerId: string, roundNumber: number): Promise<unknown[]>;
 }
 
+export interface SeasonProgressPortOptions {
+  currentSeasonId?: string;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  calculateRawSeasonPoints: (context: Record<string, unknown>) => number;
+  getSeasonPointsBreakdown: (context: Record<string, unknown>) => Record<string, unknown>;
+  getSeasonLevel: (points: number) => { id: string };
+  applySeasonPointProtection: (context: { runPoints: number }) => number;
+  seasonLevelRank: (levelId: string) => number;
+  getAwardableRunAchievements: (
+    context: Record<string, unknown>,
+    lang?: string,
+    options?: { alreadyEarnedIds?: string[] }
+  ) => Array<{ id: string }>;
+}
+
+export interface SeasonProgressPort {
+  awardRunSeasonProgress(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, params: {
+    playerId: string;
+    gameRunId: string;
+    characterId?: string | null;
+    mushroomId?: string | null;
+    endReason?: string | null;
+    lastOutcome?: string | null;
+    wins?: number;
+    losses?: number;
+    completedRounds?: number;
+    livesRemaining?: number;
+  }): Promise<unknown>;
+}
+
 export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
 export function createGameRunLoadoutPort(options: GameRunLoadoutPortOptions): GameRunLoadoutPort;
+export function createSeasonProgressPort(options: SeasonProgressPortOptions): SeasonProgressPort;

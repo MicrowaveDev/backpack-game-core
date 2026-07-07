@@ -2,8 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createArtifactFusionPort,
-  createGameRunLoadoutPort
+  createGameRunLoadoutPort,
+  createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
+import {
+  createRunAchievementService,
+  createSeasonLevelService
+} from '@microwavedev/backpack-game-core/modules/season';
 
 function rectangleCells(item) {
   const cells = [];
@@ -223,4 +228,62 @@ test('[server-port][mushroom gameplay] reads fusion reveals through injected que
     ingredientArtifactIds: ['blade', 'knot'],
     ingredients: [{ id: 'row_blade', artifactId: 'blade' }]
   }]);
+});
+
+test('[server-port][mushroom gameplay] awards season progress through injected helpers', async () => {
+  const calls = [];
+  const season = createSeasonLevelService({
+    levels: [
+      { id: 'bronze', minPoints: 0 },
+      { id: 'silver', minPoints: 10 }
+    ]
+  });
+  const achievements = createRunAchievementService({
+    achievements: {
+      general: [{
+        id: 'season_silver',
+        criteria: { minSeasonLevel: 'silver' }
+      }]
+    },
+    seasonLevelRank: season.seasonLevelRank
+  });
+  let nextId = 0;
+  const port = createSeasonProgressPort({
+    currentSeasonId: 'season_test',
+    createId: (prefix) => `${prefix}_${++nextId}`,
+    nowIso: () => '2026-07-07T00:00:00.000Z',
+    calculateRawSeasonPoints: season.calculateRawSeasonPoints,
+    getSeasonPointsBreakdown: season.getSeasonPointsBreakdown,
+    getSeasonLevel: season.getSeasonLevel,
+    applySeasonPointProtection: season.applySeasonPointProtection,
+    seasonLevelRank: season.seasonLevelRank,
+    getAwardableRunAchievements: achievements.getAwardableRunAchievements
+  });
+  const client = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      if (/FROM player_season_runs/.test(sql)) return { rows: [], rowCount: 0 };
+      if (/FROM player_season_progress/.test(sql)) return { rows: [], rowCount: 0 };
+      if (/SELECT achievement_id FROM player_achievements/.test(sql)) return { rows: [], rowCount: 0 };
+      if (/SELECT source_id FROM player_achievements/.test(sql)) return { rows: [], rowCount: 0 };
+      return { rows: [], rowCount: 1 };
+    }
+  };
+
+  const result = await port.awardRunSeasonProgress(client, {
+    playerId: 'player_1',
+    gameRunId: 'run_1',
+    characterId: 'ruby',
+    endReason: 'max_rounds',
+    wins: 4,
+    losses: 0,
+    completedRounds: 4,
+    livesRemaining: 2
+  });
+
+  assert.equal(result.season.seasonId, 'season_test');
+  assert.equal(result.season.levelId, 'silver');
+  assert.equal(result.achievements[0].id, 'season_silver');
+  assert.ok(calls.some((call) => /INSERT INTO player_season_runs/.test(call.sql)));
+  assert.ok(calls.some((call) => /INSERT INTO player_achievements/.test(call.sql)));
 });

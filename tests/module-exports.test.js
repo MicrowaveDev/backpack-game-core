@@ -87,6 +87,10 @@ import {
   shapeRunStateSummary
 } from '@microwavedev/backpack-game-core/modules/run';
 import {
+  createRunAchievementService,
+  createSeasonLevelService
+} from '@microwavedev/backpack-game-core/modules/season';
+import {
   shapeSupportLookupResult,
   shapeSupportWalletMutationResult
 } from '@microwavedev/backpack-game-core/modules/support';
@@ -189,6 +193,7 @@ import {
   createLoadoutValidationServerModule,
   computeCharacterLevel,
   computeProgressLevel,
+  createMutationClaimService,
   createReadyManagerExports,
   createRunReadinessServerModule,
   createRunReadinessManager,
@@ -207,7 +212,8 @@ import {
 } from '@microwavedev/backpack-game-core/server';
 import {
   createArtifactFusionPort,
-  createGameRunLoadoutPort
+  createGameRunLoadoutPort,
+  createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
 import {
   initModels as initMushroomModels
@@ -420,6 +426,12 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
     maxRounds: 9
   }).endReason, 'max_rounds');
   assert.equal(typeof shapeRunStateSummary, 'function');
+  assert.equal(createSeasonLevelService({
+    levels: [{ id: 'bronze', minPoints: 0 }, { id: 'silver', minPoints: 10 }]
+  }).getSeasonLevel(10).id, 'silver');
+  assert.equal(createRunAchievementService({
+    achievements: { general: [{ id: 'first', criteria: { minWins: 1 } }] }
+  }).getAwardableRunAchievements({ wins: 1 })[0].id, 'first');
 
   assert.deepEqual(getEffectiveShape({ width: 1, height: 2, shape: [[1], [1]] }), [[1], [1]]);
   assert.deepEqual(pieceCells({ x: 0, y: 0, width: 1, height: 2 }), ['0:0', '0:1']);
@@ -455,9 +467,11 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(runCurrencyFields(3).runCoins, 3);
   assert.equal(typeof createStructuredLogger, 'function');
   assert.equal(typeof createRequestLogger, 'function');
+  assert.equal(typeof createMutationClaimService, 'function');
   assert.equal(typeof log.info, 'function');
   assert.equal(typeof createArtifactFusionPort, 'function');
   assert.equal(typeof createGameRunLoadoutPort, 'function');
+  assert.equal(typeof createSeasonProgressPort, 'function');
   assert.equal(typeof initMushroomModels, 'function');
   assert.equal(typeof createProviderSettlementAdapterRegistry, 'function');
   assert.equal(shapeSupportLookupResult({ players: [{}] }, { includeCounts: true }).counts.players, 1);

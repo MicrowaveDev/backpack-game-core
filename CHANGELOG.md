@@ -8,6 +8,19 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `modules/season` with product-configurable season level/scoring
+  helpers and run-achievement evaluator factories. Product repos keep season
+  tables, achievement definitions, badge/rank art, copy, scheduling, and
+  balance local.
+- Added `createSeasonProgressPort()` to the quarantined Mushroom gameplay port
+  package after physically moving Mushroom's season persistence service behind
+  injected scoring, achievement, ID, and clock providers. It preserves current
+  `player_season_*` / `player_achievements` SQL until repositories replace
+  table details.
+- Added `createMutationClaimService()` to the public `server` facade after
+  physically moving Mushroom's mutation-claim helper into core and replacing
+  product env/db imports with injected query, ID, clock, sleep, and timing
+  adapters.
 - Added `artifact-fusion-recipes` and expanded `modules/fusion` with
   product-configurable recipe normalization, recipe lookup, ingredient-policy,
   and fusion evaluator helpers. Product repos keep authored recipe tables,

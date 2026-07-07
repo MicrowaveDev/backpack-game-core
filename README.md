@@ -33,6 +33,10 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 - `run-lifecycle`: run start, initial/next shop state, starter loadout, ghost
   budget, round result, and group-completion planners over injected config and
   state snapshots, plus provider-driven run-state summary DTO shaping.
+- `modules/season`: season scoring, progression summary, end-reward lookup,
+  and run-achievement evaluator factories over product-provided season levels,
+  current-season metadata, achievement definitions, priority tables, and badge
+  symbol adapters.
 - `backpack-loadout`: provider-driven loadout generation over injected catalog,
   pricing, bag shape, weighting, and validation hooks.
 - `artifact-capabilities`: default backpack family capability helpers plus
@@ -107,14 +111,16 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   factories for ghost loadouts, loadout validation wrappers, gacha simulation
   wrappers, readiness singleton exports, reusable run readiness/lock helpers,
   neutral server utility helpers, adapter-driven structured/request logging,
-  server module factories for shared services, and shared middleware.
+  mutation-claim service factory, server module factories for shared services,
+  and shared middleware.
   The module contract is documented in
   [`docs/server-module-contract.md`](docs/server-module-contract.md).
 - `server/ports/mushroom/gameplay`: quarantined move-first ports for Mushroom
   gameplay service files that are not neutral yet. These exports are migration
   surfaces, not stable cross-game APIs; use them through product wrappers while
   repository/config contracts are extracted. Current ports include
-  `createGameRunLoadoutPort()` and `createArtifactFusionPort()`.
+  `createGameRunLoadoutPort()`, `createArtifactFusionPort()`, and
+  `createSeasonProgressPort()`.
 - `server/models/mushroom`: quarantined Mushroom Sequelize model definitions
   moved from `app/server/models`. Products still own the Sequelize instance,
   dialect config, sync/backfill logic, queries, transactions, and migrations.
@@ -136,6 +142,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/modules/assets/profile-state`
 - `@microwavedev/backpack-game-core/modules/shop`
 - `@microwavedev/backpack-game-core/modules/run`
+- `@microwavedev/backpack-game-core/modules/season`
 - `@microwavedev/backpack-game-core/modules/loadout`
 - `@microwavedev/backpack-game-core/modules/loadout/validation-service`
 - `@microwavedev/backpack-game-core/modules/battle`

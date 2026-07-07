@@ -4,3 +4,6 @@ export {
 export {
   createGameRunLoadoutPort
 } from './game-run-loadout.js';
+export {
+  createSeasonProgressPort
+} from './season-service.js';
