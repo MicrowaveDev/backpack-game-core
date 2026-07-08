@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomAssetServicePort()` to the quarantined Mushroom
+  economy port package after physically moving Mushroom's profile asset
+  catalog, direct purchase, equipment, runtime pack, gacha roll, duplicate
+  burn, pity, and pack-odds behavior behind injected DB, transaction, portrait
+  catalog, wallet, mutation-claim, ID, clock, JSON, and env providers.
+  Mushroom keeps the old asset-service path as a wrapper while asset/gacha
+  repository and policy contracts are neutralized.
 - Added `createMushroomWalletServicePort()` to the quarantined Mushroom
   economy port package after physically moving Mushroom's wallet balance,
   wallet transaction, purchase-intent, Telegram Stars, BTCPay, NOWPayments,

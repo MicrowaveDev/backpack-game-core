@@ -1,4 +1,8 @@
 export {
+  createMushroomAssetServicePort
+} from './asset-service.js';
+
+export {
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE,
   WALLET_PAYMENT_SURFACES,

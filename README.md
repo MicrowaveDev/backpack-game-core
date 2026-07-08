@@ -125,10 +125,11 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   `createMushroomRunServicePort()`, `createMushroomShopServicePort()`, and
   `createSeasonProgressPort()`.
 - `server/ports/mushroom/economy`: quarantined move-first ports for Mushroom
-  wallet/payment service files that are not neutral yet. These exports preserve
-  current wallet SQL, payment provider, webhook replay, and reconciliation
-  behavior behind product wrappers while repository/provider contracts are
-  extracted. Current ports include `createMushroomWalletServicePort()`.
+  asset/wallet/payment service files that are not neutral yet. These exports
+  preserve current profile-asset, gacha pack, wallet SQL, payment provider,
+  webhook replay, and reconciliation behavior behind product wrappers while
+  repository/provider contracts are extracted. Current ports include
+  `createMushroomAssetServicePort()` and `createMushroomWalletServicePort()`.
 - `server/models/mushroom`: quarantined Mushroom Sequelize model definitions
   moved from `app/server/models`. Products still own the Sequelize instance,
   dialect config, sync/backfill logic, queries, transactions, and migrations.
@@ -168,6 +169,7 @@ Quarantined migration subpaths are public only for wrapped product adoption
 while they are being neutralized:
 
 - `@microwavedev/backpack-game-core/server/ports/mushroom/gameplay`
+- `@microwavedev/backpack-game-core/server/ports/mushroom/economy`
 - `@microwavedev/backpack-game-core/server/models/mushroom`
 
 Consumers should import only the package root or these public subpaths. Do not

@@ -8,6 +8,60 @@ export interface MushroomWalletServicePortOptions {
   defaultFetch?: typeof fetch;
 }
 
+export interface MushroomAssetServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  withTransaction: <T>(fn: (client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }) => Promise<T>) => Promise<T>;
+  PORTRAIT_VARIANTS: Record<string, unknown[]>;
+  portraitVariantsForResponse: (variants: unknown) => unknown;
+  portraitUrl: (characterId: string, portraitId?: string) => string;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  parseJson?: (value: unknown, fallback?: unknown) => unknown;
+  spendCurrency: (client: unknown, params: Record<string, unknown>) => Promise<unknown>;
+  WALLET_CURRENCY_CODE?: string;
+  withWalletMutationLock: <T>(playerId: string, work: () => Promise<T>) => Promise<T>;
+  withMutationClaim: <T>(scope: string, key: string, work: () => Promise<T>) => Promise<T>;
+  env?: Record<string, string | undefined>;
+}
+
+export interface MushroomAssetServicePort {
+  activeGachaPackIds(): string[];
+  assetGachaDbPacksEnabled(): boolean;
+  assetPolicy(asset: unknown): unknown;
+  burnAssetPackDuplicates(playerId: string, packId: string, options?: Record<string, unknown>): Promise<unknown>;
+  chooseWeightedAssetCandidate(candidates: unknown[], rng: () => number): unknown;
+  computePackPityState(pack: unknown, options?: Record<string, unknown>): unknown;
+  directBuyPolicy(): string;
+  equipAsset(playerId: string, assetId: string): Promise<unknown>;
+  equipPortrait(playerId: string, characterId: string, portraitId: string): Promise<unknown>;
+  getAssetById(assetId: string): unknown;
+  getAssetCatalog(): unknown[];
+  getAssetPack(packId: string): unknown;
+  getAssetPacks(): unknown[];
+  getAssetPacksForPlayer(playerId: string): Promise<unknown[]>;
+  getDatabaseAssetPacks(options?: Record<string, unknown>): Promise<unknown[]>;
+  getPackOdds(packId: string): unknown;
+  getPackOddsForRuntime(packId: string): Promise<unknown>;
+  getPlayerCosmeticState(playerId: string): Promise<unknown>;
+  getRuntimeAssetById(assetId: string, options?: Record<string, unknown>): Promise<unknown>;
+  getRuntimeAssetCatalog(options?: Record<string, unknown>): Promise<unknown[]>;
+  getRuntimeAssetPack(packId: string, options?: Record<string, unknown>): Promise<unknown>;
+  getRuntimeAssetPacks(options?: Record<string, unknown>): Promise<unknown[]>;
+  getRuntimePortraitVariantsForResponse(options?: Record<string, unknown>): Promise<unknown>;
+  isAssetGachaEnabled(): boolean;
+  parsePortraitAssetId(assetId: string): unknown;
+  portraitAssetId(characterId: string, portraitId?: string): string;
+  purchaseAsset(playerId: string, assetId: string, options?: Record<string, unknown>): Promise<unknown>;
+  resolveAssetPackRollCandidates(pack: unknown, options?: Record<string, unknown>): unknown[];
+  resolveEquippedPortraitId(client: unknown, playerId: string, characterId: string): Promise<string>;
+  rollAssetPack(playerId: string, packId: string, options?: Record<string, unknown>): Promise<unknown>;
+  selectAssetPackRollResults(candidates: unknown[], pack: unknown, options?: Record<string, unknown>): unknown[];
+  shapeAssetPack(pack: unknown, options?: Record<string, unknown>): unknown;
+  shapePortraitVariant(options: Record<string, unknown>): unknown;
+  shapePortraitVariantsForCharacter(options: Record<string, unknown>): unknown[];
+  validateAssetPack(pack: unknown, options?: Record<string, unknown>): unknown;
+}
+
 export interface MushroomWalletServicePort {
   auditWalletMirror(options?: Record<string, unknown>): Promise<unknown>;
   backfillMissingWalletBalancesFromPlayers(options?: Record<string, unknown>): Promise<unknown>;
@@ -36,4 +90,5 @@ export declare const WALLET_PAYMENT_SURFACES: Record<string, string[]>;
 export declare const WALLET_PURCHASE_PROVIDERS: Set<string>;
 export declare const WALLET_PURCHASE_STATUSES: Set<string>;
 
+export declare function createMushroomAssetServicePort(options?: MushroomAssetServicePortOptions): MushroomAssetServicePort;
 export declare function createMushroomWalletServicePort(options?: MushroomWalletServicePortOptions): MushroomWalletServicePort;
