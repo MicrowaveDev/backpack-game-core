@@ -24,6 +24,7 @@ const quarantinedMushroomPortFiles = new Set([
   'src/server/ports/mushroom/gameplay/artifact-fusion-service.js',
   'src/server/ports/mushroom/gameplay/battle-engine.js',
   'src/server/ports/mushroom/gameplay/battle-service.js',
+  'src/server/ports/mushroom/gameplay/game-service.js',
   'src/server/ports/mushroom/gameplay/game-run-loadout.js',
   'src/server/ports/mushroom/gameplay/index.d.ts',
   'src/server/ports/mushroom/gameplay/index.js',

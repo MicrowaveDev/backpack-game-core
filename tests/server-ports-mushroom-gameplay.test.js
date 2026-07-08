@@ -5,6 +5,7 @@ import {
   createGameRunLoadoutPort,
   createMushroomBattleEnginePort,
   createMushroomBattleServicePort,
+  createMushroomGameServicePort,
   createMushroomShopServicePort,
   createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
@@ -606,4 +607,52 @@ test('[server-port][mushroom gameplay] runs shop mutations through injected repo
   assert.equal(sell.coins, 5);
   assert.equal(deletedRows[0].id, 'row_blade');
   assert.equal(refunds[0].refundAmount, 3);
+});
+
+test('[server-port][mushroom gameplay] assembles bootstrap state through injected services', async () => {
+  const port = createMushroomGameServicePort({
+    query: async (sql, params) => {
+      assert.match(sql, /daily_rate_limits/);
+      assert.deepEqual(params, ['player_1', '2026-07-08']);
+      return { rowCount: 1, rows: [{ battle_starts: 3 }] };
+    },
+    artifacts: [{ id: 'blade' }],
+    dailyBattleLimit: 9,
+    mushroomsForResponse: () => [{ id: 'thalla' }],
+    dayKey: () => '2026-07-08',
+    nextUtcReset: () => new Date('2026-07-09T00:00:00.000Z'),
+    getBattleHistory: async (playerId, limit) => [{ playerId, limit, id: 'battle_1' }],
+    getPlayerState: async () => ({
+      player: { id: 'player_1' },
+      activeMushroomId: 'thalla',
+      settings: { lang: 'en' }
+    }),
+    getActiveGameRuns: async () => [
+      { id: 'legacy_run', mode: 'solo', player: {} },
+      { id: 'other_run', mode: 'solo', mushroomId: 'lomie', player: { mushroomId: 'lomie' } }
+    ],
+    getGameRunHistory: async (_playerId, limit) => [{ id: 'run_old', limit }],
+    getHomeFieldConfig: () => ({ enabled: true }),
+    directBuyPolicy: () => 'allow',
+    getAssetPacksForPlayer: async () => [
+      { id: 'pack_active', active: true },
+      { id: 'pack_inactive', active: false }
+    ],
+    getRuntimeAssetCatalog: async () => [{ assetId: 'portrait.thalla.default' }],
+    isAssetGachaEnabled: () => true
+  });
+
+  const bootstrap = await port.getBootstrap('player_1');
+  assert.equal(bootstrap.activeGameRun.id, 'legacy_run');
+  assert.equal(bootstrap.activeGameRun.mushroomId, 'thalla');
+  assert.equal(bootstrap.activeGameRuns[0].player.mushroomId, 'thalla');
+  assert.deepEqual(bootstrap.battleLimit, {
+    used: 3,
+    limit: 9,
+    nextResetAt: '2026-07-09T00:00:00.000Z'
+  });
+  assert.deepEqual(bootstrap.assetAcquisition.activePackIds, ['pack_active']);
+  assert.equal(bootstrap.assetAcquisition.gachaEnabled, true);
+  assert.equal(bootstrap.battleHistory[0].limit, 10);
+  assert.equal(bootstrap.gameRunHistory[0].limit, 10);
 });

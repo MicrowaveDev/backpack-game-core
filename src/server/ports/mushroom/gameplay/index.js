@@ -13,6 +13,9 @@ export {
   createGameRunLoadoutPort
 } from './game-run-loadout.js';
 export {
+  createMushroomGameServicePort
+} from './game-service.js';
+export {
   createSeasonProgressPort
 } from './season-service.js';
 export {

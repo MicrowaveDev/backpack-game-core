@@ -48,6 +48,28 @@ export interface GameRunLoadoutPort {
   readCurrentRoundItems(client: unknown, gameRunId: string, playerId: string, roundNumber: number): Promise<unknown[]>;
 }
 
+export interface MushroomGameServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  artifacts: unknown[];
+  dailyBattleLimit: number;
+  mushroomsForResponse: () => unknown[];
+  dayKey: (date: Date) => string;
+  nextUtcReset: (date: Date) => Date;
+  getBattleHistory: (playerId: string, limit?: number) => Promise<unknown[]>;
+  getPlayerState: (playerId: string) => Promise<Record<string, unknown>>;
+  getActiveGameRuns: (playerId: string) => Promise<Array<Record<string, unknown>>>;
+  getGameRunHistory: (playerId: string, limit?: number) => Promise<unknown[]>;
+  getHomeFieldConfig: () => unknown;
+  directBuyPolicy: () => string;
+  getAssetPacksForPlayer: (playerId: string) => Promise<Array<{ id: string; active?: boolean }>>;
+  getRuntimeAssetCatalog: () => Promise<unknown[]>;
+  isAssetGachaEnabled: () => boolean;
+}
+
+export interface MushroomGameServicePort {
+  getBootstrap(playerId: string): Promise<unknown>;
+}
+
 export interface MushroomBattleEnginePortOptions {
   getArtifactById: (artifactId: string) => unknown;
   getMushroomById: (mushroomId: string) => {
@@ -181,6 +203,7 @@ export interface SeasonProgressPort {
 }
 
 export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
+export function createMushroomGameServicePort(options: MushroomGameServicePortOptions): MushroomGameServicePort;
 export function createMushroomBattleEnginePort(options: MushroomBattleEnginePortOptions): MushroomBattleEnginePort;
 export function createMushroomBattleServicePort(options: MushroomBattleServicePortOptions): MushroomBattleServicePort;
 export function createMushroomShopServicePort(options: MushroomShopServicePortOptions): MushroomShopServicePort;

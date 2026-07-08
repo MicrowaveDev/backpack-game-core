@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomGameServicePort()` to the quarantined Mushroom gameplay
+  port package after physically moving Mushroom's bootstrap state assembly
+  behind injected player, battle-history, run-history, active-run, asset-pack,
+  asset-catalog, home-field, daily-limit, clock, and catalog providers.
+  Mushroom keeps the old facade export path and product service composition,
+  while the moved port preserves current bootstrap response aliases until
+  repository and route contracts are neutral.
 - Added `createMushroomShopServicePort()` to the quarantined Mushroom gameplay
   port package after physically moving Mushroom's run-shop buy, refresh,
   force-shop, sell, and eligible character-item lookup behavior behind injected
