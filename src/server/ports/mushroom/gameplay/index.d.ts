@@ -48,6 +48,64 @@ export interface GameRunLoadoutPort {
   readCurrentRoundItems(client: unknown, gameRunId: string, playerId: string, roundNumber: number): Promise<unknown[]>;
 }
 
+export interface MushroomBattleEnginePortOptions {
+  getArtifactById: (artifactId: string) => unknown;
+  getMushroomById: (mushroomId: string) => {
+    id: string;
+    name: Record<string, string>;
+    styleTag?: string;
+    passive?: unknown;
+    active?: unknown;
+    baseStats: {
+      health: number;
+      attack: number;
+      speed: number;
+      defense: number;
+    };
+  };
+  buildArtifactSummary: (items?: unknown[]) => {
+    damage?: number;
+    speed?: number;
+    armor?: number;
+    stunChance?: number;
+  };
+  createRng: (seed: string) => () => number;
+  stepCap: number;
+  maxStunChance: number;
+}
+
+export interface MushroomBattleEnginePort {
+  simulateBattle(snapshot: {
+    left: Record<string, unknown>;
+    right: Record<string, unknown>;
+  }, seed: string): unknown;
+}
+
+export interface MushroomBattleServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  getMushroomById: (mushroomId: string) => { name: Record<string, string> };
+  getStarterPresetCost: (mushroomId: string) => number;
+  bagColumns: number;
+  roundIncome: number[];
+  portraitUrl: (mushroomId: string, portraitId?: string | null) => string;
+  createId: (prefix: string) => string;
+  dayKey: (date: Date) => string;
+  nowIso: () => string;
+  parseJson: (value: unknown, fallback: unknown) => unknown;
+  effectiveGridHeight: (items: unknown[]) => number;
+  validateLoadoutItems: (items: unknown[], runBudget: number) => unknown;
+  normalizeRotation: (rotated?: unknown) => number;
+  resolveEquippedPortraitId: (client: unknown, playerId: string, mushroomId: string) => Promise<string>;
+}
+
+export interface MushroomBattleServicePort {
+  getActiveSnapshot(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, playerId: string): Promise<unknown>;
+  getDailyUsage(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, playerId: string): Promise<number>;
+  recordBattle(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, params: Record<string, unknown>): Promise<unknown>;
+  getBattle(battleId: string, viewerPlayerId: string, existingClient?: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> } | null): Promise<unknown>;
+  getBattleHistory(playerId: string, limit?: number): Promise<unknown[]>;
+}
+
 export interface SeasonProgressPortOptions {
   currentSeasonId?: string;
   createId: (prefix: string) => string;
@@ -80,5 +138,9 @@ export interface SeasonProgressPort {
 }
 
 export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
+export function createMushroomBattleEnginePort(options: MushroomBattleEnginePortOptions): MushroomBattleEnginePort;
+export function createMushroomBattleServicePort(options: MushroomBattleServicePortOptions): MushroomBattleServicePort;
 export function createGameRunLoadoutPort(options: GameRunLoadoutPortOptions): GameRunLoadoutPort;
 export function createSeasonProgressPort(options: SeasonProgressPortOptions): SeasonProgressPort;
+export function randomInt(rng: () => number, max: number): number;
+export function shuffleWithRng<T>(items: T[], rng: () => number): T[];

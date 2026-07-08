@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   createArtifactFusionPort,
   createGameRunLoadoutPort,
+  createMushroomBattleEnginePort,
+  createMushroomBattleServicePort,
   createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
 import {
@@ -286,4 +288,191 @@ test('[server-port][mushroom gameplay] awards season progress through injected h
   assert.equal(result.achievements[0].id, 'season_silver');
   assert.ok(calls.some((call) => /INSERT INTO player_season_runs/.test(call.sql)));
   assert.ok(calls.some((call) => /INSERT INTO player_achievements/.test(call.sql)));
+});
+
+test('[server-port][mushroom gameplay] simulates battles through injected catalogs and tuning', () => {
+  const artifacts = new Map([
+    ['thorn', {
+      id: 'thorn',
+      family: 'damage',
+      bonus: { damage: 3, stunChance: 6 },
+      battleEffect: { id: 'thorn_flash', trigger: 'hit', statKey: 'damage' }
+    }],
+    ['guard', {
+      id: 'guard',
+      family: 'armor',
+      bonus: { armor: 2 },
+      battleEffect: { id: 'guard_block', trigger: 'block', statKey: 'armor' }
+    }]
+  ]);
+  const mushrooms = new Map([
+    ['thalla', {
+      id: 'thalla',
+      name: { en: 'Thalla' },
+      styleTag: 'control',
+      baseStats: { health: 30, attack: 7, speed: 4, defense: 1 }
+    }],
+    ['lomie', {
+      id: 'lomie',
+      name: { en: 'Lomie' },
+      styleTag: 'defense',
+      baseStats: { health: 30, attack: 4, speed: 1, defense: 2 }
+    }]
+  ]);
+  const port = createMushroomBattleEnginePort({
+    getArtifactById: (artifactId) => artifacts.get(artifactId),
+    getMushroomById: (mushroomId) => mushrooms.get(mushroomId),
+    buildArtifactSummary: (items = []) => items.reduce((totals, item) => {
+      const artifact = artifacts.get(item.artifactId);
+      totals.damage += Number(artifact?.bonus?.damage || 0);
+      totals.speed += Number(artifact?.bonus?.speed || 0);
+      totals.armor += Number(artifact?.bonus?.armor || 0);
+      totals.stunChance += Number(artifact?.bonus?.stunChance || 0);
+      return totals;
+    }, { damage: 0, speed: 0, armor: 0, stunChance: 0 }),
+    createRng: () => () => 0,
+    stepCap: 1,
+    maxStunChance: 35
+  });
+
+  const result = port.simulateBattle({
+    left: {
+      playerId: 'player_1',
+      mushroomId: 'thalla',
+      loadout: { items: [{ id: 'row_thorn', artifactId: 'thorn', x: 0, y: 0 }] }
+    },
+    right: {
+      playerId: 'player_2',
+      mushroomId: 'lomie',
+      loadout: { items: [{ id: 'row_guard', artifactId: 'guard', x: 0, y: 0 }] }
+    }
+  }, 'seed');
+
+  const action = result.events.find((event) => event.type === 'action' && event.actorSide === 'left');
+  assert.equal(action.actionName, 'Spore Lash');
+  assert.equal(action.artifactAttribution.damage[0].artifactId, 'thorn');
+  assert.equal(action.artifactAttribution.armor[0].artifactId, 'guard');
+  assert.equal(action.effectTags[0].id, 'thorn_flash');
+  assert.equal(result.leftState.mushroomId, 'thalla');
+});
+
+test('[server-port][mushroom gameplay] reads snapshots and battles through injected repositories', async () => {
+  const calls = [];
+  let capturedBudget = null;
+  let id = 0;
+  const port = createMushroomBattleServicePort({
+    query: async (sql, params) => {
+      calls.push({ sql, params });
+      if (/FROM battles/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{
+            id: 'battle_1',
+            mode: 'solo',
+            opponent_kind: 'bot',
+            rated_scope: 'solo',
+            battle_seed: 'seed',
+            outcome: 'win',
+            winner_side: 'left',
+            created_at: '2026-07-07T00:00:00.000Z'
+          }]
+        };
+      }
+      if (/FROM battle_snapshots/.test(sql)) {
+        return {
+          rowCount: 2,
+          rows: [
+            { side: 'left', payload_json: '{"mushroomId":"thalla"}' },
+            { side: 'right', payload_json: '{"mushroomId":"lomie"}' }
+          ]
+        };
+      }
+      if (/FROM battle_events/.test(sql)) {
+        return { rowCount: 1, rows: [{ payload_json: '{"type":"battle_start"}' }] };
+      }
+      if (/FROM battle_rewards/.test(sql)) return { rowCount: 0, rows: [] };
+      if (/FROM game_rounds/.test(sql)) return { rowCount: 0, rows: [] };
+      return { rowCount: 0, rows: [] };
+    },
+    getMushroomById: (mushroomId) => ({ name: { en: mushroomId } }),
+    getStarterPresetCost: () => 2,
+    bagColumns: 6,
+    roundIncome: [5, 5, 5],
+    portraitUrl: (mushroomId, portraitId) => `/portraits/${mushroomId}-${portraitId}.png`,
+    createId: (prefix) => `${prefix}_${++id}`,
+    dayKey: () => '2026-07-07',
+    nowIso: () => '2026-07-07T00:00:00.000Z',
+    parseJson: (value, fallback) => {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return fallback;
+      }
+    },
+    effectiveGridHeight: () => 4,
+    validateLoadoutItems: (_items, budget) => {
+      capturedBudget = budget;
+    },
+    normalizeRotation: (value) => Number(value || 0),
+    resolveEquippedPortraitId: async () => 'default'
+  });
+  const activeClient = {
+    async query(sql) {
+      if (/FROM player_active_character/.test(sql)) {
+        return { rowCount: 1, rows: [{ mushroom_id: 'thalla' }] };
+      }
+      if (/FROM game_run_players/.test(sql)) {
+        return { rowCount: 1, rows: [{ game_run_id: 'run_1', current_round: 2 }] };
+      }
+      if (/FROM game_run_loadout_items/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{
+            id: 'row_1',
+            artifact_id: 'thorn',
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+            sort_order: 1,
+            active: 0,
+            rotated: 0
+          }]
+        };
+      }
+      return { rowCount: 0, rows: [] };
+    }
+  };
+
+  const snapshot = await port.getActiveSnapshot(activeClient, 'player_1');
+  assert.equal(snapshot.mushroomId, 'thalla');
+  assert.equal(snapshot.imagePath, '/portraits/thalla-default.png');
+  assert.equal(snapshot.loadout.gridWidth, 6);
+  assert.equal(capturedBudget, 12);
+
+  const battleClient = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      return { rowCount: 1, rows: [] };
+    }
+  };
+  const battle = await port.recordBattle(battleClient, {
+    leftSnapshot: { playerId: 'player_1', mushroomId: 'thalla' },
+    rightSnapshot: { playerId: 'player_2', mushroomId: 'lomie' },
+    simulation: { winnerSide: 'left', events: [{ type: 'battle_start' }, { type: 'battle_end' }] },
+    battleSeed: 'seed',
+    mode: 'solo',
+    opponentKind: 'bot',
+    ratedScope: 'solo',
+    challengeId: null,
+    initiatorPlayerId: 'player_1'
+  });
+  assert.equal(battle.id, 'battle_1');
+  assert.ok(calls.some((call) => /INSERT INTO battles/.test(call.sql)));
+  assert.equal(calls.filter((call) => /INSERT INTO battle_events/.test(call.sql)).length, 2);
+
+  const shaped = await port.getBattle('battle_1', 'player_1');
+  assert.equal(shaped.id, 'battle_1');
+  assert.equal(shaped.snapshots.left.mushroomId, 'thalla');
+  assert.equal(shaped.events[0].type, 'battle_start');
 });

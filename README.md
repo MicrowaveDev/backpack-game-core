@@ -119,7 +119,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   gameplay service files that are not neutral yet. These exports are migration
   surfaces, not stable cross-game APIs; use them through product wrappers while
   repository/config contracts are extracted. Current ports include
-  `createGameRunLoadoutPort()`, `createArtifactFusionPort()`, and
+  `createGameRunLoadoutPort()`, `createArtifactFusionPort()`,
+  `createMushroomBattleEnginePort()`, `createMushroomBattleServicePort()`, and
   `createSeasonProgressPort()`.
 - `server/models/mushroom`: quarantined Mushroom Sequelize model definitions
   moved from `app/server/models`. Products still own the Sequelize instance,

@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomBattleEnginePort()` and
+  `createMushroomBattleServicePort()` to the quarantined Mushroom gameplay
+  port package after physically moving Mushroom's battle hook, active snapshot,
+  replay persistence, and battle history services behind injected catalog,
+  RNG, validation, portrait, DB query, ID, and clock providers. These preserve
+  current Mushroom ability names, artifact metadata, and SQL table behavior
+  until repository/config contracts replace the product-specific details.
 - Added `modules/season` with product-configurable season level/scoring
   helpers and run-achievement evaluator factories. Product repos keep season
   tables, achievement definitions, badge/rank art, copy, scheduling, and
