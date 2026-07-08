@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomPlayerServicePort()` to the quarantined Mushroom
+  gameplay port package after physically moving Mushroom's profile, settings,
+  friend/challenge, leaderboard, inventory-review, portrait, and preset service
+  behavior behind injected DB, transaction, catalog, wallet, asset, season,
+  clock, ID, bot-loadout, and run-challenge providers. Mushroom keeps the old
+  service path as a wrapper while repository and route contracts are
+  neutralized.
 - Added `createMushroomGameServicePort()` to the quarantined Mushroom gameplay
   port package after physically moving Mushroom's bootstrap state assembly
   behind injected player, battle-history, run-history, active-run, asset-pack,

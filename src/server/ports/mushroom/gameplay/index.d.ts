@@ -70,6 +70,46 @@ export interface MushroomGameServicePort {
   getBootstrap(playerId: string): Promise<unknown>;
 }
 
+export interface MushroomPlayerServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  withTransaction: <T>(fn: (client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }) => Promise<T>) => Promise<T>;
+  getMushroomById: (mushroomId: string) => unknown;
+  getTier: (level: number) => string;
+  mushrooms: Array<{ id: string }>;
+  starterPresetVariants: Record<string, Array<Record<string, unknown> & { id: string; requiredLevel: number }>>;
+  computeCharacterLevel: (characterXp: number) => { level: number; current: number; next: number | null };
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  nowDate?: () => Date;
+  getSeasonLevel: (points: number) => { id: string };
+  createBotGhostSnapshot: (seed: string, mushroomId: string) => Record<string, unknown>;
+  equipPortrait: (playerId: string, mushroomId: string, portraitId: string) => Promise<unknown>;
+  getPlayerCosmeticState: (playerId: string) => Promise<{ equippedByTarget: Map<string, { assetId: string }> }>;
+  getRuntimeAssetCatalog: () => Promise<unknown[]>;
+  getRuntimePortraitVariantsForResponse: () => Promise<Record<string, Array<{ id: string; path?: string }>>>;
+  parsePortraitAssetId: (assetId: string) => { mushroomId?: string; portraitId?: string } | null;
+  shapePortraitVariantsForCharacter: (params: Record<string, unknown>) => unknown[];
+  getWalletState: (playerId: string) => Promise<Record<string, unknown> & { balance: number }>;
+  createChallengeRun: (challengerPlayerId: string, inviteePlayerId: string, challengeId: string) => Promise<unknown>;
+}
+
+export interface MushroomPlayerServicePort {
+  acceptFriendChallenge(challengeId: string, playerId: string): Promise<unknown>;
+  addFriendByCode(playerId: string, friendCode: string): Promise<unknown[]>;
+  createRunChallenge(playerId: string, inviteePlayerId: string): Promise<unknown>;
+  declineFriendChallenge(challengeId: string, playerId: string): Promise<unknown>;
+  getFriendChallenge(challengeId: string): Promise<unknown>;
+  getFriends(playerId: string): Promise<unknown[]>;
+  getInventoryReviewSamples(): Promise<unknown[]>;
+  getLeaderboard(): Promise<unknown[]>;
+  getPlayerState(playerId: string): Promise<unknown>;
+  saveLocalTestRun(payload: unknown): Promise<unknown>;
+  selectActiveMushroom(playerId: string, mushroomId: string): Promise<unknown>;
+  switchPortrait(playerId: string, mushroomId: string, portraitId: string): Promise<unknown>;
+  switchPreset(playerId: string, mushroomId: string, presetId: string): Promise<unknown>;
+  updateSettings(playerId: string, payload: Record<string, unknown>): Promise<unknown>;
+}
+
 export interface MushroomBattleEnginePortOptions {
   getArtifactById: (artifactId: string) => unknown;
   getMushroomById: (mushroomId: string) => {
@@ -204,6 +244,7 @@ export interface SeasonProgressPort {
 
 export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
 export function createMushroomGameServicePort(options: MushroomGameServicePortOptions): MushroomGameServicePort;
+export function createMushroomPlayerServicePort(options: MushroomPlayerServicePortOptions): MushroomPlayerServicePort;
 export function createMushroomBattleEnginePort(options: MushroomBattleEnginePortOptions): MushroomBattleEnginePort;
 export function createMushroomBattleServicePort(options: MushroomBattleServicePortOptions): MushroomBattleServicePort;
 export function createMushroomShopServicePort(options: MushroomShopServicePortOptions): MushroomShopServicePort;

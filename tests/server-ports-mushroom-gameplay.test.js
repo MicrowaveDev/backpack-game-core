@@ -6,6 +6,7 @@ import {
   createMushroomBattleEnginePort,
   createMushroomBattleServicePort,
   createMushroomGameServicePort,
+  createMushroomPlayerServicePort,
   createMushroomShopServicePort,
   createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
@@ -655,4 +656,115 @@ test('[server-port][mushroom gameplay] assembles bootstrap state through injecte
   assert.equal(bootstrap.assetAcquisition.gachaEnabled, true);
   assert.equal(bootstrap.battleHistory[0].limit, 10);
   assert.equal(bootstrap.gameRunHistory[0].limit, 10);
+});
+
+test('[server-port][mushroom gameplay] assembles player state through injected services', async () => {
+  const queries = [];
+  const port = createMushroomPlayerServicePort({
+    query: async (sql, params = []) => {
+      queries.push({ sql, params });
+      if (/FROM players WHERE id/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{
+            id: 'player_1',
+            telegram_id: 'tg_1',
+            telegram_username: 'tester',
+            name: 'Tester',
+            lang: 'en',
+            spore: 4,
+            rating: 1100,
+            rated_battle_count: 2,
+            wins: 1,
+            losses: 0,
+            draws: 0,
+            friend_code: 'FRIEND'
+          }]
+        };
+      }
+      if (/FROM player_settings/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{ lang: 'en', reduced_motion: 1, battle_speed: '2x', replay_speed: 4 }]
+        };
+      }
+      if (/FROM player_active_character/.test(sql)) {
+        return { rowCount: 1, rows: [{ mushroom_id: 'thalla' }] };
+      }
+      if (/FROM player_mushrooms/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{
+            mushroom_id: 'thalla',
+            mycelium: 120,
+            active_portrait: 'default',
+            active_preset: 'default',
+            wins: 1,
+            losses: 0,
+            draws: 0
+          }]
+        };
+      }
+      if (/FROM game_run_players/.test(sql)) {
+        return { rowCount: 1, rows: [{ mushroom_id: 'thalla', wins: 3, losses: 1 }] };
+      }
+      if (/FROM player_season_progress/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{
+            season_id: 'season_1',
+            total_points: 25,
+            peak_points: 30,
+            level_id: 'silver',
+            updated_at: '2026-07-08T00:00:00.000Z'
+          }]
+        };
+      }
+      if (/LIMIT 6/.test(sql)) {
+        return { rowCount: 1, rows: [{ achievement_id: 'first_win', earned_at: '2026-07-08T00:00:00.000Z' }] };
+      }
+      if (/FROM player_achievements/.test(sql)) {
+        return {
+          rowCount: 1,
+          rows: [{ achievement_id: 'first_win', season_id: 'season_1', earned_at: '2026-07-08T00:00:00.000Z' }]
+        };
+      }
+      return { rowCount: 0, rows: [] };
+    },
+    withTransaction: async (fn) => fn({ query: async () => ({ rowCount: 0, rows: [] }) }),
+    getMushroomById: (mushroomId) => ({ id: mushroomId }),
+    getTier: (level) => `tier_${level}`,
+    mushrooms: [{ id: 'thalla' }],
+    starterPresetVariants: { thalla: [{ id: 'default', requiredLevel: 1 }, { id: 'deep', requiredLevel: 3 }] },
+    computeCharacterLevel: () => ({ level: 2, current: 100, next: 200 }),
+    createId: (prefix) => `${prefix}_1`,
+    nowIso: () => '2026-07-08T00:00:00.000Z',
+    getSeasonLevel: (points) => ({ id: points >= 30 ? 'gold' : 'silver' }),
+    createBotGhostSnapshot: () => ({ mushroomId: 'thalla', loadout: [] }),
+    equipPortrait: async () => ({ portraitId: 'default' }),
+    getPlayerCosmeticState: async () => ({
+      equippedByTarget: new Map([['portrait:character:thalla', { assetId: 'portrait.thalla.default' }]])
+    }),
+    getRuntimeAssetCatalog: async () => [{ assetId: 'portrait.thalla.default' }],
+    getRuntimePortraitVariantsForResponse: async () => ({
+      thalla: [{ id: 'default', path: '/portraits/thalla.png' }]
+    }),
+    parsePortraitAssetId: () => ({ mushroomId: 'thalla', portraitId: 'default' }),
+    shapePortraitVariantsForCharacter: ({ activePortraitId }) => [{ id: activePortraitId, owned: true }],
+    getWalletState: async () => ({ balance: 12, currencyCode: 'SPORE' }),
+    createChallengeRun: async () => ({ id: 'run_challenge' })
+  });
+
+  const state = await port.getPlayerState('player_1');
+  assert.equal(state.player.spore, 12);
+  assert.equal(state.settings.replaySpeed, 4);
+  assert.equal(state.activeMushroomId, 'thalla');
+  assert.equal(state.progression.thalla.level, 2);
+  assert.equal(state.progression.thalla.tier, 'tier_2');
+  assert.equal(state.progression.thalla.wins, 3);
+  assert.equal(state.progression.thalla.activePortraitUrl, '/portraits/thalla.png');
+  assert.equal(state.progression.thalla.presets[1].unlocked, false);
+  assert.equal(state.season.peakLevelId, 'gold');
+  assert.equal(state.season.recentAchievements[0].id, 'first_win');
+  assert.ok(queries.some((entry) => /player_season_progress/.test(entry.sql)));
 });
