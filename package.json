@@ -89,6 +89,10 @@
       "types": "./src/server/ports/mushroom/gameplay/index.d.ts",
       "import": "./src/server/ports/mushroom/gameplay/index.js"
     },
+    "./server/ports/mushroom/economy": {
+      "types": "./src/server/ports/mushroom/economy/index.d.ts",
+      "import": "./src/server/ports/mushroom/economy/index.js"
+    },
     "./vue": {
       "types": "./src/vue/index.d.ts",
       "import": "./src/vue/index.js"

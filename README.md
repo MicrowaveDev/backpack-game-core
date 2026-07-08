@@ -124,6 +124,11 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   `createMushroomGameServicePort()`, `createMushroomPlayerServicePort()`,
   `createMushroomRunServicePort()`, `createMushroomShopServicePort()`, and
   `createSeasonProgressPort()`.
+- `server/ports/mushroom/economy`: quarantined move-first ports for Mushroom
+  wallet/payment service files that are not neutral yet. These exports preserve
+  current wallet SQL, payment provider, webhook replay, and reconciliation
+  behavior behind product wrappers while repository/provider contracts are
+  extracted. Current ports include `createMushroomWalletServicePort()`.
 - `server/models/mushroom`: quarantined Mushroom Sequelize model definitions
   moved from `app/server/models`. Products still own the Sequelize instance,
   dialect config, sync/backfill logic, queries, transactions, and migrations.

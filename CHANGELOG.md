@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomWalletServicePort()` to the quarantined Mushroom
+  economy port package after physically moving Mushroom's wallet balance,
+  wallet transaction, purchase-intent, Telegram Stars, BTCPay, NOWPayments,
+  webhook replay, settlement reconciliation, stale-intent expiry, and mirror
+  audit behavior behind injected DB, transaction, ID, clock, JSON, env, and
+  fetch providers. Mushroom keeps the old wallet-service path as a wrapper
+  while repository, provider, and paid-ops contracts are neutralized.
 - Added `createMushroomRunServicePort()` to the quarantined Mushroom gameplay
   port package after physically moving Mushroom's run lifecycle service behind
   injected DB, transaction, lock, battle, shop, loadout, fusion, season,
