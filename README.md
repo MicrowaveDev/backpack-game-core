@@ -122,7 +122,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   `createGameRunLoadoutPort()`, `createArtifactFusionPort()`,
   `createMushroomBattleEnginePort()`, `createMushroomBattleServicePort()`, and
   `createMushroomGameServicePort()`, `createMushroomPlayerServicePort()`,
-  `createMushroomShopServicePort()`, and `createSeasonProgressPort()`.
+  `createMushroomRunServicePort()`, `createMushroomShopServicePort()`, and
+  `createSeasonProgressPort()`.
 - `server/models/mushroom`: quarantined Mushroom Sequelize model definitions
   moved from `app/server/models`. Products still own the Sequelize instance,
   dialect config, sync/backfill logic, queries, transactions, and migrations.

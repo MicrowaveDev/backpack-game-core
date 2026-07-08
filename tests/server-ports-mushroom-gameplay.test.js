@@ -7,6 +7,7 @@ import {
   createMushroomBattleServicePort,
   createMushroomGameServicePort,
   createMushroomPlayerServicePort,
+  createMushroomRunServicePort,
   createMushroomShopServicePort,
   createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
@@ -51,6 +52,10 @@ function createPort({ query }) {
 test('[server-port][mushroom gameplay] requires injected providers', () => {
   assert.throws(
     () => createGameRunLoadoutPort({}),
+    /requires query/
+  );
+  assert.throws(
+    () => createMushroomRunServicePort({}),
     /requires query/
   );
 });

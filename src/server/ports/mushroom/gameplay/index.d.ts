@@ -110,6 +110,78 @@ export interface MushroomPlayerServicePort {
   updateSettings(playerId: string, payload: Record<string, unknown>): Promise<unknown>;
 }
 
+export interface MushroomRunServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  withTransaction: <T>(fn: (client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }) => Promise<T>) => Promise<T>;
+  challengeWinnerBonus: Record<string, unknown>;
+  getEligibleCharacterItems: (characterId: string, level: number) => unknown[];
+  dailyBattleLimit: number;
+  getArtifactById: (artifactId: string) => unknown;
+  getArtifactPrice: (artifact: unknown) => number;
+  getCompletionBonus: (wins: number) => Record<string, unknown>;
+  getTier: (level: number) => string;
+  completedRunMaxAgeDays: number;
+  ghostBotMaxAgeDays: number;
+  ghostBudgetDiscount: number;
+  ghostSnapshotMaxCount: number;
+  getStarterPreset: (characterId: string, presetId?: string | null) => unknown[];
+  maxRoundsPerRun: number;
+  mushrooms: Array<{ id: string }>;
+  ratingFloor: number;
+  roundIncome: number[];
+  runRewardTable: Array<Record<string, unknown>>;
+  shopOfferSize: number;
+  startingLives: number;
+  portraitUrl: (characterId: string, portraitId?: string | null) => string;
+  computeCharacterLevel: (characterXp: number) => { level: number };
+  createId: (prefix: string) => string;
+  createRng: (seed: string) => () => number;
+  dayKey: (date: Date) => string;
+  expectedScore: (ratingA: number, ratingB: number) => number;
+  kFactor: (ratedBattleCount: number) => number;
+  nowIso: () => string;
+  parseJson: (value: unknown, fallback: unknown) => unknown;
+  runCurrencyFields: (coins: number) => Record<string, unknown>;
+  shuffleWithRng: <T>(items: T[], rng: () => number) => T[];
+  simulateBattle: (snapshot: Record<string, unknown>, seed: string) => unknown;
+  getActiveSnapshot: (client: unknown, playerId: string) => Promise<unknown>;
+  getDailyUsage: (client: unknown, playerId: string) => Promise<number>;
+  getBattle: (battleId: string, viewerPlayerId: string, client?: unknown) => Promise<unknown>;
+  recordBattle: (client: unknown, params: Record<string, unknown>) => Promise<unknown>;
+  withRunLock: <T>(gameRunId: string, fn: () => Promise<T>) => Promise<T>;
+  createBotGhostSnapshot: (seed: string, characterId: string, budget?: number) => Record<string, unknown>;
+  createBotLoadout: (character: unknown, rng: () => number, budget: number) => unknown[];
+  generateShopOffer: (rng: () => number, count?: number, roundsSinceBag?: number, eligibleItems?: unknown[]) => unknown;
+  lookupEligibleCharacterItems: (client: unknown, playerId: string, mode: string, gameRunId: string) => Promise<unknown[]>;
+  applyRunPlacements: (client: unknown, gameRunId: string, playerId: string, roundNumber: number, items: unknown[]) => Promise<void>;
+  copyRoundForward: (client: unknown, gameRunId: string, playerId: string, fromRound: number, toRound: number) => Promise<number>;
+  insertLoadoutItem: (client: unknown, params: Record<string, unknown>) => Promise<string>;
+  readCurrentRoundItems: (client: unknown, gameRunId: string, playerId: string, roundNumber: number) => Promise<unknown[]>;
+  applyRoundStartFusions: (client: unknown, gameRunId: string, playerId: string, roundNumber: number) => Promise<unknown[]>;
+  readFusionReveals: (client: unknown, gameRunId: string, playerId: string, resultRoundNumber: number) => Promise<unknown[]>;
+  awardRunSeasonProgress: (client: unknown, params: Record<string, unknown>) => Promise<unknown>;
+  getEarnedRunAchievements: (context: Record<string, unknown>, lang?: string, options?: Record<string, unknown>) => unknown[];
+  getSeasonLevel: (points: number) => { id: string };
+  getSeasonPointsBreakdown: (context: Record<string, unknown>) => Record<string, unknown>;
+  seasonLevelRank: (levelId: string) => number;
+  grantCurrency: (client: unknown, params: Record<string, unknown>) => Promise<unknown>;
+  resolveEquippedPortraitId: (client: unknown, playerId: string, characterId: string) => Promise<string>;
+}
+
+export interface MushroomRunServicePort {
+  abandonGameRun(playerId: string, gameRunId: string): Promise<unknown>;
+  applyRunLoadoutPlacements(playerId: string, gameRunId: string, items: unknown[]): Promise<unknown>;
+  createChallengeRun(challengerPlayerId: string, inviteePlayerId: string, challengeId: string): Promise<unknown>;
+  getActiveGameRun(playerId: string, characterId?: string | null): Promise<unknown>;
+  getActiveGameRuns(playerId: string): Promise<unknown[]>;
+  getGameRun(gameRunId: string, viewerPlayerId: string): Promise<unknown>;
+  getGameRunHistory(playerId: string, limit?: number): Promise<unknown[]>;
+  pruneCompletedRuns(maxAgeDays?: number): Promise<unknown>;
+  pruneOldGhostSnapshots(maxBotAgeDays?: number, maxSnapshotCount?: number): Promise<unknown>;
+  resolveRound(playerId: string, gameRunId: string): Promise<unknown>;
+  startGameRun(playerId: string, mode?: string): Promise<unknown>;
+}
+
 export interface MushroomBattleEnginePortOptions {
   getArtifactById: (artifactId: string) => unknown;
   getMushroomById: (mushroomId: string) => {
@@ -245,6 +317,7 @@ export interface SeasonProgressPort {
 export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
 export function createMushroomGameServicePort(options: MushroomGameServicePortOptions): MushroomGameServicePort;
 export function createMushroomPlayerServicePort(options: MushroomPlayerServicePortOptions): MushroomPlayerServicePort;
+export function createMushroomRunServicePort(options: MushroomRunServicePortOptions): MushroomRunServicePort;
 export function createMushroomBattleEnginePort(options: MushroomBattleEnginePortOptions): MushroomBattleEnginePort;
 export function createMushroomBattleServicePort(options: MushroomBattleServicePortOptions): MushroomBattleServicePort;
 export function createMushroomShopServicePort(options: MushroomShopServicePortOptions): MushroomShopServicePort;

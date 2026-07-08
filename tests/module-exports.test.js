@@ -217,6 +217,7 @@ import {
   createMushroomBattleServicePort,
   createMushroomGameServicePort,
   createMushroomPlayerServicePort,
+  createMushroomRunServicePort,
   createMushroomShopServicePort,
   createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
@@ -480,6 +481,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createMushroomBattleServicePort, 'function');
   assert.equal(typeof createMushroomGameServicePort, 'function');
   assert.equal(typeof createMushroomPlayerServicePort, 'function');
+  assert.equal(typeof createMushroomRunServicePort, 'function');
   assert.equal(typeof createMushroomShopServicePort, 'function');
   assert.equal(typeof createSeasonProgressPort, 'function');
   assert.equal(typeof initMushroomModels, 'function');

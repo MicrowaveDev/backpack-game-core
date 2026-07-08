@@ -19,6 +19,9 @@ export {
   createMushroomPlayerServicePort
 } from './player-service.js';
 export {
+  createMushroomRunServicePort
+} from './run-service.js';
+export {
   createSeasonProgressPort
 } from './season-service.js';
 export {
