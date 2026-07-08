@@ -15,3 +15,6 @@ export {
 export {
   createSeasonProgressPort
 } from './season-service.js';
+export {
+  createMushroomShopServicePort
+} from './shop-service.js';

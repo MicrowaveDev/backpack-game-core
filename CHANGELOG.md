@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomShopServicePort()` to the quarantined Mushroom gameplay
+  port package after physically moving Mushroom's run-shop buy, refresh,
+  force-shop, sell, and eligible character-item lookup behavior behind injected
+  transaction, lock, catalog, pricing, pity, progression, loadout-row, clock,
+  RNG, and run-currency providers. It preserves current Mushroom run-shop SQL,
+  error text, and compatibility response aliases until repository contracts
+  replace the table details.
 - Added `createMushroomBattleEnginePort()` and
   `createMushroomBattleServicePort()` to the quarantined Mushroom gameplay
   port package after physically moving Mushroom's battle hook, active snapshot,

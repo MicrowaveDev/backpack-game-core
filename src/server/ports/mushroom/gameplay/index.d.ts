@@ -106,6 +106,49 @@ export interface MushroomBattleServicePort {
   getBattleHistory(playerId: string, limit?: number): Promise<unknown[]>;
 }
 
+export interface MushroomShopServicePortOptions {
+  withTransaction: <T>(fn: (client: unknown) => Promise<T>) => Promise<T>;
+  withRunLock: <T>(gameRunId: string, fn: () => Promise<T>) => Promise<T>;
+  bagBaseChance: number;
+  bagEscalationStep: number;
+  bagPityThreshold: number;
+  bags: unknown[];
+  combatArtifacts: unknown[];
+  getArtifactById: (artifactId: string) => unknown;
+  getArtifactPrice: (artifact: unknown) => number;
+  getEligibleCharacterItems: (characterId: string, level: number) => unknown[];
+  getShopRefreshCost: (refreshCount: number) => number;
+  shopOfferSize: number;
+  computeCharacterLevel: (characterXp: number) => { level: number };
+  createRng: (seed: string) => () => number;
+  nowIso: () => string;
+  parseJson: (value: unknown, fallback: unknown) => unknown;
+  runCurrencyFields: (coins: number) => Record<string, unknown>;
+  isBag: (artifact: unknown) => boolean;
+  bagsContainingItem: (item: unknown, bags: unknown[]) => unknown[];
+  deleteLoadoutItemByIdScoped: (client: unknown, params: Record<string, unknown>) => Promise<unknown>;
+  deleteOneByArtifactId: (
+    client: unknown,
+    gameRunId: string,
+    playerId: string,
+    roundNumber: number,
+    artifactId: string
+  ) => Promise<unknown>;
+  insertLoadoutItem: (client: unknown, params: Record<string, unknown>) => Promise<string>;
+  insertRefund: (client: unknown, params: Record<string, unknown>) => Promise<void>;
+  nextSortOrder: (client: unknown, gameRunId: string, playerId: string, roundNumber: number) => Promise<number>;
+  readCurrentRoundItems: (client: unknown, gameRunId: string, playerId: string, roundNumber: number) => Promise<unknown[]>;
+}
+
+export interface MushroomShopServicePort {
+  lookupEligibleCharacterItems(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, playerId: string, mode: string, gameRunId: string): Promise<unknown[]>;
+  generateShopOffer(rng: () => number, count?: number, roundsSinceBag?: number, eligibleCharacterItems?: unknown[]): unknown;
+  buyRunShopItem(playerId: string, gameRunId: string, artifactId: string): Promise<unknown>;
+  refreshRunShop(playerId: string, gameRunId: string): Promise<unknown>;
+  forceRunShopForTest(playerId: string, gameRunId: string, artifactIds: string[]): Promise<unknown>;
+  sellRunItem(playerId: string, gameRunId: string, target: string | Record<string, unknown>): Promise<unknown>;
+}
+
 export interface SeasonProgressPortOptions {
   currentSeasonId?: string;
   createId: (prefix: string) => string;
@@ -140,6 +183,7 @@ export interface SeasonProgressPort {
 export function createArtifactFusionPort(options: ArtifactFusionPortOptions): ArtifactFusionPort;
 export function createMushroomBattleEnginePort(options: MushroomBattleEnginePortOptions): MushroomBattleEnginePort;
 export function createMushroomBattleServicePort(options: MushroomBattleServicePortOptions): MushroomBattleServicePort;
+export function createMushroomShopServicePort(options: MushroomShopServicePortOptions): MushroomShopServicePort;
 export function createGameRunLoadoutPort(options: GameRunLoadoutPortOptions): GameRunLoadoutPort;
 export function createSeasonProgressPort(options: SeasonProgressPortOptions): SeasonProgressPort;
 export function randomInt(rng: () => number, max: number): number;

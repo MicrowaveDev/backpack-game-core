@@ -5,6 +5,7 @@ import {
   createGameRunLoadoutPort,
   createMushroomBattleEnginePort,
   createMushroomBattleServicePort,
+  createMushroomShopServicePort,
   createSeasonProgressPort
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
 import {
@@ -475,4 +476,134 @@ test('[server-port][mushroom gameplay] reads snapshots and battles through injec
   assert.equal(shaped.id, 'battle_1');
   assert.equal(shaped.snapshots.left.mushroomId, 'thalla');
   assert.equal(shaped.events[0].type, 'battle_start');
+});
+
+test('[server-port][mushroom gameplay] runs shop mutations through injected repositories', async () => {
+  const artifacts = {
+    blade: { id: 'blade', family: 'damage', width: 1, height: 1, price: 3 },
+    bag: { id: 'bag', family: 'bag', width: 2, height: 2, price: 5 },
+    charm: { id: 'charm', family: 'damage', width: 1, height: 1, price: 2 }
+  };
+  let activeClient = null;
+  const insertedRows = [];
+  const refunds = [];
+  const deletedRows = [];
+  const port = createMushroomShopServicePort({
+    withTransaction: async (fn) => fn(activeClient),
+    withRunLock: async (_gameRunId, fn) => fn(),
+    bagBaseChance: 0,
+    bagEscalationStep: 0,
+    bagPityThreshold: 99,
+    bags: ['bag'],
+    combatArtifacts: ['blade'],
+    getArtifactById: (artifactId) => artifacts[artifactId] || null,
+    getArtifactPrice: (artifact) => artifact.price,
+    getEligibleCharacterItems: (mushroomId, level) => (mushroomId === 'thalla' && level >= 2 ? ['charm'] : []),
+    getShopRefreshCost: (refreshCount) => (refreshCount < 3 ? 1 : 2),
+    shopOfferSize: 2,
+    computeCharacterLevel: (xp) => ({ level: Math.floor(Number(xp || 0) / 100) + 1 }),
+    createRng: () => () => 0,
+    nowIso: () => '2026-07-08T00:00:00.000Z',
+    parseJson: (value, fallback) => {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return fallback;
+      }
+    },
+    runCurrencyFields: (coins) => ({ coins, runCurrency: coins }),
+    isBag: (artifact) => artifact?.family === 'bag',
+    bagsContainingItem: () => [],
+    deleteLoadoutItemByIdScoped: async (_client, params) => {
+      const row = { id: params.rowId, artifactId: 'blade' };
+      deletedRows.push(row);
+      return row;
+    },
+    deleteOneByArtifactId: async () => null,
+    insertLoadoutItem: async (_client, row) => {
+      insertedRows.push(row);
+      return 'row_new';
+    },
+    insertRefund: async (_client, row) => {
+      refunds.push(row);
+    },
+    nextSortOrder: async () => 7,
+    readCurrentRoundItems: async () => [{
+      id: 'row_blade',
+      artifactId: 'blade',
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      purchasedRound: 1
+    }]
+  });
+
+  const updates = [];
+  activeClient = {
+    async query(sql, params) {
+      if (/SELECT current_round FROM game_runs/.test(sql)) {
+        return { rowCount: 1, rows: [{ current_round: 1 }] };
+      }
+      if (/SELECT \* FROM game_run_players/.test(sql)) {
+        return { rowCount: 1, rows: [{ id: 'grp_1', coins: 10 }] };
+      }
+      if (/SELECT offer_json FROM game_run_shop_states/.test(sql)) {
+        return { rowCount: 1, rows: [{ offer_json: '["blade","bag"]' }] };
+      }
+      updates.push({ sql, params });
+      return { rowCount: 1, rows: [] };
+    }
+  };
+  const buy = await port.buyRunShopItem('player_1', 'run_1', 'blade');
+  assert.equal(buy.id, 'row_new');
+  assert.equal(buy.coins, 7);
+  assert.equal(insertedRows[0].sortOrder, 7);
+  assert.deepEqual(buy.shopOffer, ['bag']);
+
+  activeClient = {
+    async query(sql, params) {
+      if (/SELECT current_round, mode FROM game_runs/.test(sql)) {
+        return { rowCount: 1, rows: [{ current_round: 1, mode: 'solo' }] };
+      }
+      if (/SELECT \* FROM game_run_players/.test(sql)) {
+        return { rowCount: 1, rows: [{ id: 'grp_1', coins: 3 }] };
+      }
+      if (/SELECT \* FROM game_run_shop_states/.test(sql)) {
+        return { rowCount: 1, rows: [{ refresh_count: 0, rounds_since_bag: 1, round_number: 1 }] };
+      }
+      if (/FROM player_active_character/.test(sql)) {
+        return { rowCount: 1, rows: [{ mushroom_id: 'thalla' }] };
+      }
+      if (/FROM player_mushrooms/.test(sql)) {
+        return { rowCount: 1, rows: [{ mycelium: 250 }] };
+      }
+      updates.push({ sql, params });
+      return { rowCount: 1, rows: [] };
+    }
+  };
+  const refresh = await port.refreshRunShop('player_1', 'run_1');
+  assert.equal(refresh.coins, 2);
+  assert.equal(refresh.refreshCount, 1);
+  assert.equal(refresh.refreshCost, 1);
+  assert.equal(refresh.shopOffer.length, 2);
+
+  activeClient = {
+    async query(sql, params) {
+      if (/SELECT current_round FROM game_runs/.test(sql)) {
+        return { rowCount: 1, rows: [{ current_round: 1 }] };
+      }
+      if (/SELECT \* FROM game_run_players/.test(sql)) {
+        return { rowCount: 1, rows: [{ id: 'grp_1', coins: 2 }] };
+      }
+      updates.push({ sql, params });
+      return { rowCount: 1, rows: [] };
+    }
+  };
+  const sell = await port.sellRunItem('player_1', 'run_1', { id: 'row_blade' });
+  assert.equal(sell.id, 'row_blade');
+  assert.equal(sell.sellPrice, 3);
+  assert.equal(sell.coins, 5);
+  assert.equal(deletedRows[0].id, 'row_blade');
+  assert.equal(refunds[0].refundAmount, 3);
 });
