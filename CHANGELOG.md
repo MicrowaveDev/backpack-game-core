@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createTelegramBotGatewayPort()` in the quarantined platform package
+  after physically moving Mini App/deep-link helpers, Bot API transport,
+  webhook reconciliation, game callbacks/scores, auth-code flow, payment
+  callbacks, command handling, and mention replies behind injected auth,
+  wallet, environment, fetch, product-name, and copy providers.
 - Added `createMushroomAuthServicePort()` in the quarantined Mushroom platform
   port package after physically moving session login/logout, provider init-data
   verification, browser auth codes, player-default initialization, auth pruning,

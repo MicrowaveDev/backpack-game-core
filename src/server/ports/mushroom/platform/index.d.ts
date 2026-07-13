@@ -34,3 +34,22 @@ export interface MushroomAuthServicePort {
 export function createMushroomAuthServicePort(
   options: MushroomAuthServicePortOptions
 ): MushroomAuthServicePort;
+
+export interface TelegramBotGatewayPortOptions {
+  createTelegramAuthCode: (...args: any[]) => Promise<any>;
+  confirmTelegramAuthCode: (...args: any[]) => Promise<any>;
+  completeTelegramSuccessfulPayment: (...args: any[]) => Promise<any>;
+  getPaymentSupportLinks: (...args: any[]) => any;
+  validateTelegramPreCheckout: (...args: any[]) => Promise<any>;
+  env?: Record<string, string | undefined>;
+  defaultFetch?: (...args: any[]) => Promise<any>;
+  defaultMiniAppName?: string;
+  defaultGameShortName?: string;
+  copy?: Record<string, string>;
+}
+
+export type TelegramBotGatewayPort = Record<string, (...args: any[]) => any>;
+
+export function createTelegramBotGatewayPort(
+  options: TelegramBotGatewayPortOptions
+): TelegramBotGatewayPort;

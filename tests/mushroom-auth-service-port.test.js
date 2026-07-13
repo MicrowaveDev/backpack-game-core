@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { createMushroomAuthServicePort } from '../src/server/ports/mushroom/platform/index.js';
+import {
+  createMushroomAuthServicePort,
+  createTelegramBotGatewayPort
+} from '../src/server/ports/mushroom/platform/index.js';
 
 function createPort(overrides = {}) {
   return createMushroomAuthServicePort({
@@ -51,4 +54,24 @@ test('[mushroom-auth-port] exposes framework-compatible auth guard behavior', ()
   port.requireAuth({ authenticated: false }, response, () => assert.fail('guard should reject'));
   assert.equal(statusCode, 401);
   assert.deepEqual(payload, { success: false, error: 'Authentication required' });
+});
+
+test('[telegram-bot-port] uses product configuration for links and visible copy', () => {
+  const gateway = createTelegramBotGatewayPort({
+    createTelegramAuthCode: async () => ({ publicCode: 'CODE' }),
+    confirmTelegramAuthCode: async () => ({}),
+    completeTelegramSuccessfulPayment: async () => ({}),
+    getPaymentSupportLinks: () => ({ supportUrl: 'https://game.test/support' }),
+    validateTelegramPreCheckout: async () => ({ ok: true }),
+    env: {
+      TELEGRAM_MINI_APP_NAME: 'meat',
+      PUBLIC_GAME_URL: 'https://game.test'
+    },
+    defaultGameShortName: 'meat_master',
+    copy: { mentionText: 'Open Meat Master.' }
+  });
+
+  assert.equal(gateway.buildMiniAppLink('@test_bot', 'entry'), 'https://t.me/test_bot/meat?startapp=entry');
+  assert.equal(gateway.createMentionReply({ botUsername: 'test_bot' }).text, 'Open Meat Master.');
+  assert.equal(gateway.buildWebhookUrl(), 'https://game.test/api/bot/webhook');
 });
