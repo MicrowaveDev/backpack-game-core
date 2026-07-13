@@ -163,6 +163,9 @@ export declare const RUN_ROUTE_NAMES: Readonly<{
   unready: 'run.unready';
 }>;
 
+export declare const SUPPORT_ADMIN_ROUTE_NAMES: Readonly<Record<string, string>>;
+export declare const GACHA_ADMIN_ROUTE_NAMES: Readonly<Record<string, string>>;
+
 export type Rng = () => number;
 
 export declare const DEFAULT_CHARACTER_XP_LEVEL_CURVE: readonly number[];
@@ -268,7 +271,7 @@ export interface FeatureRouteGroupOptions<RouteKey extends string> {
   prefix?: string;
   routes?: Partial<Record<RouteKey, BackpackAuthRouteConfig | BackpackRouteHandler | false>>;
   handlers?: Partial<Record<RouteKey, BackpackRouteHandler>>;
-  middleware?: Partial<Record<RouteKey | 'all' | 'auth' | 'mutation' | 'purchase' | 'profileMutation' | 'webhook', BackpackRouteHandler | BackpackRouteHandler[]>>;
+  middleware?: Record<string, BackpackRouteHandler | BackpackRouteHandler[]>;
   meta?: Record<string, unknown>;
 }
 
@@ -406,6 +409,12 @@ export declare function createSocialRouteGroup(
 ): BackpackRouteGroup;
 export declare function createRunRouteGroup(
   options?: FeatureRouteGroupOptions<keyof typeof RUN_ROUTE_NAMES>
+): BackpackRouteGroup;
+export declare function createSupportAdminRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof SUPPORT_ADMIN_ROUTE_NAMES>
+): BackpackRouteGroup;
+export declare function createGachaAdminRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof GACHA_ADMIN_ROUTE_NAMES>
 ): BackpackRouteGroup;
 
 export interface AuthRoutesServerModuleOptions extends AuthRouteGroupOptions {

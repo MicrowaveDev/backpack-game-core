@@ -212,6 +212,76 @@ const RUN_ROUTE_DEFINITIONS = Object.freeze({
   buy: Object.freeze({ name: RUN_ROUTE_NAMES.buy, method: 'post', path: '/game-run/:id/buy', access: 'mutation' })
 });
 
+export const SUPPORT_ADMIN_ROUTE_NAMES = Object.freeze({
+  actions: 'supportAdmin.actions',
+  assetFreeze: 'supportAdmin.assetFreeze',
+  assetGrant: 'supportAdmin.assetGrant',
+  assetRevoke: 'supportAdmin.assetRevoke',
+  assetUnfreeze: 'supportAdmin.assetUnfreeze',
+  moneyLookup: 'supportAdmin.moneyLookup',
+  purchaseRefund: 'supportAdmin.purchaseRefund',
+  walletGrant: 'supportAdmin.walletGrant',
+  walletRevoke: 'supportAdmin.walletRevoke'
+});
+
+const SUPPORT_ADMIN_ROUTE_DEFINITIONS = Object.freeze({
+  moneyLookup: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.moneyLookup, method: 'get', path: '/support/money-lookup', access: 'viewer' }),
+  actions: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.actions, method: 'get', path: '/support/actions', access: 'viewer' }),
+  walletGrant: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.walletGrant, method: 'post', path: '/support/actions/wallet-grant', access: 'wallet' }),
+  walletRevoke: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.walletRevoke, method: 'post', path: '/support/actions/wallet-revoke', access: 'wallet' }),
+  assetGrant: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.assetGrant, method: 'post', path: '/support/actions/asset-grant', access: 'asset' }),
+  assetRevoke: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.assetRevoke, method: 'post', path: '/support/actions/asset-revoke', access: 'asset' }),
+  assetFreeze: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.assetFreeze, method: 'post', path: '/support/actions/asset-freeze', access: 'asset' }),
+  assetUnfreeze: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.assetUnfreeze, method: 'post', path: '/support/actions/asset-unfreeze', access: 'asset' }),
+  purchaseRefund: Object.freeze({ name: SUPPORT_ADMIN_ROUTE_NAMES.purchaseRefund, method: 'post', path: '/support/actions/purchase-refund', access: 'refund' })
+});
+
+export const GACHA_ADMIN_ROUTE_NAMES = Object.freeze({
+  catalog: 'gachaAdmin.catalog',
+  createCollection: 'gachaAdmin.createCollection',
+  createPack: 'gachaAdmin.createPack',
+  createPackItem: 'gachaAdmin.createPackItem',
+  createPlanItem: 'gachaAdmin.createPlanItem',
+  createSeason: 'gachaAdmin.createSeason',
+  deletePackItem: 'gachaAdmin.deletePackItem',
+  deletePlanItem: 'gachaAdmin.deletePlanItem',
+  exportFixture: 'gachaAdmin.exportFixture',
+  importFixture: 'gachaAdmin.importFixture',
+  previewPack: 'gachaAdmin.previewPack',
+  promotePlanItems: 'gachaAdmin.promotePlanItems',
+  replacePackItems: 'gachaAdmin.replacePackItems',
+  transitionPack: 'gachaAdmin.transitionPack',
+  updateCollection: 'gachaAdmin.updateCollection',
+  updatePack: 'gachaAdmin.updatePack',
+  updatePackItem: 'gachaAdmin.updatePackItem',
+  updatePlanItem: 'gachaAdmin.updatePlanItem',
+  updateSeason: 'gachaAdmin.updateSeason',
+  validatePack: 'gachaAdmin.validatePack'
+});
+
+const GACHA_ADMIN_ROUTE_DEFINITIONS = Object.freeze({
+  catalog: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.catalog, method: 'get', path: '/gacha/catalog', access: 'read' }),
+  exportFixture: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.exportFixture, method: 'get', path: '/gacha/export', access: 'read' }),
+  importFixture: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.importFixture, method: 'post', path: '/gacha/import', access: 'write' }),
+  createPlanItem: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.createPlanItem, method: 'post', path: '/gacha/plan-items', access: 'write' }),
+  updatePlanItem: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.updatePlanItem, method: 'patch', path: '/gacha/plan-items/:itemId', access: 'write' }),
+  deletePlanItem: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.deletePlanItem, method: 'delete', path: '/gacha/plan-items/:itemId', access: 'write' }),
+  createSeason: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.createSeason, method: 'post', path: '/gacha/seasons', access: 'write' }),
+  updateSeason: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.updateSeason, method: 'patch', path: '/gacha/seasons/:seasonId', access: 'write' }),
+  createCollection: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.createCollection, method: 'post', path: '/gacha/collections', access: 'write' }),
+  updateCollection: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.updateCollection, method: 'patch', path: '/gacha/collections/:collectionId', access: 'write' }),
+  createPack: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.createPack, method: 'post', path: '/gacha/packs', access: 'write' }),
+  updatePack: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.updatePack, method: 'patch', path: '/gacha/packs/:packId', access: 'write' }),
+  validatePack: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.validatePack, method: 'get', path: '/gacha/packs/:packId/validation', access: 'read' }),
+  previewPack: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.previewPack, method: 'get', path: '/gacha/packs/:packId/preview', access: 'read' }),
+  transitionPack: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.transitionPack, method: 'post', path: '/gacha/packs/:packId/transition', access: 'write' }),
+  replacePackItems: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.replacePackItems, method: 'put', path: '/gacha/packs/:packId/items', access: 'write' }),
+  promotePlanItems: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.promotePlanItems, method: 'post', path: '/gacha/packs/:packId/promote-plan-items', access: 'write' }),
+  createPackItem: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.createPackItem, method: 'post', path: '/gacha/packs/:packId/items', access: 'write' }),
+  updatePackItem: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.updatePackItem, method: 'patch', path: '/gacha/packs/:packId/items/:itemId', access: 'write' }),
+  deletePackItem: Object.freeze({ name: GACHA_ADMIN_ROUTE_NAMES.deletePackItem, method: 'delete', path: '/gacha/packs/:packId/items/:itemId', access: 'write' })
+});
+
 const ASSET_ROUTE_DEFINITIONS = Object.freeze({
   catalog: Object.freeze({ name: ASSET_ROUTE_NAMES.catalog, method: 'get', path: '/assets/catalog', access: 'auth' }),
   odds: Object.freeze({ name: ASSET_ROUTE_NAMES.odds, method: 'get', path: '/assets/packs/:packId/odds', access: 'auth' }),
@@ -569,6 +639,32 @@ export function createRunRouteGroup(options = {}) {
     prefix: options.prefix || '/api',
     feature: 'run',
     definitions: RUN_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
+  });
+}
+
+export function createSupportAdminRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'supportAdminRoutes',
+    prefix: options.prefix || '/api/admin',
+    feature: 'supportAdmin',
+    definitions: SUPPORT_ADMIN_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
+  });
+}
+
+export function createGachaAdminRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'gachaAdminRoutes',
+    prefix: options.prefix || '/api/admin',
+    feature: 'gachaAdmin',
+    definitions: GACHA_ADMIN_ROUTE_DEFINITIONS,
     routes: options.routes || {},
     handlers: options.handlers || {},
     middleware: options.middleware || {},

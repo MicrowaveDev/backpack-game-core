@@ -6,6 +6,7 @@ import {
   ASSET_ROUTE_NAMES,
   SOCIAL_ROUTE_NAMES,
   RUN_ROUTE_NAMES,
+  GACHA_ADMIN_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
   createAssetRouteGroup,
@@ -17,6 +18,7 @@ import {
   createBackpackRouteDescriptor,
   createBackpackRouteGroup,
   createGhostLoadoutService,
+  createGachaAdminRouteGroup,
   createHostedCommunityClientServerModule,
   createLoadoutValidationServerModule,
   createProfileRouteGroup,
@@ -26,6 +28,7 @@ import {
   createServerGachaSimulationService,
   createServerLoadoutUtils,
   createSocialRouteGroup,
+  createSupportAdminRouteGroup,
   createSocialPreviewCacheServerModule,
   createWikiRouteGroup,
   createWalletRouteGroup,
@@ -397,6 +400,31 @@ test('[server] run route group composes auth, membership, and mutation policies'
   assert.deepEqual(routes[0].handlers, [auth, handler]);
   assert.deepEqual(routes[1].handlers, [auth, member, handler]);
   assert.deepEqual(routes[3].handlers, [auth, member, mutation, handler]);
+});
+
+test('[server] admin route groups keep read and privileged mutation policies separate', () => {
+  const viewer = () => {};
+  const wallet = () => {};
+  const read = () => {};
+  const write = () => {};
+  const handler = () => {};
+  const routes = flattenBackpackRouteDescriptors([
+    createSupportAdminRouteGroup({
+      handlers: { moneyLookup: handler, walletGrant: handler },
+      middleware: { viewer, wallet }
+    }),
+    createGachaAdminRouteGroup({
+      handlers: { catalog: handler, replacePackItems: handler, createPackItem: handler },
+      middleware: { read, write }
+    })
+  ]);
+  assert.deepEqual(routes.map((route) => route.method), ['get', 'post', 'get', 'put', 'post']);
+  assert.deepEqual(routes[0].handlers, [viewer, handler]);
+  assert.deepEqual(routes[1].handlers, [wallet, handler]);
+  assert.deepEqual(routes[2].handlers, [read, handler]);
+  assert.deepEqual(routes[3].handlers, [write, handler]);
+  assert.equal(routes[4].name, GACHA_ADMIN_ROUTE_NAMES.createPackItem);
+  assert.equal(routes[4].path, '/api/admin/gacha/packs/:packId/items');
 });
 
 test('[server] auth route module resolves handlers and middleware from providers', () => {

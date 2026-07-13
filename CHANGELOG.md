@@ -8,8 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
-- Added framework-neutral profile, wallet, asset, social, and run route-group
-  factories.
+- Added framework-neutral profile, wallet, asset, social, run, support-admin,
+  and gacha-admin route-group factories. The gacha contract distinguishes bulk
+  pack-item replacement (`PUT`) from single-item creation (`POST`), fixing an
+  unreachable duplicate `PUT` registration in the original consumer routes.
   Consumers inject handlers and policy middleware while core owns stable route
   names, default paths, access metadata, and descriptor assembly. Route
   middleware is de-duplicated when a route key is also its access-policy key,
