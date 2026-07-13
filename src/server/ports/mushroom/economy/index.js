@@ -3,6 +3,10 @@ export {
 } from './asset-service.js';
 
 export {
+  createMushroomGachaAdminServicePort
+} from './gacha-admin-service.js';
+
+export {
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE,
   WALLET_PAYMENT_SURFACES,

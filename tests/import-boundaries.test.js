@@ -22,6 +22,7 @@ function rel(file) {
 
 const quarantinedMushroomPortFiles = new Set([
   'src/server/ports/mushroom/economy/asset-service.js',
+  'src/server/ports/mushroom/economy/gacha-admin-service.js',
   'src/server/ports/mushroom/economy/index.d.ts',
   'src/server/ports/mushroom/economy/index.js',
   'src/server/ports/mushroom/economy/wallet-service.js',

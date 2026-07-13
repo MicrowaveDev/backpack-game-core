@@ -24,6 +24,52 @@ export interface MushroomAssetServicePortOptions {
   env?: Record<string, string | undefined>;
 }
 
+export interface MushroomGachaAdminServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  withTransaction: <T>(fn: (client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }) => Promise<T>) => Promise<T>;
+  characterVariants: Record<string, unknown[]>;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  parseJson?: (value: unknown, fallback?: unknown) => unknown;
+  getAssetCatalog: () => unknown[];
+  getRuntimeAssetCatalog: (options?: Record<string, unknown>) => Promise<unknown[]>;
+  shapeAssetPack: (pack: unknown, options?: Record<string, unknown>) => unknown;
+  validateAssetPack: (pack: unknown, options?: Record<string, unknown>) => unknown;
+  walletCurrencyCode?: string;
+  writePlanImage: (input: {
+    seasonId: string;
+    itemId: string;
+    buffer: Uint8Array;
+    mimeType: string;
+    extension: string;
+  }) => Promise<{ imagePath: string }>;
+  deletePlanImage: (imagePath: string) => Promise<void>;
+  env?: Record<string, string | undefined>;
+}
+
+export interface MushroomGachaAdminServicePort {
+  listGachaAdminCatalog(): Promise<unknown>;
+  exportGachaAdminFixture(): Promise<unknown>;
+  importGachaAdminFixture(options?: Record<string, unknown>): Promise<unknown>;
+  createGachaPlanItem(options?: Record<string, unknown>): Promise<unknown>;
+  updateGachaPlanItem(options?: Record<string, unknown>): Promise<unknown>;
+  deleteGachaPlanItem(options?: Record<string, unknown>): Promise<unknown>;
+  createGachaSeason(options?: Record<string, unknown>): Promise<unknown>;
+  updateGachaSeason(options?: Record<string, unknown>): Promise<unknown>;
+  createGachaCollection(options?: Record<string, unknown>): Promise<unknown>;
+  updateGachaCollection(options?: Record<string, unknown>): Promise<unknown>;
+  createGachaPack(options?: Record<string, unknown>): Promise<unknown>;
+  updateGachaPack(options?: Record<string, unknown>): Promise<unknown>;
+  createGachaPackItem(options?: Record<string, unknown>): Promise<unknown>;
+  updateGachaPackItem(options?: Record<string, unknown>): Promise<unknown>;
+  deleteGachaPackItem(options?: Record<string, unknown>): Promise<unknown>;
+  replaceGachaPackItems(options?: Record<string, unknown>): Promise<unknown>;
+  promoteGachaPlanItemsToPack(options?: Record<string, unknown>): Promise<unknown>;
+  validateGachaAdminPack(options?: Record<string, unknown>): Promise<unknown>;
+  previewGachaAdminPack(options?: Record<string, unknown>): Promise<unknown>;
+  transitionGachaPack(options?: Record<string, unknown>): Promise<unknown>;
+}
+
 export interface MushroomAssetServicePort {
   activeGachaPackIds(): string[];
   assetGachaDbPacksEnabled(): boolean;
@@ -91,4 +137,5 @@ export declare const WALLET_PURCHASE_PROVIDERS: Set<string>;
 export declare const WALLET_PURCHASE_STATUSES: Set<string>;
 
 export declare function createMushroomAssetServicePort(options?: MushroomAssetServicePortOptions): MushroomAssetServicePort;
+export declare function createMushroomGachaAdminServicePort(options?: MushroomGachaAdminServicePortOptions): MushroomGachaAdminServicePort;
 export declare function createMushroomWalletServicePort(options?: MushroomWalletServicePortOptions): MushroomWalletServicePort;

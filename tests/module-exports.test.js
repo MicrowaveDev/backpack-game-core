@@ -223,6 +223,7 @@ import {
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/gameplay';
 import {
   createMushroomAssetServicePort,
+  createMushroomGachaAdminServicePort,
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/economy';
@@ -490,6 +491,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(typeof createMushroomShopServicePort, 'function');
   assert.equal(typeof createSeasonProgressPort, 'function');
   assert.equal(typeof createMushroomAssetServicePort, 'function');
+  assert.equal(typeof createMushroomGachaAdminServicePort, 'function');
   assert.equal(typeof createMushroomWalletServicePort, 'function');
   assert.equal(WALLET_CURRENCY_CODE, 'soft_coin');
   assert.equal(typeof initMushroomModels, 'function');

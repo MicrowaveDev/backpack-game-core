@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomGachaAdminServicePort()` to the quarantined Mushroom
+  economy port package after physically moving season, collection, pack,
+  plan-item, fixture import/export, promotion, simulation, release-checklist,
+  and audit orchestration behind injected persistence, character catalog,
+  asset service, wallet currency, clock/ID/JSON, env, and image-storage
+  providers. Mushroom keeps its filesystem paths, public asset directory,
+  permissions, routes, and product configuration in a thin local wrapper.
 - Added `createMushroomAssetServicePort()` to the quarantined Mushroom
   economy port package after physically moving Mushroom's profile asset
   catalog, direct purchase, equipment, runtime pack, gacha roll, duplicate
