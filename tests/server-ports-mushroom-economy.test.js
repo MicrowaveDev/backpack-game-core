@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   createMushroomAssetServicePort,
   createMushroomGachaAdminServicePort,
+  createMushroomProviderSettlementServicePort,
   createMushroomSupportMoneyServicePort,
   createMushroomSupportOpsServicePort,
+  createMushroomWalletOpsCheckServicePort,
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/economy';
@@ -13,9 +15,47 @@ test('[server-port][mushroom economy] exposes the wallet service factory', () =>
   assert.equal(WALLET_CURRENCY_CODE, 'soft_coin');
   assert.equal(typeof createMushroomAssetServicePort, 'function');
   assert.equal(typeof createMushroomGachaAdminServicePort, 'function');
+  assert.equal(typeof createMushroomProviderSettlementServicePort, 'function');
   assert.equal(typeof createMushroomSupportMoneyServicePort, 'function');
   assert.equal(typeof createMushroomSupportOpsServicePort, 'function');
+  assert.equal(typeof createMushroomWalletOpsCheckServicePort, 'function');
   assert.equal(typeof createMushroomWalletServicePort, 'function');
+});
+
+test('[server-port][mushroom economy] settlement service normalizes through injected provider policy', () => {
+  const port = createMushroomProviderSettlementServicePort({
+    query: async () => ({ rows: [], rowCount: 0 }),
+    withTransaction: async (work) => work({ query: async () => ({ rows: [], rowCount: 0 }) }),
+    createId: (prefix) => `${prefix}_1`,
+    nowIso: () => '2026-01-01T00:00:00.000Z',
+    walletPurchaseProviders: new Set(['crypto'])
+  });
+
+  const record = port.normalizeProviderSettlementRecord({
+    provider: 'crypto',
+    status: 'paid',
+    amount: '12.34',
+    currency: 'usd'
+  });
+  assert.equal(record.settlementStatus, 'completed');
+  assert.equal(record.priceAmount, 1234);
+  assert.equal(record.priceCurrency, 'USD');
+});
+
+test('[server-port][mushroom economy] wallet ops service composes injected audits', async () => {
+  const port = createMushroomWalletOpsCheckServicePort({
+    auditWalletMirror: async () => ({ total: 0 }),
+    reconcileWalletPayments: async () => ({
+      ok: true,
+      total: 0,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      categories: {}
+    })
+  });
+
+  const report = await port.runWalletOpsChecks({ limit: 10 });
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.paymentReconciliationIssues, 0);
 });
 
 test('[server-port][mushroom economy] support money lookup uses injected persistence', async () => {

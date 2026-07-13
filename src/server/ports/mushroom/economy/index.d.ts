@@ -104,6 +104,32 @@ export interface MushroomSupportOpsServicePort {
   listSupportActions(options?: Record<string, unknown>): Promise<unknown[]>;
 }
 
+export interface MushroomProviderSettlementServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  withTransaction: <T>(fn: (client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }) => Promise<T>) => Promise<T>;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  parseJson?: (value: unknown, fallback?: unknown) => unknown;
+  walletPurchaseProviders: Set<string>;
+}
+
+export interface MushroomProviderSettlementServicePort {
+  normalizeProviderSettlementRecord(record?: unknown, options?: Record<string, unknown>): unknown;
+  importProviderSettlementRecords(options?: Record<string, unknown>): Promise<unknown>;
+}
+
+export interface MushroomWalletOpsCheckServicePortOptions {
+  auditWalletMirror: (options?: Record<string, unknown>) => Promise<unknown>;
+  reconcileWalletPayments: (options?: Record<string, unknown>) => Promise<unknown>;
+  env?: Record<string, string | undefined>;
+  defaultFetch?: typeof fetch;
+}
+
+export interface MushroomWalletOpsCheckServicePort {
+  runWalletOpsChecks(options?: Record<string, unknown>): Promise<unknown>;
+  sendWalletOpsAlert(report: unknown, options?: Record<string, unknown>): Promise<unknown>;
+}
+
 export interface MushroomAssetServicePort {
   activeGachaPackIds(): string[];
   assetGachaDbPacksEnabled(): boolean;
@@ -174,4 +200,6 @@ export declare function createMushroomAssetServicePort(options?: MushroomAssetSe
 export declare function createMushroomGachaAdminServicePort(options?: MushroomGachaAdminServicePortOptions): MushroomGachaAdminServicePort;
 export declare function createMushroomSupportMoneyServicePort(options?: MushroomSupportMoneyServicePortOptions): MushroomSupportMoneyServicePort;
 export declare function createMushroomSupportOpsServicePort(options?: MushroomSupportOpsServicePortOptions): MushroomSupportOpsServicePort;
+export declare function createMushroomProviderSettlementServicePort(options?: MushroomProviderSettlementServicePortOptions): MushroomProviderSettlementServicePort;
+export declare function createMushroomWalletOpsCheckServicePort(options?: MushroomWalletOpsCheckServicePortOptions): MushroomWalletOpsCheckServicePort;
 export declare function createMushroomWalletServicePort(options?: MushroomWalletServicePortOptions): MushroomWalletServicePort;

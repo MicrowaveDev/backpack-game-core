@@ -15,6 +15,14 @@ export {
 } from './support-ops-service.js';
 
 export {
+  createMushroomProviderSettlementServicePort
+} from './provider-settlement-service.js';
+
+export {
+  createMushroomWalletOpsCheckServicePort
+} from './wallet-ops-check-service.js';
+
+export {
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE,
   WALLET_PAYMENT_SURFACES,

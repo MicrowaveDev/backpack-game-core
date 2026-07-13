@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomProviderSettlementServicePort()` and
+  `createMushroomWalletOpsCheckServicePort()` after physically moving external
+  settlement reconciliation/import and wallet operational reporting behind
+  injected persistence, provider policy, wallet audits, clock/ID/JSON, env,
+  and fetch providers. Concrete provider export field maps and alert
+  configuration remain product-owned.
 - Added `createMushroomSupportMoneyServicePort()` and
   `createMushroomSupportOpsServicePort()` after physically moving Mushroom's
   support lookup, wallet adjustment, asset grant/revoke/freeze/unfreeze,
