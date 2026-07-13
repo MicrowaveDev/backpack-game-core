@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added framework-neutral profile, wallet, and asset route-group factories.
+  Consumers inject handlers and policy middleware while core owns stable route
+  names, default paths, access metadata, and descriptor assembly. Route
+  middleware is de-duplicated when a route key is also its access-policy key,
+  preventing repeated rate limits or idempotency guards.
 - Added framework-neutral `createBotRouteGroup()` and `createWikiRouteGroup()`
   descriptor factories. Consumers inject handlers and access middleware while
   core owns route names, default paths, feature metadata, and group assembly.

@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   AUTH_ROUTE_NAMES,
   BOT_ROUTE_NAMES,
+  ASSET_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
+  createAssetRouteGroup,
   createAuthRouteGroup,
   createBotRouteGroup,
   createAuthRoutesServerModule,
@@ -15,12 +17,14 @@ import {
   createGhostLoadoutService,
   createHostedCommunityClientServerModule,
   createLoadoutValidationServerModule,
+  createProfileRouteGroup,
   createReadyManagerExports,
   createRunReadinessServerModule,
   createServerGachaSimulationService,
   createServerLoadoutUtils,
   createSocialPreviewCacheServerModule,
   createWikiRouteGroup,
+  createWalletRouteGroup,
   flattenBackpackRouteDescriptors,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
@@ -311,6 +315,31 @@ test('[server] bot and wiki route groups preserve product handlers and access mi
     '/api/wiki/characters/:slug'
   ]);
   assert.equal(wikiRoutes[1].meta.section, 'characters');
+});
+
+test('[server] profile, wallet, and asset route groups compose access-specific middleware', () => {
+  const auth = () => {};
+  const mutation = () => {};
+  const purchase = () => {};
+  const handler = () => {};
+  const groups = [
+    createProfileRouteGroup({ handlers: { profile: handler }, middleware: { auth } }),
+    createWalletRouteGroup({ handlers: { state: handler }, middleware: { auth } }),
+    createAssetRouteGroup({
+      handlers: { catalog: handler, roll: handler, purchase: handler },
+      middleware: { auth, mutation, purchase }
+    })
+  ];
+  const routes = flattenBackpackRouteDescriptors(groups);
+  assert.deepEqual(routes.map((route) => route.name), [
+    'profile.get',
+    'wallet.state',
+    ASSET_ROUTE_NAMES.catalog,
+    ASSET_ROUTE_NAMES.roll,
+    ASSET_ROUTE_NAMES.purchase
+  ]);
+  assert.deepEqual(routes[3].handlers, [mutation, handler]);
+  assert.deepEqual(routes[4].handlers, [purchase, handler]);
 });
 
 test('[server] auth route module resolves handlers and middleware from providers', () => {

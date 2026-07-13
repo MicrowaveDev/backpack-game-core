@@ -129,6 +129,50 @@ export const WIKI_ROUTE_NAMES = Object.freeze({
   entry: 'wiki.entry'
 });
 
+export const PROFILE_ROUTE_NAMES = Object.freeze({
+  activeCharacter: 'profile.activeCharacter',
+  profile: 'profile.get',
+  settings: 'profile.settings'
+});
+
+const PROFILE_ROUTE_DEFINITIONS = Object.freeze({
+  profile: Object.freeze({ name: PROFILE_ROUTE_NAMES.profile, method: 'get', path: '/profile', access: 'auth' }),
+  activeCharacter: Object.freeze({ name: PROFILE_ROUTE_NAMES.activeCharacter, method: 'put', path: '/active-character', access: 'auth' }),
+  settings: Object.freeze({ name: PROFILE_ROUTE_NAMES.settings, method: 'post', path: '/settings', access: 'auth' })
+});
+
+export const WALLET_ROUTE_NAMES = Object.freeze({
+  bundles: 'wallet.bundles',
+  purchaseIntent: 'wallet.purchaseIntent',
+  state: 'wallet.state',
+  webhook: 'wallet.webhook'
+});
+
+const WALLET_ROUTE_DEFINITIONS = Object.freeze({
+  state: Object.freeze({ name: WALLET_ROUTE_NAMES.state, method: 'get', path: '/wallet', access: 'auth' }),
+  bundles: Object.freeze({ name: WALLET_ROUTE_NAMES.bundles, method: 'get', path: '/wallet/bundles', access: 'auth' }),
+  purchaseIntent: Object.freeze({ name: WALLET_ROUTE_NAMES.purchaseIntent, method: 'post', path: '/wallet/purchase-intents', access: 'auth' }),
+  webhook: Object.freeze({ name: WALLET_ROUTE_NAMES.webhook, method: 'post', path: '/wallet/purchase-webhook/:provider', access: 'webhook' })
+});
+
+export const ASSET_ROUTE_NAMES = Object.freeze({
+  burn: 'assets.burn',
+  catalog: 'assets.catalog',
+  equip: 'assets.equip',
+  odds: 'assets.odds',
+  purchase: 'assets.purchase',
+  roll: 'assets.roll'
+});
+
+const ASSET_ROUTE_DEFINITIONS = Object.freeze({
+  catalog: Object.freeze({ name: ASSET_ROUTE_NAMES.catalog, method: 'get', path: '/assets/catalog', access: 'auth' }),
+  odds: Object.freeze({ name: ASSET_ROUTE_NAMES.odds, method: 'get', path: '/assets/packs/:packId/odds', access: 'auth' }),
+  roll: Object.freeze({ name: ASSET_ROUTE_NAMES.roll, method: 'post', path: '/assets/packs/:packId/roll', access: 'mutation' }),
+  burn: Object.freeze({ name: ASSET_ROUTE_NAMES.burn, method: 'post', path: '/assets/packs/:packId/burn', access: 'mutation' }),
+  purchase: Object.freeze({ name: ASSET_ROUTE_NAMES.purchase, method: 'post', path: '/assets/:assetId/purchase', access: 'purchase' }),
+  equip: Object.freeze({ name: ASSET_ROUTE_NAMES.equip, method: 'post', path: '/assets/:assetId/equip', access: 'profileMutation' })
+});
+
 function uniqueStrings(values, label) {
   const seen = new Set();
   const normalized = [];
@@ -302,13 +346,50 @@ function configuredRouteHandlers({ key, definition, routeConfig, handlers, middl
     ...(handlers?.[key] ? [handlers[key]] : [])
   ];
   if (!explicitHandlers.length) return [];
+  const routeMiddleware = key === definition.access ? [] : asHandlerArray(middleware?.[key]);
   return [
     ...asHandlerArray(middleware?.all),
     ...asHandlerArray(middleware?.[definition.access]),
-    ...asHandlerArray(middleware?.[key]),
+    ...routeMiddleware,
     ...asHandlerArray(routeConfig.middleware),
     ...explicitHandlers
   ];
+}
+
+function createDefinedRouteGroup({
+  name,
+  prefix,
+  feature,
+  definitions,
+  routes,
+  handlers,
+  middleware,
+  meta
+}) {
+  const descriptors = Object.entries(definitions).flatMap(([key, definition]) => {
+    const routeConfig = routeConfigFor(key, routes);
+    if (routeConfig.disabled || routeConfig.enabled === false) return [];
+    const routeHandlers = configuredRouteHandlers({ key, definition, routeConfig, handlers, middleware });
+    if (!routeHandlers.length) return [];
+    return [createBackpackRouteDescriptor({
+      name: routeConfig.name || definition.name,
+      method: routeConfig.method || definition.method,
+      path: routeConfig.path || definition.path,
+      handlers: routeHandlers,
+      meta: {
+        feature,
+        access: definition.access,
+        routeKey: key,
+        ...(routeConfig.meta || {})
+      }
+    })];
+  });
+  return createBackpackRouteGroup({
+    name,
+    prefix,
+    routes: descriptors,
+    meta: { feature, ...meta }
+  });
 }
 
 export function createAuthRouteGroup({
@@ -379,6 +460,45 @@ export function createBotRouteGroup({
     prefix,
     routes: descriptors,
     meta: { feature: 'bot', ...meta }
+  });
+}
+
+export function createProfileRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'profileRoutes',
+    prefix: options.prefix || '/api',
+    feature: 'profile',
+    definitions: PROFILE_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
+  });
+}
+
+export function createWalletRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'walletRoutes',
+    prefix: options.prefix || '/api',
+    feature: 'wallet',
+    definitions: WALLET_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
+  });
+}
+
+export function createAssetRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'assetRoutes',
+    prefix: options.prefix || '/api',
+    feature: 'assets',
+    definitions: ASSET_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
   });
 }
 

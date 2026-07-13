@@ -117,6 +117,28 @@ export declare const WIKI_ROUTE_NAMES: Readonly<{
   entry: 'wiki.entry';
 }>;
 
+export declare const PROFILE_ROUTE_NAMES: Readonly<{
+  activeCharacter: 'profile.activeCharacter';
+  profile: 'profile.get';
+  settings: 'profile.settings';
+}>;
+
+export declare const WALLET_ROUTE_NAMES: Readonly<{
+  bundles: 'wallet.bundles';
+  purchaseIntent: 'wallet.purchaseIntent';
+  state: 'wallet.state';
+  webhook: 'wallet.webhook';
+}>;
+
+export declare const ASSET_ROUTE_NAMES: Readonly<{
+  burn: 'assets.burn';
+  catalog: 'assets.catalog';
+  equip: 'assets.equip';
+  odds: 'assets.odds';
+  purchase: 'assets.purchase';
+  roll: 'assets.roll';
+}>;
+
 export type Rng = () => number;
 
 export declare const DEFAULT_CHARACTER_XP_LEVEL_CURVE: readonly number[];
@@ -214,6 +236,15 @@ export interface WikiRouteGroupOptions {
   home?: BackpackRouteHandler | (Partial<BackpackRouteDescriptorInput> & { handler: BackpackRouteHandler });
   entries?: WikiEntryRouteConfig[];
   middleware?: BackpackRouteHandler | BackpackRouteHandler[];
+  meta?: Record<string, unknown>;
+}
+
+export interface FeatureRouteGroupOptions<RouteKey extends string> {
+  name?: string;
+  prefix?: string;
+  routes?: Partial<Record<RouteKey, BackpackAuthRouteConfig | BackpackRouteHandler | false>>;
+  handlers?: Partial<Record<RouteKey, BackpackRouteHandler>>;
+  middleware?: Partial<Record<RouteKey | 'all' | 'auth' | 'mutation' | 'purchase' | 'profileMutation' | 'webhook', BackpackRouteHandler | BackpackRouteHandler[]>>;
   meta?: Record<string, unknown>;
 }
 
@@ -337,6 +368,15 @@ export declare function bindBackpackRouteDescriptors(
 export declare function createAuthRouteGroup(options?: AuthRouteGroupOptions): BackpackRouteGroup;
 export declare function createBotRouteGroup(options?: BotRouteGroupOptions): BackpackRouteGroup;
 export declare function createWikiRouteGroup(options?: WikiRouteGroupOptions): BackpackRouteGroup;
+export declare function createProfileRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof PROFILE_ROUTE_NAMES>
+): BackpackRouteGroup;
+export declare function createWalletRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof WALLET_ROUTE_NAMES>
+): BackpackRouteGroup;
+export declare function createAssetRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof ASSET_ROUTE_NAMES>
+): BackpackRouteGroup;
 
 export interface AuthRoutesServerModuleOptions extends AuthRouteGroupOptions {
   name?: string;
