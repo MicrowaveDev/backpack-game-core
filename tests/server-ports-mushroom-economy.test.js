@@ -39,7 +39,8 @@ test('[server-port][mushroom economy] gacha admin service uses injected catalog 
     writePlanImage: async ({ seasonId, itemId, extension }) => ({
       imagePath: `/gacha-plan/${seasonId}/${itemId}.${extension}`
     }),
-    deletePlanImage: async () => {}
+    deletePlanImage: async () => {},
+    recordAdminAction: async (_client, input) => input
   });
 
   const catalog = await port.listGachaAdminCatalog();

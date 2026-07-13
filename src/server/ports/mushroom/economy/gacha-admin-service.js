@@ -50,6 +50,7 @@ export function createMushroomGachaAdminServicePort(options = {}) {
     walletCurrencyCode = 'soft_coin',
     writePlanImage = requiredDependency('writePlanImage'),
     deletePlanImage = requiredDependency('deletePlanImage'),
+    recordAdminAction = requiredDependency('recordAdminAction'),
     env = process.env
   } = options;
 
@@ -152,23 +153,6 @@ function gachaAdminInputError(message) {
   const err = new Error(message);
   err.statusCode = 400;
   return err;
-}
-
-function rowToSupportAction(row) {
-  return {
-    id: row.id,
-    actorId: row.actor_id,
-    actionType: row.action_type,
-    playerId: row.player_id || null,
-    targetType: row.target_type,
-    targetId: row.target_id || null,
-    status: row.status,
-    reason: row.reason || null,
-    note: row.note || '',
-    evidence: parseJson(row.evidence_json, {}),
-    result: parseJson(row.result_json, {}),
-    createdAt: row.created_at
-  };
 }
 
 function rowToSeason(row) {
@@ -557,28 +541,17 @@ async function insertAdminAction(client, {
   evidence = {},
   result = {}
 }) {
-  const id = createId('support');
-  await client.query(
-    `INSERT INTO support_actions
-     (id, actor_id, action_type, player_id, target_type, target_id, status,
-      reason, note, evidence_json, result_json, created_at)
-     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11)`,
-    [
-      id,
-      actorId,
-      actionType,
-      targetType,
-      targetId,
-      status,
-      reason,
-      note,
-      JSON.stringify(evidence || {}),
-      JSON.stringify(result || {}),
-      nowIso()
-    ]
-  );
-  const inserted = await client.query(`SELECT * FROM support_actions WHERE id = $1`, [id]);
-  return rowToSupportAction(inserted.rows[0]);
+  return recordAdminAction(client, {
+    actorId,
+    actionType,
+    targetType,
+    targetId,
+    status,
+    reason,
+    note,
+    evidence,
+    result
+  });
 }
 
 async function findOne(client, table, id) {

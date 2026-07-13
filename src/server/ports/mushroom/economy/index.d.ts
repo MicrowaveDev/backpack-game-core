@@ -44,6 +44,7 @@ export interface MushroomGachaAdminServicePortOptions {
     extension: string;
   }) => Promise<{ imagePath: string }>;
   deletePlanImage: (imagePath: string) => Promise<void>;
+  recordAdminAction: (client: unknown, input: Record<string, unknown>) => Promise<unknown>;
   env?: Record<string, string | undefined>;
 }
 
