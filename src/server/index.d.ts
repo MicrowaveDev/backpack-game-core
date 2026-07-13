@@ -103,6 +103,20 @@ export interface BackpackAuthRouteConfig extends Partial<BackpackRouteDescriptor
   enabled?: boolean;
 }
 
+export declare const BOT_ROUTE_NAMES: Readonly<{
+  discovery: 'bot.discovery';
+  gameScore: 'bot.gameScore';
+  start: 'bot.start';
+  webhook: 'bot.webhook';
+}>;
+
+export type BackpackBotRouteKey = keyof typeof BOT_ROUTE_NAMES;
+
+export declare const WIKI_ROUTE_NAMES: Readonly<{
+  home: 'wiki.home';
+  entry: 'wiki.entry';
+}>;
+
 export type Rng = () => number;
 
 export declare const DEFAULT_CHARACTER_XP_LEVEL_CURVE: readonly number[];
@@ -177,6 +191,29 @@ export interface AuthRouteGroupOptions {
   routes?: Partial<Record<BackpackAuthRouteKey, BackpackAuthRouteConfig | BackpackRouteHandler | false>>;
   handlers?: Partial<Record<BackpackAuthRouteKey, BackpackRouteHandler>>;
   middleware?: Partial<Record<BackpackAuthRouteKey | 'all' | 'auth' | 'dev' | 'public', BackpackRouteHandler | BackpackRouteHandler[]>>;
+  meta?: Record<string, unknown>;
+}
+
+export interface BotRouteGroupOptions {
+  name?: string;
+  prefix?: string;
+  routes?: Partial<Record<BackpackBotRouteKey, BackpackAuthRouteConfig | BackpackRouteHandler | false>>;
+  handlers?: Partial<Record<BackpackBotRouteKey, BackpackRouteHandler>>;
+  middleware?: Partial<Record<BackpackBotRouteKey | 'all' | 'auth' | 'public' | 'webhook', BackpackRouteHandler | BackpackRouteHandler[]>>;
+  meta?: Record<string, unknown>;
+}
+
+export interface WikiEntryRouteConfig extends Partial<BackpackRouteDescriptorInput> {
+  section?: string;
+  handler: BackpackRouteHandler;
+}
+
+export interface WikiRouteGroupOptions {
+  name?: string;
+  prefix?: string;
+  home?: BackpackRouteHandler | (Partial<BackpackRouteDescriptorInput> & { handler: BackpackRouteHandler });
+  entries?: WikiEntryRouteConfig[];
+  middleware?: BackpackRouteHandler | BackpackRouteHandler[];
   meta?: Record<string, unknown>;
 }
 
@@ -298,6 +335,8 @@ export declare function bindBackpackRouteDescriptors(
   }
 ): BackpackRouteDescriptor[];
 export declare function createAuthRouteGroup(options?: AuthRouteGroupOptions): BackpackRouteGroup;
+export declare function createBotRouteGroup(options?: BotRouteGroupOptions): BackpackRouteGroup;
+export declare function createWikiRouteGroup(options?: WikiRouteGroupOptions): BackpackRouteGroup;
 
 export interface AuthRoutesServerModuleOptions extends AuthRouteGroupOptions {
   name?: string;

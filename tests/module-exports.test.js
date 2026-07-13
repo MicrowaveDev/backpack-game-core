@@ -172,11 +172,13 @@ import {
 } from '@microwavedev/backpack-game-core/modules/fusion';
 import {
   AUTH_ROUTE_NAMES,
+  BOT_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   clearIdempotencyCache,
   clearRateLimitBuckets,
   createAssetGachaSimulationServerModule,
   createAuthRouteGroup,
+  createBotRouteGroup,
   createAuthRoutesServerModule,
   createGhostLoadoutService,
   createKeyedAsyncMutex,
@@ -188,6 +190,7 @@ import {
   createRequestLogger,
   createRng,
   createSessionKey,
+  createWikiRouteGroup,
   createShortCode,
   createStructuredLogger,
   createLoadoutValidationServerModule,
@@ -721,6 +724,9 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof bindBackpackRouteDescriptors, 'function');
   assert.equal(AUTH_ROUTE_NAMES.providerLogin, 'auth.providerLogin');
   assert.equal(typeof createAuthRouteGroup, 'function');
+  assert.equal(BOT_ROUTE_NAMES.webhook, 'bot.webhook');
+  assert.equal(typeof createBotRouteGroup, 'function');
+  assert.equal(typeof createWikiRouteGroup, 'function');
   assert.equal(typeof createAuthRoutesServerModule, 'function');
   assert.equal(typeof createGhostLoadoutService, 'function');
   assert.equal(typeof createServerLoadoutUtils, 'function');

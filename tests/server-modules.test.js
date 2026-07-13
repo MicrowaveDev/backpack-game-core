@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AUTH_ROUTE_NAMES,
+  BOT_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
   createAuthRouteGroup,
+  createBotRouteGroup,
   createAuthRoutesServerModule,
   createBackpackServerContext,
   createBackpackServerModule,
@@ -18,6 +20,7 @@ import {
   createServerGachaSimulationService,
   createServerLoadoutUtils,
   createSocialPreviewCacheServerModule,
+  createWikiRouteGroup,
   flattenBackpackRouteDescriptors,
   setupBackpackServerModules
 } from '@microwavedev/backpack-game-core/server';
@@ -280,6 +283,34 @@ test('[server] auth route group builds product-configurable route descriptors', 
   assert.deepEqual(routes[1].handlers, [publicGate, providerLogin]);
   assert.equal(routes[1].meta.feature, 'auth');
   assert.equal(routes[1].meta.routeKey, 'providerLogin');
+});
+
+test('[server] bot and wiki route groups preserve product handlers and access middleware', () => {
+  const authGate = () => {};
+  const webhookGate = () => {};
+  const discovery = () => {};
+  const score = () => {};
+  const botRoutes = flattenBackpackRouteDescriptors([createBotRouteGroup({
+    handlers: { discovery, gameScore: score },
+    middleware: { auth: authGate, webhook: webhookGate }
+  })]);
+  assert.deepEqual(botRoutes.map((route) => route.name), [
+    BOT_ROUTE_NAMES.discovery,
+    BOT_ROUTE_NAMES.gameScore
+  ]);
+  assert.deepEqual(botRoutes[1].handlers, [authGate, score]);
+
+  const home = () => {};
+  const entry = () => {};
+  const wikiRoutes = flattenBackpackRouteDescriptors([createWikiRouteGroup({
+    home,
+    entries: [{ section: 'characters', handler: entry }]
+  })]);
+  assert.deepEqual(wikiRoutes.map((route) => route.path), [
+    '/api/wiki/home',
+    '/api/wiki/characters/:slug'
+  ]);
+  assert.equal(wikiRoutes[1].meta.section, 'characters');
 });
 
 test('[server] auth route module resolves handlers and middleware from providers', () => {

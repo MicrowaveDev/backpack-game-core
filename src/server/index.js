@@ -110,6 +110,25 @@ const AUTH_ROUTE_DEFINITIONS = Object.freeze({
   })
 });
 
+export const BOT_ROUTE_NAMES = Object.freeze({
+  discovery: 'bot.discovery',
+  gameScore: 'bot.gameScore',
+  start: 'bot.start',
+  webhook: 'bot.webhook'
+});
+
+const BOT_ROUTE_DEFINITIONS = Object.freeze({
+  discovery: Object.freeze({ name: BOT_ROUTE_NAMES.discovery, method: 'get', path: '/bot/discovery', access: 'public' }),
+  start: Object.freeze({ name: BOT_ROUTE_NAMES.start, method: 'post', path: '/bot/start', access: 'public' }),
+  webhook: Object.freeze({ name: BOT_ROUTE_NAMES.webhook, method: 'post', path: '/bot/webhook', access: 'webhook' }),
+  gameScore: Object.freeze({ name: BOT_ROUTE_NAMES.gameScore, method: 'post', path: '/bot/game-score', access: 'auth' })
+});
+
+export const WIKI_ROUTE_NAMES = Object.freeze({
+  home: 'wiki.home',
+  entry: 'wiki.entry'
+});
+
 function uniqueStrings(values, label) {
   const seen = new Set();
   const normalized = [];
@@ -326,6 +345,83 @@ export function createAuthRouteGroup({
       feature: 'auth',
       ...meta
     }
+  });
+}
+
+export function createBotRouteGroup({
+  name = 'botRoutes',
+  prefix = '/api',
+  routes = {},
+  handlers = {},
+  middleware = {},
+  meta = {}
+} = {}) {
+  const descriptors = Object.entries(BOT_ROUTE_DEFINITIONS).flatMap(([key, definition]) => {
+    const routeConfig = routeConfigFor(key, routes);
+    if (routeConfig.disabled || routeConfig.enabled === false) return [];
+    const routeHandlers = configuredRouteHandlers({ key, definition, routeConfig, handlers, middleware });
+    if (!routeHandlers.length) return [];
+    return [createBackpackRouteDescriptor({
+      name: routeConfig.name || definition.name,
+      method: routeConfig.method || definition.method,
+      path: routeConfig.path || definition.path,
+      handlers: routeHandlers,
+      meta: {
+        feature: 'bot',
+        access: definition.access,
+        routeKey: key,
+        ...(routeConfig.meta || {})
+      }
+    })];
+  });
+  return createBackpackRouteGroup({
+    name,
+    prefix,
+    routes: descriptors,
+    meta: { feature: 'bot', ...meta }
+  });
+}
+
+export function createWikiRouteGroup({
+  name = 'wikiRoutes',
+  prefix = '/api/wiki',
+  home,
+  entries = [],
+  middleware = [],
+  meta = {}
+} = {}) {
+  const commonMiddleware = asHandlerArray(middleware);
+  const descriptors = [];
+  if (home) {
+    const homeConfig = typeof home === 'function' ? { handler: home } : home;
+    descriptors.push(createBackpackRouteDescriptor({
+      name: homeConfig.name || WIKI_ROUTE_NAMES.home,
+      method: homeConfig.method || 'get',
+      path: homeConfig.path || '/home',
+      handlers: [...commonMiddleware, ...asHandlerArray(homeConfig.middleware), homeConfig.handler],
+      meta: { feature: 'wiki', routeKey: 'home', ...(homeConfig.meta || {}) }
+    }));
+  }
+  for (const entry of asArray(entries)) {
+    if (!entry?.handler) throw new Error('Wiki entry route requires a handler');
+    descriptors.push(createBackpackRouteDescriptor({
+      name: entry.name || `${WIKI_ROUTE_NAMES.entry}.${entry.section || 'default'}`,
+      method: entry.method || 'get',
+      path: entry.path || `/${entry.section}/:slug`,
+      handlers: [...commonMiddleware, ...asHandlerArray(entry.middleware), entry.handler],
+      meta: {
+        feature: 'wiki',
+        routeKey: 'entry',
+        section: entry.section || null,
+        ...(entry.meta || {})
+      }
+    }));
+  }
+  return createBackpackRouteGroup({
+    name,
+    prefix,
+    routes: descriptors,
+    meta: { feature: 'wiki', ...meta }
   });
 }
 

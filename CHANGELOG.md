@@ -8,6 +8,9 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added framework-neutral `createBotRouteGroup()` and `createWikiRouteGroup()`
+  descriptor factories. Consumers inject handlers and access middleware while
+  core owns route names, default paths, feature metadata, and group assembly.
 - Added `createWikiServicePort()` in the platform package after physically
   moving frontmatter parsing, Markdown block shaping, section indexes, related
   entry resolution, and progression-tier gating behind injected filesystem,
