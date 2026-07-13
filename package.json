@@ -93,6 +93,10 @@
       "types": "./src/server/ports/mushroom/economy/index.d.ts",
       "import": "./src/server/ports/mushroom/economy/index.js"
     },
+    "./server/ports/mushroom/platform": {
+      "types": "./src/server/ports/mushroom/platform/index.d.ts",
+      "import": "./src/server/ports/mushroom/platform/index.js"
+    },
     "./vue": {
       "types": "./src/vue/index.d.ts",
       "import": "./src/vue/index.js"

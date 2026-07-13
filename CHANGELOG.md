@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomAuthServicePort()` in the quarantined Mushroom platform
+  port package after physically moving session login/logout, provider init-data
+  verification, browser auth codes, player-default initialization, auth pruning,
+  and request authentication behind injected DB/transaction, character catalog,
+  crypto, clock, randomness, ID, language, and session-policy providers.
+  Mushroom keeps credentials, environment policy, route registration, and the
+  concrete legacy table contract in its local adapter.
 - Added `createMushroomProviderSettlementServicePort()` and
   `createMushroomWalletOpsCheckServicePort()` after physically moving external
   settlement reconciliation/import and wallet operational reporting behind
