@@ -53,3 +53,13 @@ this repo is checked out under the hub:
 - Run `npm test` after core behavior or export changes.
 - Run `npm pack --dry-run` after adding exports or files that should ship.
 - Keep package subpath exports and `.d.ts` declarations in sync.
+
+## Node Tooling
+
+- Reusable script engines live under the Node-only `tooling/*` exports. Keep
+  repository roots, catalogs, command aliases, suite maps, environment policy,
+  logging, and process exit policy in consumer wrappers.
+- Do not re-export Node tooling from the package root, `client`, or `vue`.
+- Product script entry points must import package subpaths, never core source
+  paths. Browser tooling such as Puppeteer and Playwright remains a consumer
+  dependency; core runner helpers only orchestrate injected commands.

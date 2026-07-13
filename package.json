@@ -65,6 +65,22 @@
       "types": "./src/profile-asset-state.d.ts",
       "import": "./src/profile-asset-state.js"
     },
+    "./tooling/image": {
+      "types": "./src/tooling/image.d.ts",
+      "import": "./src/tooling/image.js"
+    },
+    "./tooling/provenance": {
+      "types": "./src/tooling/provenance.d.ts",
+      "import": "./src/tooling/provenance.js"
+    },
+    "./tooling/commands": {
+      "types": "./src/tooling/commands.d.ts",
+      "import": "./src/tooling/commands.js"
+    },
+    "./tooling/runners": {
+      "types": "./src/tooling/runners.d.ts",
+      "import": "./src/tooling/runners.js"
+    },
     "./client": {
       "types": "./src/client/index.d.ts",
       "import": "./src/client/index.js"

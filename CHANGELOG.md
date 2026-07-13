@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added Node-only `tooling/image`, `tooling/provenance`, `tooling/commands`, and
+  `tooling/runners` exports after physically moving the reusable Mushroom script
+  engines. Repository roots, command manifests, browser suite maps, product
+  asset catalogs, and process policy are injected by consumer wrappers.
+
 - Added persistence-neutral `run-runtime/v1` orchestration through
   `createRunRuntimeService()`. Products inject one atomic adapter per run
   operation and retain transactions, repositories, rewards, events, policy,
