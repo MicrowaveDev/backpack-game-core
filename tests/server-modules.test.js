@@ -4,6 +4,7 @@ import {
   AUTH_ROUTE_NAMES,
   BOT_ROUTE_NAMES,
   ASSET_ROUTE_NAMES,
+  SOCIAL_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
   createAssetRouteGroup,
@@ -22,6 +23,7 @@ import {
   createRunReadinessServerModule,
   createServerGachaSimulationService,
   createServerLoadoutUtils,
+  createSocialRouteGroup,
   createSocialPreviewCacheServerModule,
   createWikiRouteGroup,
   createWalletRouteGroup,
@@ -340,6 +342,30 @@ test('[server] profile, wallet, and asset route groups compose access-specific m
   ]);
   assert.deepEqual(routes[3].handlers, [mutation, handler]);
   assert.deepEqual(routes[4].handlers, [purchase, handler]);
+});
+
+test('[server] social route group exposes stable community paths with injected auth', () => {
+  const auth = () => {};
+  const handler = () => {};
+  const routes = flattenBackpackRouteDescriptors([createSocialRouteGroup({
+    handlers: {
+      friends: handler,
+      createChallenge: handler,
+      leaderboard: handler
+    },
+    middleware: { auth }
+  })]);
+  assert.deepEqual(routes.map((route) => route.name), [
+    SOCIAL_ROUTE_NAMES.friends,
+    SOCIAL_ROUTE_NAMES.createChallenge,
+    SOCIAL_ROUTE_NAMES.leaderboard
+  ]);
+  assert.deepEqual(routes.map((route) => route.path), [
+    '/api/friends',
+    '/api/friends/challenges',
+    '/api/leaderboard'
+  ]);
+  assert.deepEqual(routes[1].handlers, [auth, handler]);
 });
 
 test('[server] auth route module resolves handlers and middleware from providers', () => {

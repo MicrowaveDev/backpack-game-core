@@ -164,6 +164,26 @@ export const ASSET_ROUTE_NAMES = Object.freeze({
   roll: 'assets.roll'
 });
 
+export const SOCIAL_ROUTE_NAMES = Object.freeze({
+  acceptChallenge: 'social.acceptChallenge',
+  addFriendByCode: 'social.addFriendByCode',
+  createChallenge: 'social.createChallenge',
+  declineChallenge: 'social.declineChallenge',
+  friends: 'social.friends',
+  getChallenge: 'social.getChallenge',
+  leaderboard: 'social.leaderboard'
+});
+
+const SOCIAL_ROUTE_DEFINITIONS = Object.freeze({
+  friends: Object.freeze({ name: SOCIAL_ROUTE_NAMES.friends, method: 'get', path: '/friends', access: 'auth' }),
+  addFriendByCode: Object.freeze({ name: SOCIAL_ROUTE_NAMES.addFriendByCode, method: 'post', path: '/friends/add-by-code', access: 'auth' }),
+  createChallenge: Object.freeze({ name: SOCIAL_ROUTE_NAMES.createChallenge, method: 'post', path: '/friends/challenges', access: 'auth' }),
+  getChallenge: Object.freeze({ name: SOCIAL_ROUTE_NAMES.getChallenge, method: 'get', path: '/friends/challenges/:id', access: 'auth' }),
+  acceptChallenge: Object.freeze({ name: SOCIAL_ROUTE_NAMES.acceptChallenge, method: 'post', path: '/friends/challenges/:id/accept', access: 'auth' }),
+  declineChallenge: Object.freeze({ name: SOCIAL_ROUTE_NAMES.declineChallenge, method: 'post', path: '/friends/challenges/:id/decline', access: 'auth' }),
+  leaderboard: Object.freeze({ name: SOCIAL_ROUTE_NAMES.leaderboard, method: 'get', path: '/leaderboard', access: 'auth' })
+});
+
 const ASSET_ROUTE_DEFINITIONS = Object.freeze({
   catalog: Object.freeze({ name: ASSET_ROUTE_NAMES.catalog, method: 'get', path: '/assets/catalog', access: 'auth' }),
   odds: Object.freeze({ name: ASSET_ROUTE_NAMES.odds, method: 'get', path: '/assets/packs/:packId/odds', access: 'auth' }),
@@ -495,6 +515,19 @@ export function createAssetRouteGroup(options = {}) {
     prefix: options.prefix || '/api',
     feature: 'assets',
     definitions: ASSET_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
+  });
+}
+
+export function createSocialRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'socialRoutes',
+    prefix: options.prefix || '/api',
+    feature: 'social',
+    definitions: SOCIAL_ROUTE_DEFINITIONS,
     routes: options.routes || {},
     handlers: options.handlers || {},
     middleware: options.middleware || {},

@@ -139,6 +139,16 @@ export declare const ASSET_ROUTE_NAMES: Readonly<{
   roll: 'assets.roll';
 }>;
 
+export declare const SOCIAL_ROUTE_NAMES: Readonly<{
+  acceptChallenge: 'social.acceptChallenge';
+  addFriendByCode: 'social.addFriendByCode';
+  createChallenge: 'social.createChallenge';
+  declineChallenge: 'social.declineChallenge';
+  friends: 'social.friends';
+  getChallenge: 'social.getChallenge';
+  leaderboard: 'social.leaderboard';
+}>;
+
 export type Rng = () => number;
 
 export declare const DEFAULT_CHARACTER_XP_LEVEL_CURVE: readonly number[];
@@ -376,6 +386,9 @@ export declare function createWalletRouteGroup(
 ): BackpackRouteGroup;
 export declare function createAssetRouteGroup(
   options?: FeatureRouteGroupOptions<keyof typeof ASSET_ROUTE_NAMES>
+): BackpackRouteGroup;
+export declare function createSocialRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof SOCIAL_ROUTE_NAMES>
 ): BackpackRouteGroup;
 
 export interface AuthRoutesServerModuleOptions extends AuthRouteGroupOptions {
