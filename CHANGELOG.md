@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createMushroomSupportMoneyServicePort()` and
+  `createMushroomSupportOpsServicePort()` after physically moving Mushroom's
+  support lookup, wallet adjustment, asset grant/revoke/freeze/unfreeze,
+  purchase refund, and action-list behavior behind injected persistence,
+  wallet, asset, audit, ID, clock, and JSON providers. Mushroom keeps operator
+  tokens, role/approval policy, routes, and concrete audit writes local.
 - Added `createMushroomGachaAdminServicePort()` to the quarantined Mushroom
   economy port package after physically moving season, collection, pack,
   plan-item, fixture import/export, promotion, simulation, release-checklist,

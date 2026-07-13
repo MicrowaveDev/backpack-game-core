@@ -71,6 +71,39 @@ export interface MushroomGachaAdminServicePort {
   transitionGachaPack(options?: Record<string, unknown>): Promise<unknown>;
 }
 
+export interface MushroomSupportMoneyServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  parseJson?: (value: unknown, fallback?: unknown) => unknown;
+}
+
+export interface MushroomSupportMoneyServicePort {
+  lookupMoneySupportRecords(options?: { query?: string; limit?: number }): Promise<unknown>;
+}
+
+export interface MushroomSupportOpsServicePortOptions {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>;
+  withTransaction: <T>(fn: (client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }) => Promise<T>) => Promise<T>;
+  createId: (prefix: string) => string;
+  nowIso: () => string;
+  parseJson?: (value: unknown, fallback?: unknown) => unknown;
+  grantCurrency: (client: unknown, input: Record<string, unknown>) => Promise<unknown>;
+  spendCurrency: (client: unknown, input: Record<string, unknown>) => Promise<unknown>;
+  walletCurrencyCode?: string;
+  getRuntimeAssetById: (assetId: string, options?: Record<string, unknown>) => Promise<unknown>;
+  parsePortraitAssetId: (assetId: string) => unknown;
+  recordSupportAction: (client: unknown, input: Record<string, unknown>) => Promise<unknown>;
+}
+
+export interface MushroomSupportOpsServicePort {
+  supportAdjustWallet(options?: Record<string, unknown>): Promise<unknown>;
+  supportGrantAsset(options?: Record<string, unknown>): Promise<unknown>;
+  supportRevokeAsset(options?: Record<string, unknown>): Promise<unknown>;
+  supportFreezeAsset(options?: Record<string, unknown>): Promise<unknown>;
+  supportUnfreezeAsset(options?: Record<string, unknown>): Promise<unknown>;
+  supportMarkPurchaseRefunded(options?: Record<string, unknown>): Promise<unknown>;
+  listSupportActions(options?: Record<string, unknown>): Promise<unknown[]>;
+}
+
 export interface MushroomAssetServicePort {
   activeGachaPackIds(): string[];
   assetGachaDbPacksEnabled(): boolean;
@@ -139,4 +172,6 @@ export declare const WALLET_PURCHASE_STATUSES: Set<string>;
 
 export declare function createMushroomAssetServicePort(options?: MushroomAssetServicePortOptions): MushroomAssetServicePort;
 export declare function createMushroomGachaAdminServicePort(options?: MushroomGachaAdminServicePortOptions): MushroomGachaAdminServicePort;
+export declare function createMushroomSupportMoneyServicePort(options?: MushroomSupportMoneyServicePortOptions): MushroomSupportMoneyServicePort;
+export declare function createMushroomSupportOpsServicePort(options?: MushroomSupportOpsServicePortOptions): MushroomSupportOpsServicePort;
 export declare function createMushroomWalletServicePort(options?: MushroomWalletServicePortOptions): MushroomWalletServicePort;

@@ -7,6 +7,14 @@ export {
 } from './gacha-admin-service.js';
 
 export {
+  createMushroomSupportMoneyServicePort
+} from './support-money-service.js';
+
+export {
+  createMushroomSupportOpsServicePort
+} from './support-ops-service.js';
+
+export {
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE,
   WALLET_PAYMENT_SURFACES,

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   createMushroomAssetServicePort,
   createMushroomGachaAdminServicePort,
+  createMushroomSupportMoneyServicePort,
+  createMushroomSupportOpsServicePort,
   createMushroomWalletServicePort,
   WALLET_CURRENCY_CODE
 } from '@microwavedev/backpack-game-core/server/ports/mushroom/economy';
@@ -11,7 +13,56 @@ test('[server-port][mushroom economy] exposes the wallet service factory', () =>
   assert.equal(WALLET_CURRENCY_CODE, 'soft_coin');
   assert.equal(typeof createMushroomAssetServicePort, 'function');
   assert.equal(typeof createMushroomGachaAdminServicePort, 'function');
+  assert.equal(typeof createMushroomSupportMoneyServicePort, 'function');
+  assert.equal(typeof createMushroomSupportOpsServicePort, 'function');
   assert.equal(typeof createMushroomWalletServicePort, 'function');
+});
+
+test('[server-port][mushroom economy] support money lookup uses injected persistence', async () => {
+  let queryCount = 0;
+  const port = createMushroomSupportMoneyServicePort({
+    query: async () => {
+      queryCount += 1;
+      return { rows: [], rowCount: 0 };
+    }
+  });
+
+  const result = await port.lookupMoneySupportRecords({ query: 'player_1' });
+  assert.ok(queryCount > 0);
+  assert.equal(result.query, 'player_1');
+  assert.equal(result.counts.players, 0);
+});
+
+test('[server-port][mushroom economy] support ops action listing uses injected persistence', async () => {
+  const port = createMushroomSupportOpsServicePort({
+    query: async () => ({
+      rows: [{
+        id: 'support_1',
+        actor_id: 'operator_1',
+        action_type: 'wallet_grant',
+        player_id: 'player_1',
+        target_type: 'wallet',
+        target_id: 'soft_coin',
+        status: 'applied',
+        evidence_json: '{}',
+        result_json: '{}',
+        created_at: '2026-01-01T00:00:00.000Z'
+      }],
+      rowCount: 1
+    }),
+    withTransaction: async (work) => work({ query: async () => ({ rows: [], rowCount: 0 }) }),
+    createId: (prefix) => `${prefix}_1`,
+    nowIso: () => '2026-01-01T00:00:00.000Z',
+    grantCurrency: async () => ({}),
+    spendCurrency: async () => ({}),
+    getRuntimeAssetById: async () => null,
+    parsePortraitAssetId: () => null,
+    recordSupportAction: async (_client, input) => input
+  });
+
+  const actions = await port.listSupportActions({ playerId: 'player_1' });
+  assert.equal(actions[0].id, 'support_1');
+  assert.equal(actions[0].actorId, 'operator_1');
 });
 
 test('[server-port][mushroom economy] gacha admin service uses injected catalog and persistence providers', async () => {
