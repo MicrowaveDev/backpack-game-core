@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {
   createMushroomAuthServicePort,
-  createTelegramBotGatewayPort
+  createTelegramBotGatewayPort,
+  createWikiServicePort
 } from '../src/server/ports/mushroom/platform/index.js';
 
 function createPort(overrides = {}) {
@@ -74,4 +75,45 @@ test('[telegram-bot-port] uses product configuration for links and visible copy'
   assert.equal(gateway.buildMiniAppLink('@test_bot', 'entry'), 'https://t.me/test_bot/meat?startapp=entry');
   assert.equal(gateway.createMentionReply({ botUsername: 'test_bot' }).text, 'Open Meat Master.');
   assert.equal(gateway.buildWebhookUrl(), 'https://game.test/api/bot/webhook');
+});
+
+test('[wiki-port] indexes configured sections and gates tiered content by progress', async () => {
+  const pages = {
+    '/wiki/characters/hero/page.md': [
+      '---',
+      'title: Hero',
+      'related: arena',
+      '---',
+      '<!-- tier:0 -->',
+      'Visible',
+      '<!-- tier:1 -->',
+      'Secret'
+    ].join('\n'),
+    '/wiki/locations/arena/page.md': '---\ntitle: Arena\n---\nArena body'
+  };
+  const service = createWikiServicePort({
+    rootDir: '/wiki',
+    readFile: async (file) => pages[file],
+    readDirectory: async (dir) => [{
+      name: dir.endsWith('/characters') ? 'hero' : 'arena',
+      isDirectory: () => true
+    }],
+    sections: ['characters', 'locations'],
+    gatedSection: 'characters',
+    tierThresholds: [0, 10],
+    parseMarkdown: (markdown) => `<p>${markdown}</p>`,
+    lexMarkdown: (markdown) => [{ type: 'paragraph', text: markdown, tokens: [] }],
+    summarizeEntry: (entry) => ({ slug: entry.slug, title: entry.title })
+  });
+
+  assert.deepEqual(await service.getWikiHome(), {
+    characters: [{ slug: 'hero', title: 'Hero' }],
+    locations: [{ slug: 'arena', title: 'Arena' }]
+  });
+  const entry = await service.getWikiEntry('characters', 'hero', 0);
+  assert.deepEqual(entry.sections.map(({ tier, locked }) => ({ tier, locked })), [
+    { tier: 0, locked: false },
+    { tier: 1, locked: true }
+  ]);
+  assert.deepEqual(entry.relatedEntries, [{ slug: 'arena', title: 'Arena' }]);
 });

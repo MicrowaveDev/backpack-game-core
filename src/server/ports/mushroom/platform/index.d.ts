@@ -53,3 +53,23 @@ export type TelegramBotGatewayPort = Record<string, (...args: any[]) => any>;
 export function createTelegramBotGatewayPort(
   options: TelegramBotGatewayPortOptions
 ): TelegramBotGatewayPort;
+
+export interface WikiServicePortOptions {
+  rootDir: string;
+  readFile: (path: string, encoding: string) => Promise<string>;
+  readDirectory: (path: string, options: any) => Promise<any[]>;
+  joinPath?: (...parts: string[]) => string;
+  parseMarkdown?: (markdown: string) => string;
+  lexMarkdown?: (markdown: string) => any[];
+  sections?: string[];
+  gatedSection?: string;
+  tierThresholds?: number[];
+  summarizeEntry?: (entry: any) => any;
+}
+
+export interface WikiServicePort {
+  getWikiHome(): Promise<Record<string, any[]>>;
+  getWikiEntry(section: string, slug: string, progressValue?: number): Promise<any>;
+}
+
+export function createWikiServicePort(options: WikiServicePortOptions): WikiServicePort;

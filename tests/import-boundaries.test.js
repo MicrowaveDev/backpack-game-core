@@ -44,7 +44,8 @@ const quarantinedMushroomPortFiles = new Set([
   'src/server/ports/mushroom/platform/auth-service.js',
   'src/server/ports/mushroom/platform/bot-gateway-service.js',
   'src/server/ports/mushroom/platform/index.d.ts',
-  'src/server/ports/mushroom/platform/index.js'
+  'src/server/ports/mushroom/platform/index.js',
+  'src/server/ports/mushroom/platform/wiki-service.js'
 ]);
 
 const quarantinedMushroomModelFiles = new Set([

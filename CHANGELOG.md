@@ -8,6 +8,10 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added `createWikiServicePort()` in the platform package after physically
+  moving frontmatter parsing, Markdown block shaping, section indexes, related
+  entry resolution, and progression-tier gating behind injected filesystem,
+  path, Markdown, section, threshold, and summary-field providers.
 - Added `createTelegramBotGatewayPort()` in the quarantined platform package
   after physically moving Mini App/deep-link helpers, Bot API transport,
   webhook reconciliation, game callbacks/scores, auth-code flow, payment
