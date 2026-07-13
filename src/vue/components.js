@@ -18,6 +18,7 @@ export { RecipeList } from './components/RecipeList.js';
 export { ReplayDuel } from './components/ReplayDuel.js';
 export { ReplayScreen } from './components/ReplayScreen.js';
 export { RunHud } from './components/RunHud.js';
+export { RunSummaryScreen } from './components/RunSummaryScreen.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
 export { ShopZone } from './components/ShopZone.js';

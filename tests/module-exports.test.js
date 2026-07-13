@@ -277,6 +277,7 @@ import {
   ReplayDuel,
   ReplayScreen,
   RunHud,
+  RunSummaryScreen,
   SellZone,
   SeasonRankEmblem,
   ShopZone,
@@ -306,6 +307,7 @@ import {
   ReplayDuel as ReplayDuelFromComponents,
   ReplayScreen as ReplayScreenFromComponents,
   RunHud as RunHudFromComponents,
+  RunSummaryScreen as RunSummaryScreenFromComponents,
   SellZone as SellZoneFromComponents,
   SeasonRankEmblem as SeasonRankEmblemFromComponents,
   ShopZone as ShopZoneFromComponents,
@@ -586,6 +588,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(ReplayDuel.name, 'ReplayDuel');
   assert.equal(ReplayScreen.name, 'ReplayScreen');
   assert.equal(RunHud.name, 'RunHud');
+  assert.equal(RunSummaryScreen.name, 'RunSummaryScreen');
   assert.equal(SellZone.name, 'SellZone');
   assert.equal(ShopZone.name, 'ShopZone');
   assert.equal(ShopItemList.name, 'ShopItemList');
@@ -615,6 +618,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(ReplayDuelFromComponents, ReplayDuel);
   assert.equal(ReplayScreenFromComponents, ReplayScreen);
   assert.equal(RunHudFromComponents, RunHud);
+  assert.equal(RunSummaryScreenFromComponents, RunSummaryScreen);
   assert.equal(SellZoneFromComponents, SellZone);
   assert.equal(ShopZoneFromComponents, ShopZone);
   assert.equal(ShopItemListFromComponents, ShopItemList);

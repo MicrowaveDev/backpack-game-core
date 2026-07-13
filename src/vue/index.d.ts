@@ -21,6 +21,7 @@ export {
   ReplayDuel,
   ReplayScreen,
   RunHud,
+  RunSummaryScreen,
   SellZone,
   SeasonRankEmblem,
   ShopZone,

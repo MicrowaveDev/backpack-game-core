@@ -23,6 +23,7 @@ import {
   ReplayDuel,
   ReplayScreen,
   RunHud,
+  RunSummaryScreen,
   SellZone,
   SeasonRankEmblem,
   ShopZone,
@@ -183,6 +184,17 @@ test('[vue] RunHud exposes neutral run summary and currency hooks', () => {
     player: { runCurrency: 3 },
     runCurrency: {}
   }), 3);
+});
+
+test('[vue] RunSummaryScreen renders a locale-ready neutral summary DTO', () => {
+  assert.equal(RunSummaryScreen.name, 'RunSummaryScreen');
+  assert.match(RunSummaryScreen.template, /summary\.character\.name/);
+  assert.match(RunSummaryScreen.template, /\$emit\('open-round'/);
+  assert.doesNotMatch(RunSummaryScreen.template, /mushroom|spore/i);
+  assert.deepEqual(RunSummaryScreen.computed.stats.call({
+    summary: { stats: [{ key: 'wins', label: 'Wins', value: 2 }] }
+  }), [{ key: 'wins', label: 'Wins', value: 2 }]);
+  assert.deepEqual(RunSummaryScreen.computed.rounds.call({ summary: null }), []);
 });
 
 test('[vue] PrepActions exposes neutral ready and abandon action hooks', () => {
