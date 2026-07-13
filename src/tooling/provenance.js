@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { metadataEntriesHash, readPngHeader } from './image.js';
 
+export { buildMetadataBundle } from './image.js';
+
 export function outputPathFromArgs(argv, defaultPath) {
   const outArg = argv.find((arg) => arg.startsWith('--out='));
   return outArg ? path.resolve(outArg.slice('--out='.length)) : defaultPath;

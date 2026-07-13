@@ -11,6 +11,10 @@ import {
   readPngRgba
 } from '@microwavedev/backpack-game-core/tooling/image';
 import {
+  buildMetadataBundle,
+  checkImageDomainProvenance
+} from '@microwavedev/backpack-game-core/tooling/provenance';
+import {
   formatScriptDocumentationResult,
   validateScriptDocumentation
 } from '@microwavedev/backpack-game-core/tooling/commands';
@@ -40,6 +44,57 @@ test('[tooling/image] deterministic PNGs round-trip and path roots are injected'
   }
 });
 
+test('[tooling/provenance] validates injected roots and reports malformed metadata', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'core-provenance-'));
+  try {
+    const outputPath = 'assets/approved.png';
+    const absolutePath = path.join(root, outputPath);
+    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+    fs.writeFileSync(absolutePath, encodeDeterministicPng({
+      width: 1,
+      height: 1,
+      rgba: Buffer.from([1, 2, 3, 255])
+    }));
+    const entry = {
+      id: 'approved',
+      status: 'approved',
+      outputPath,
+      png: { sha256: fileSha256(absolutePath) },
+      validation: { status: 'passed' },
+      review: { decision: 'approved' }
+    };
+    const metadata = buildMetadataBundle({
+      status: 'approved',
+      policy: { runtimeUsesApprovedOnly: true },
+      entries: [entry]
+    });
+    const metadataPath = path.join(root, 'metadata.json');
+    fs.writeFileSync(metadataPath, JSON.stringify(metadata));
+    const failures = [];
+    assert.equal(checkImageDomainProvenance({
+      metadataPath,
+      repoRoot: root,
+      onFailure: (message) => failures.push(message)
+    }).length, 1);
+    assert.deepEqual(failures, []);
+
+    fs.writeFileSync(metadataPath, JSON.stringify({ ...metadata, entryCount: 4 }));
+    checkImageDomainProvenance({
+      metadataPath,
+      repoRoot: root,
+      onFailure: (message) => failures.push(message)
+    });
+    assert.match(failures.at(-1), /does not match entries/);
+    assert.throws(() => checkImageDomainProvenance({
+      metadataPath: path.join(root, 'missing.json'),
+      repoRoot: root,
+      onFailure() {}
+    }), /Missing image metadata/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('[tooling/commands] validates configured manifests without product assumptions', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'core-commands-'));
   try {
@@ -60,6 +115,16 @@ test('[tooling/commands] validates configured manifests without product assumpti
     });
     assert.deepEqual(result.errors, []);
     assert.match(formatScriptDocumentationResult(result), /1 commands in 1 families/);
+    fs.writeFileSync(path.join(scriptsRoot, 'command-manifest.json'), JSON.stringify({
+      directories: [{ id: 'checks', purpose: 'Checks', entryPoints: true }],
+      families: [{ id: 'quality', commands: ['missing'] }],
+      compatibilityAliases: []
+    }));
+    assert.ok(validateScriptDocumentation({
+      packageJsonPath: path.join(root, 'package.json'),
+      manifestPath: path.join(scriptsRoot, 'command-manifest.json'),
+      readmePath: path.join(scriptsRoot, 'README.md')
+    }).errors.length >= 2);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -93,4 +158,6 @@ test('[tooling/runners] parses configured suites and forwards child exit state',
   assert.equal(returned, child);
   child.emit('exit', 2, null);
   assert.deepEqual(exitState, { code: 2, signal: null });
+  child.emit('exit', null, 'SIGTERM');
+  assert.deepEqual(exitState, { code: null, signal: 'SIGTERM' });
 });
