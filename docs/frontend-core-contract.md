@@ -89,6 +89,12 @@ Vue installed.
   battle-stage slot; product route navigation, replay timeline state,
   localization, currency labels, reward policy, combatant DTO shaping, and
   final fighter rendering remain product-local.
+- Run summary shells such as `RunSummaryScreen` should receive one localized
+  DTO containing title, outcome, character image/name, stat rows, replayable
+  round rows, and the home label. Core owns stable summary structure and emits
+  neutral `home` and `open-round` events; products own run-to-DTO projection,
+  outcome policy, locale dictionaries, character catalogs, replay navigation,
+  asset resolution, and final styling.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.

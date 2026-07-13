@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added persistence-neutral `run-runtime/v1` orchestration through
+  `createRunRuntimeService()`. Products inject one atomic adapter per run
+  operation and retain transactions, repositories, rewards, events, policy,
+  HTTP mapping, and product-specific challenge/readiness behavior.
+- Added the neutral Vue `RunSummaryScreen`. It renders locale-ready character,
+  outcome, stat, and round DTOs and emits only `home` and `open-round`; product
+  adapters own vocabulary, routes, assets, state lookup, and final CSS.
 - Added framework-neutral profile, wallet, asset, social, run, support-admin,
   and gacha-admin route-group factories. The gacha contract distinguishes bulk
   pack-item replacement (`PUT`) from single-item creation (`POST`), fixing an

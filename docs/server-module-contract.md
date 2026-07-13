@@ -172,6 +172,22 @@ low-risk shared services:
 Apps still decide which providers exist, which module order to use, and how
 routes call the registered services.
 
+## Stable Runtime Services
+
+`createRunRuntimeService()` exposes the `run-runtime/v1` contract for start,
+read, active/history lookup, abandon, shop refresh/buy/sell, loadout save,
+round resolution, and latest replay operations. Each configured adapter owns
+one complete atomic product operation; optional `beforeOperation` and
+`afterOperation` hooks provide cross-cutting observation without splitting a
+product transaction across core callbacks.
+
+Products retain repositories and transaction boundaries, character and item
+catalogs, run tuning and rewards, challenge/readiness extensions, event/SSE
+delivery, HTTP errors, and final route registration. An app may implement only
+the adapters it supports; calling an unconfigured operation fails explicitly.
+This keeps the stable runtime reusable across Mushroom SQL persistence and
+Meat snapshot persistence without exposing either schema.
+
 ## Quarantined Ports
 
 Large product service files may move into explicit quarantine subpaths before
