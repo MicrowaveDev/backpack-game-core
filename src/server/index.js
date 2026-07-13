@@ -184,6 +184,34 @@ const SOCIAL_ROUTE_DEFINITIONS = Object.freeze({
   leaderboard: Object.freeze({ name: SOCIAL_ROUTE_NAMES.leaderboard, method: 'get', path: '/leaderboard', access: 'auth' })
 });
 
+export const RUN_ROUTE_NAMES = Object.freeze({
+  abandon: 'run.abandon',
+  buy: 'run.buy',
+  challenge: 'run.challenge',
+  events: 'run.events',
+  get: 'run.get',
+  history: 'run.history',
+  ready: 'run.ready',
+  refreshShop: 'run.refreshShop',
+  sell: 'run.sell',
+  start: 'run.start',
+  unready: 'run.unready'
+});
+
+const RUN_ROUTE_DEFINITIONS = Object.freeze({
+  start: Object.freeze({ name: RUN_ROUTE_NAMES.start, method: 'post', path: '/game-run/start', access: 'auth' }),
+  history: Object.freeze({ name: RUN_ROUTE_NAMES.history, method: 'get', path: '/game-runs/history', access: 'auth' }),
+  get: Object.freeze({ name: RUN_ROUTE_NAMES.get, method: 'get', path: '/game-run/:id', access: 'auth' }),
+  challenge: Object.freeze({ name: RUN_ROUTE_NAMES.challenge, method: 'post', path: '/game-run/challenge', access: 'auth' }),
+  abandon: Object.freeze({ name: RUN_ROUTE_NAMES.abandon, method: 'post', path: '/game-run/:id/abandon', access: 'member' }),
+  ready: Object.freeze({ name: RUN_ROUTE_NAMES.ready, method: 'post', path: '/game-run/:id/ready', access: 'member' }),
+  unready: Object.freeze({ name: RUN_ROUTE_NAMES.unready, method: 'post', path: '/game-run/:id/unready', access: 'member' }),
+  events: Object.freeze({ name: RUN_ROUTE_NAMES.events, method: 'get', path: '/game-run/:id/events', access: 'member' }),
+  refreshShop: Object.freeze({ name: RUN_ROUTE_NAMES.refreshShop, method: 'post', path: '/game-run/:id/refresh-shop', access: 'mutation' }),
+  sell: Object.freeze({ name: RUN_ROUTE_NAMES.sell, method: 'post', path: '/game-run/:id/sell', access: 'mutation' }),
+  buy: Object.freeze({ name: RUN_ROUTE_NAMES.buy, method: 'post', path: '/game-run/:id/buy', access: 'mutation' })
+});
+
 const ASSET_ROUTE_DEFINITIONS = Object.freeze({
   catalog: Object.freeze({ name: ASSET_ROUTE_NAMES.catalog, method: 'get', path: '/assets/catalog', access: 'auth' }),
   odds: Object.freeze({ name: ASSET_ROUTE_NAMES.odds, method: 'get', path: '/assets/packs/:packId/odds', access: 'auth' }),
@@ -528,6 +556,19 @@ export function createSocialRouteGroup(options = {}) {
     prefix: options.prefix || '/api',
     feature: 'social',
     definitions: SOCIAL_ROUTE_DEFINITIONS,
+    routes: options.routes || {},
+    handlers: options.handlers || {},
+    middleware: options.middleware || {},
+    meta: options.meta || {}
+  });
+}
+
+export function createRunRouteGroup(options = {}) {
+  return createDefinedRouteGroup({
+    name: options.name || 'runRoutes',
+    prefix: options.prefix || '/api',
+    feature: 'run',
+    definitions: RUN_ROUTE_DEFINITIONS,
     routes: options.routes || {},
     handlers: options.handlers || {},
     middleware: options.middleware || {},

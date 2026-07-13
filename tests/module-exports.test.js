@@ -174,6 +174,7 @@ import {
   AUTH_ROUTE_NAMES,
   ASSET_ROUTE_NAMES,
   SOCIAL_ROUTE_NAMES,
+  RUN_ROUTE_NAMES,
   BOT_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   clearIdempotencyCache,
@@ -193,6 +194,7 @@ import {
   createRequestLogger,
   createProfileRouteGroup,
   createRng,
+  createRunRouteGroup,
   createSessionKey,
   createWikiRouteGroup,
   createWalletRouteGroup,
@@ -739,6 +741,8 @@ test('[server] server facade exposes module and middleware helpers', () => {
   assert.equal(typeof createAssetRouteGroup, 'function');
   assert.equal(SOCIAL_ROUTE_NAMES.friends, 'social.friends');
   assert.equal(typeof createSocialRouteGroup, 'function');
+  assert.equal(RUN_ROUTE_NAMES.start, 'run.start');
+  assert.equal(typeof createRunRouteGroup, 'function');
   assert.equal(typeof createAuthRoutesServerModule, 'function');
   assert.equal(typeof createGhostLoadoutService, 'function');
   assert.equal(typeof createServerLoadoutUtils, 'function');

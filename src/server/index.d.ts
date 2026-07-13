@@ -149,6 +149,20 @@ export declare const SOCIAL_ROUTE_NAMES: Readonly<{
   leaderboard: 'social.leaderboard';
 }>;
 
+export declare const RUN_ROUTE_NAMES: Readonly<{
+  abandon: 'run.abandon';
+  buy: 'run.buy';
+  challenge: 'run.challenge';
+  events: 'run.events';
+  get: 'run.get';
+  history: 'run.history';
+  ready: 'run.ready';
+  refreshShop: 'run.refreshShop';
+  sell: 'run.sell';
+  start: 'run.start';
+  unready: 'run.unready';
+}>;
+
 export type Rng = () => number;
 
 export declare const DEFAULT_CHARACTER_XP_LEVEL_CURVE: readonly number[];
@@ -389,6 +403,9 @@ export declare function createAssetRouteGroup(
 ): BackpackRouteGroup;
 export declare function createSocialRouteGroup(
   options?: FeatureRouteGroupOptions<keyof typeof SOCIAL_ROUTE_NAMES>
+): BackpackRouteGroup;
+export declare function createRunRouteGroup(
+  options?: FeatureRouteGroupOptions<keyof typeof RUN_ROUTE_NAMES>
 ): BackpackRouteGroup;
 
 export interface AuthRoutesServerModuleOptions extends AuthRouteGroupOptions {

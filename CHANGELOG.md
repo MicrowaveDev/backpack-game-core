@@ -8,7 +8,8 @@ until package publishing starts.
 
 ### Post-baseline additions
 
-- Added framework-neutral profile, wallet, asset, and social route-group factories.
+- Added framework-neutral profile, wallet, asset, social, and run route-group
+  factories.
   Consumers inject handlers and policy middleware while core owns stable route
   names, default paths, access metadata, and descriptor assembly. Route
   middleware is de-duplicated when a route key is also its access-policy key,

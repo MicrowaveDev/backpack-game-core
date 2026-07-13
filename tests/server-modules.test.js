@@ -5,6 +5,7 @@ import {
   BOT_ROUTE_NAMES,
   ASSET_ROUTE_NAMES,
   SOCIAL_ROUTE_NAMES,
+  RUN_ROUTE_NAMES,
   bindBackpackRouteDescriptors,
   createAssetGachaSimulationServerModule,
   createAssetRouteGroup,
@@ -21,6 +22,7 @@ import {
   createProfileRouteGroup,
   createReadyManagerExports,
   createRunReadinessServerModule,
+  createRunRouteGroup,
   createServerGachaSimulationService,
   createServerLoadoutUtils,
   createSocialRouteGroup,
@@ -366,6 +368,35 @@ test('[server] social route group exposes stable community paths with injected a
     '/api/leaderboard'
   ]);
   assert.deepEqual(routes[1].handlers, [auth, handler]);
+});
+
+test('[server] run route group composes auth, membership, and mutation policies', () => {
+  const auth = () => {};
+  const member = () => {};
+  const mutation = () => {};
+  const handler = () => {};
+  const routes = flattenBackpackRouteDescriptors([createRunRouteGroup({
+    handlers: {
+      start: handler,
+      ready: handler,
+      buy: handler,
+      events: handler
+    },
+    middleware: {
+      auth,
+      member: [auth, member],
+      mutation: [auth, member, mutation]
+    }
+  })]);
+  assert.deepEqual(routes.map((route) => route.name), [
+    RUN_ROUTE_NAMES.start,
+    RUN_ROUTE_NAMES.ready,
+    RUN_ROUTE_NAMES.events,
+    RUN_ROUTE_NAMES.buy
+  ]);
+  assert.deepEqual(routes[0].handlers, [auth, handler]);
+  assert.deepEqual(routes[1].handlers, [auth, member, handler]);
+  assert.deepEqual(routes[3].handlers, [auth, member, mutation, handler]);
 });
 
 test('[server] auth route module resolves handlers and middleware from providers', () => {
