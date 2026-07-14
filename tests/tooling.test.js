@@ -13,6 +13,7 @@ import {
   stitchVerticalImages
 } from '@microwavedev/backpack-game-core/tooling/image';
 import { validateImagePolicy } from '@microwavedev/backpack-game-core/tooling/image-validation';
+import { captureTallPage } from '@microwavedev/backpack-game-core/tooling/image-review';
 import { parsePositiveLimit, parseMarkdownMatches, selectPendingWork } from '@microwavedev/backpack-game-core/tooling/work-queue';
 import { runCommandSequence } from '@microwavedev/backpack-game-core/tooling/release';
 import { validateFusionCatalog } from '@microwavedev/backpack-game-core/modules/fusion';
@@ -60,6 +61,7 @@ test('[tooling/image] decodes buffers and stitches RGBA images vertically', () =
     rgba: Buffer.concat([top.rgba, bottom.rgba])
   });
   assert.throws(() => stitchVerticalImages([{ ...top, width: 2 }, bottom]), /same width/);
+  assert.throws(() => decodePngBuffer(encodeDeterministicPng(top).subarray(0, 20)), /truncated PNG chunk/);
 });
 
 test('[tooling/image-validation] applies neutral dimension, alpha, and margin policy', () => {
@@ -72,11 +74,28 @@ test('[tooling/image-validation] applies neutral dimension, alpha, and margin po
   assert.equal(result.stats.coverage, 0.25);
 });
 
+test('[tooling/image-review] captures and stitches injected browser page tiles', async () => {
+  const colors = [Buffer.from([1, 2, 3, 255]), Buffer.from([4, 5, 6, 255])];
+  let call = 0;
+  const page = {
+    async screenshot({ clip }) {
+      return encodeDeterministicPng({
+        width: clip.width,
+        height: clip.height,
+        rgba: Buffer.concat(Array(clip.width * clip.height).fill(colors[call++]))
+      });
+    }
+  };
+  const image = await captureTallPage({ page, width: 1, height: 2, tileHeight: 1 });
+  assert.deepEqual(image.rgba, Buffer.concat(colors));
+});
+
 test('[tooling/work-queue] parses configured queues without product language', () => {
   assert.equal(parsePositiveLimit(['--limit=4']), 4);
   assert.equal(parsePositiveLimit(['--limit=nope'], { defaultLimit: 8 }), 8);
   const parsed = parseMarkdownMatches('- `one`: first\n- `two`: second', /^- `([^`]+)`: (.+)$/gm, (match) => [match[1], match[2]]);
   assert.equal(parsed.get('two'), 'second');
+  assert.throws(() => parseMarkdownMatches('- `one`: first\n- `one`: second', /^- `([^`]+)`: (.+)$/gm, (match) => [match[1], match[2]]), /duplicate work id one/);
   assert.deepEqual(selectPendingWork([1, 2, 3, 4], { isPending: (value) => value % 2 === 0, limit: 1 }), [2]);
 });
 
@@ -105,6 +124,7 @@ test('[modules/fusion] validates catalog integrity through injected eligibility 
     isIngredientEligible: (artifact) => artifact.id !== 'b'
   });
   assert.deepEqual(issues.map((issue) => issue.code), ['ineligible-ingredient', 'unreferenced-result']);
+  assert.equal(validateFusionCatalog({ artifacts: [{ id: 'same' }, { id: 'same' }] })[0].code, 'duplicate-artifact');
 });
 
 test('[tooling/provenance] validates injected roots and reports malformed metadata', () => {

@@ -8,6 +8,11 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added product-neutral image review, image validation, work queue, release
+  sequence, vertical PNG stitching, and fusion catalog validation contracts.
+  Browser libraries, paths, content policy, prompts, and command lists remain
+  injected by consumers.
+
 - Added Node-only `tooling/image`, `tooling/provenance`, `tooling/commands`, and
   `tooling/runners` exports after physically moving the reusable Mushroom script
   engines. Repository roots, command manifests, browser suite maps, product

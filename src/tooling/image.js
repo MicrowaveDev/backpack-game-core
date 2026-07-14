@@ -88,7 +88,9 @@ function decodePngToRgba(input, { allowRgb = false, label } = {}) {
   const idat = [];
 
   while (offset < buf.length) {
+    if (offset + 12 > buf.length) throw new Error(`${sourceLabel} has a truncated PNG chunk header`);
     const length = buf.readUInt32BE(offset);
+    if (offset + 12 + length > buf.length) throw new Error(`${sourceLabel} has a truncated PNG chunk`);
     const type = buf.subarray(offset + 4, offset + 8).toString('ascii');
     const data = buf.subarray(offset + 8, offset + 8 + length);
     offset += 12 + length;
@@ -107,6 +109,9 @@ function decodePngToRgba(input, { allowRgb = false, label } = {}) {
 
   const isRgba = colorType === 6;
   const isRgb = colorType === 2;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0 || width * height > 100_000_000) {
+    throw new Error(`${sourceLabel} has invalid or excessive PNG dimensions`);
+  }
   if (bitDepth !== 8 || (!isRgba && !(allowRgb && isRgb))) {
     throw new Error(`${path.basename(sourceLabel)} must be an 8-bit RGBA PNG after chroma-key removal`);
   }
@@ -114,6 +119,7 @@ function decodePngToRgba(input, { allowRgb = false, label } = {}) {
   const sourceBytesPerPixel = isRgba ? 4 : 3;
   const sourceStride = width * sourceBytesPerPixel;
   const inflated = zlib.inflateSync(Buffer.concat(idat));
+  if (inflated.length !== (sourceStride + 1) * height) throw new Error(`${sourceLabel} has an invalid inflated PNG data length`);
   const rgba = Buffer.alloc(width * height * 4);
   let src = 0;
   let prev = Buffer.alloc(sourceStride);
@@ -207,7 +213,9 @@ export function stitchVerticalImages(images) {
   if (images.some((image) => image.width !== width)) {
     throw new Error('all vertically stitched images must have the same width');
   }
+  if (images.some((image) => !Number.isInteger(image.height) || image.height <= 0)) throw new Error('image height must be a positive integer');
   const height = images.reduce((sum, image) => sum + image.height, 0);
+  if (width * height > 100_000_000) throw new Error('stitched image dimensions are excessive');
   const rgba = Buffer.alloc(width * height * 4);
   let targetY = 0;
   for (const image of images) {

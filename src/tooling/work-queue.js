@@ -5,12 +5,14 @@ export function parsePositiveLimit(argv, { flag = '--limit=', defaultLimit = 10 
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : defaultLimit;
 }
 
-export function parseMarkdownMatches(markdown, pattern, mapMatch) {
+export function parseMarkdownMatches(markdown, pattern, mapMatch, { duplicate = 'error' } = {}) {
   if (!(pattern instanceof RegExp) || !pattern.global) throw new Error('pattern must be a global RegExp');
   const values = new Map();
   for (const match of markdown.matchAll(pattern)) {
     const mapped = mapMatch(match);
-    if (mapped) values.set(mapped[0], mapped[1]);
+    if (!mapped) continue;
+    if (duplicate === 'error' && values.has(mapped[0])) throw new Error(`duplicate work id ${mapped[0]}`);
+    values.set(mapped[0], mapped[1]);
   }
   return values;
 }

@@ -16,11 +16,13 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 
 ## Current Modules
 
-- `tooling/image`, `tooling/provenance`, `tooling/commands`, and
-  `tooling/runners`: Node-only reusable script primitives for deterministic PNG
-  processing, image metadata/provenance, configured command-manifest checks,
-  free-port selection, and child suite execution. Consumers own paths,
-  catalogs, aliases, browser dependencies, logs, and process policy.
+- `tooling/image`, `tooling/image-review`, `tooling/image-validation`,
+  `tooling/work-queue`, `tooling/release`, `tooling/provenance`,
+  `tooling/commands`, and `tooling/runners`: Node-only reusable script
+  primitives for deterministic PNG processing and review, configurable image
+  policy, queue selection, release sequencing, provenance, command-manifest
+  checks, and configured runners. Consumers own paths, catalogs, aliases,
+  browser dependencies, content policy, logs, and process policy.
 
 - `bag-shape`: shape masks, quarter-turn rotation, effective dimensions, and
   shape-cell checks for irregular bags.

@@ -3,11 +3,24 @@ export * from '../../artifact-fusion-recipes.js';
 
 export function validateFusionCatalog({ recipes = [], artifacts = [], isIngredientEligible } = {}) {
   const issues = [];
-  const artifactById = new Map(artifacts.map((artifact) => [artifact.id, artifact]));
+  const artifactById = new Map();
+  for (const artifact of artifacts) {
+    if (!artifact?.id) {
+      issues.push({ code: 'missing-artifact-id', message: 'catalog artifact is missing an id', artifact });
+      continue;
+    }
+    if (artifactById.has(artifact.id)) issues.push({ code: 'duplicate-artifact', message: `duplicate artifact id ${artifact.id}`, artifact });
+    else artifactById.set(artifact.id, artifact);
+  }
   const recipeIds = new Set();
   const resultIds = new Set();
   const ingredientSets = new Set();
   for (const recipe of recipes) {
+    if (!recipe?.id) {
+      issues.push({ code: 'missing-recipe-id', message: 'fusion recipe is missing an id', recipe });
+      continue;
+    }
+    if (!recipe.resultArtifactId) issues.push({ code: 'missing-result-id', message: `recipe ${recipe.id} is missing a resultArtifactId`, recipe });
     if (recipeIds.has(recipe.id)) issues.push({ code: 'duplicate-recipe', message: `duplicate recipe id ${recipe.id}`, recipe });
     recipeIds.add(recipe.id);
     if (resultIds.has(recipe.resultArtifactId)) issues.push({ code: 'duplicate-result', message: `duplicate fusion result ${recipe.resultArtifactId}`, recipe });

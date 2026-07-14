@@ -44,3 +44,18 @@ export function runConfiguredSuite({
   child.on('exit', (code, signal) => onExit({ code, signal }));
   return child;
 }
+
+export function runChildProcess(command, args = [], { cwd, env = process.env, stdio = 'inherit', spawnProcess = spawn, shell = process.platform === 'win32' } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawnProcess(command, args, { cwd, env, stdio, shell });
+    child.on('error', reject);
+    child.on('exit', (code, signal) => {
+      if (code === 0) resolve({ command, args, code, signal });
+      else {
+        const error = new Error(`${command} ${args.join(' ')} failed${signal ? ` with signal ${signal}` : ` with code ${code}`}`);
+        error.result = { command, args, code, signal };
+        reject(error);
+      }
+    });
+  });
+}

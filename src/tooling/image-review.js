@@ -62,3 +62,51 @@ export async function renderHtmlReview({
     await browser.close();
   }
 }
+
+export async function runImageReview({
+  launchBrowser,
+  html,
+  width,
+  viewportHeight = 1200,
+  waitUntil = 'load',
+  validatePage,
+  validateOnly = false,
+  outputPath,
+  tempPathFor = (value) => `${value}.tmp.png`,
+  fileHash,
+  allowUnchanged = false,
+  unchangedError,
+  captureOutput = ({ page, tempPath, width: captureWidth, height }) => page.screenshot({ path: tempPath, clip: { x: 0, y: 0, width: captureWidth, height } })
+}) {
+  if (typeof launchBrowser !== 'function') throw new Error('launchBrowser is required');
+  if (!validateOnly && (!outputPath || typeof fileHash !== 'function')) throw new Error('outputPath and fileHash are required when capturing output');
+  const browser = await launchBrowser();
+  let tempPath = null;
+  try {
+    const page = await browser.newPage();
+    try {
+      await setViewport(page, width, viewportHeight);
+      await page.setContent(html, { waitUntil });
+      const height = await page.evaluate(() => Math.ceil(document.documentElement.scrollHeight));
+      await setViewport(page, width, height);
+      if (validatePage) await validatePage(page);
+      if (validateOnly) return { validateOnly: true, height };
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      const previousHash = fs.existsSync(outputPath) ? fileHash(outputPath) : null;
+      tempPath = tempPathFor(outputPath);
+      await captureOutput({ page, tempPath, width, height });
+      const nextHash = fileHash(tempPath);
+      if (previousHash && previousHash === nextHash && !allowUnchanged) {
+        throw new Error(typeof unchangedError === 'function' ? unchangedError({ outputPath, previousHash, nextHash }) : 'image review output is unchanged');
+      }
+      fs.renameSync(tempPath, outputPath);
+      tempPath = null;
+      return { validateOnly: false, height, previousHash, nextHash, unchanged: previousHash === nextHash, outputPath };
+    } finally {
+      await page.close();
+    }
+  } finally {
+    if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    await browser.close();
+  }
+}
