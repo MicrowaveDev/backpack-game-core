@@ -8,6 +8,12 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added product-neutral raster transforms, spritesheet/frame-grid helpers,
+  pixel-analysis metrics, and atomic hash-bound review evidence. Raster APIs
+  expose explicit resize and compositing modes so consumer review outputs can
+  migrate without changing their PNG bytes; products retain layouts, colors,
+  paths, art-direction thresholds, and approval policy.
+
 - Added product-neutral image review, image validation, work queue, release
   sequence, vertical PNG stitching, and fusion catalog validation contracts.
   Browser libraries, paths, content policy, prompts, and command lists remain

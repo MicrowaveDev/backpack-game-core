@@ -69,6 +69,18 @@
       "types": "./src/tooling/image.d.ts",
       "import": "./src/tooling/image.js"
     },
+    "./tooling/raster": {
+      "types": "./src/tooling/raster.d.ts",
+      "import": "./src/tooling/raster.js"
+    },
+    "./tooling/image-analysis": {
+      "types": "./src/tooling/image-analysis.d.ts",
+      "import": "./src/tooling/image-analysis.js"
+    },
+    "./tooling/evidence": {
+      "types": "./src/tooling/evidence.d.ts",
+      "import": "./src/tooling/evidence.js"
+    },
     "./tooling/provenance": {
       "types": "./src/tooling/provenance.d.ts",
       "import": "./src/tooling/provenance.js"

@@ -5,6 +5,7 @@ import {
   encodeDeterministicPng,
   stitchVerticalImages
 } from './image.js';
+import { writeEvidenceBundle } from './evidence.js';
 
 async function setViewport(page, width, height) {
   if (typeof page.setViewportSize === 'function') await page.setViewportSize({ width, height });
@@ -109,4 +110,32 @@ export async function runImageReview({
     if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
     await browser.close();
   }
+}
+
+export function renderRasterReview({
+  render,
+  outputPath,
+  manifestPath,
+  manifest = {},
+  generatedAt,
+  root = process.cwd(),
+  encodeImage = encodeDeterministicPng,
+  hashField
+}) {
+  if (typeof render !== 'function') throw new Error('render is required');
+  const image = render();
+  if (!image || !Number.isInteger(image.width) || !Number.isInteger(image.height) || !Buffer.isBuffer(image.rgba)) {
+    throw new Error('render must return an RGBA image');
+  }
+  const outputBuffer = encodeImage(image);
+  const evidence = writeEvidenceBundle({
+    outputPath,
+    outputBuffer,
+    manifestPath,
+    manifest,
+    generatedAt,
+    root,
+    hashField
+  });
+  return { image, outputBuffer, manifest: evidence, outputPath, manifestPath };
 }

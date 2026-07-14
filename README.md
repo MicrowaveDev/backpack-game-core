@@ -16,7 +16,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 
 ## Current Modules
 
-- `tooling/image`, `tooling/image-review`, `tooling/image-validation`,
+- `tooling/image`, `tooling/raster`, `tooling/image-analysis`,
+  `tooling/image-review`, `tooling/image-validation`, `tooling/evidence`,
   `tooling/work-queue`, `tooling/release`, `tooling/provenance`,
   `tooling/commands`, and `tooling/runners`: Node-only reusable script
   primitives for deterministic PNG processing and review, configurable image
