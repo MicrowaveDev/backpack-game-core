@@ -81,6 +81,22 @@
       "types": "./src/tooling/runners.d.ts",
       "import": "./src/tooling/runners.js"
     },
+    "./tooling/image-review": {
+      "types": "./src/tooling/image-review.d.ts",
+      "import": "./src/tooling/image-review.js"
+    },
+    "./tooling/image-validation": {
+      "types": "./src/tooling/image-validation.d.ts",
+      "import": "./src/tooling/image-validation.js"
+    },
+    "./tooling/work-queue": {
+      "types": "./src/tooling/work-queue.d.ts",
+      "import": "./src/tooling/work-queue.js"
+    },
+    "./tooling/release": {
+      "types": "./src/tooling/release.d.ts",
+      "import": "./src/tooling/release.js"
+    },
     "./client": {
       "types": "./src/client/index.d.ts",
       "import": "./src/client/index.js"

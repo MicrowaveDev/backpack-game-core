@@ -5,11 +5,17 @@ import os from 'node:os';
 import path from 'node:path';
 import { EventEmitter } from 'node:events';
 import {
+  decodePngBuffer,
   encodeDeterministicPng,
   fileSha256,
   inputEntriesFromPaths,
-  readPngRgba
+  readPngRgba,
+  stitchVerticalImages
 } from '@microwavedev/backpack-game-core/tooling/image';
+import { validateImagePolicy } from '@microwavedev/backpack-game-core/tooling/image-validation';
+import { parsePositiveLimit, parseMarkdownMatches, selectPendingWork } from '@microwavedev/backpack-game-core/tooling/work-queue';
+import { runCommandSequence } from '@microwavedev/backpack-game-core/tooling/release';
+import { validateFusionCatalog } from '@microwavedev/backpack-game-core/modules/fusion';
 import {
   buildMetadataBundle,
   checkImageDomainProvenance
@@ -42,6 +48,63 @@ test('[tooling/image] deterministic PNGs round-trip and path roots are injected'
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('[tooling/image] decodes buffers and stitches RGBA images vertically', () => {
+  const top = { width: 1, height: 1, rgba: Buffer.from([1, 2, 3, 255]) };
+  const bottom = { width: 1, height: 1, rgba: Buffer.from([4, 5, 6, 255]) };
+  assert.deepEqual(decodePngBuffer(encodeDeterministicPng(top)), top);
+  assert.deepEqual(stitchVerticalImages([top, bottom]), {
+    width: 1,
+    height: 2,
+    rgba: Buffer.concat([top.rgba, bottom.rgba])
+  });
+  assert.throws(() => stitchVerticalImages([{ ...top, width: 2 }, bottom]), /same width/);
+});
+
+test('[tooling/image-validation] applies neutral dimension, alpha, and margin policy', () => {
+  const image = { width: 2, height: 2, rgba: Buffer.from([
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 10, 20, 30, 255
+  ]) };
+  const result = validateImagePolicy(image, { width: 3, height: 3, minCoverage: 0.5, minMargin: 1 });
+  assert.deepEqual(result.issues.map((issue) => issue.code), ['dimensions', 'coverage', 'margin']);
+  assert.equal(result.stats.coverage, 0.25);
+});
+
+test('[tooling/work-queue] parses configured queues without product language', () => {
+  assert.equal(parsePositiveLimit(['--limit=4']), 4);
+  assert.equal(parsePositiveLimit(['--limit=nope'], { defaultLimit: 8 }), 8);
+  const parsed = parseMarkdownMatches('- `one`: first\n- `two`: second', /^- `([^`]+)`: (.+)$/gm, (match) => [match[1], match[2]]);
+  assert.equal(parsed.get('two'), 'second');
+  assert.deepEqual(selectPendingWork([1, 2, 3, 4], { isPending: (value) => value % 2 === 0, limit: 1 }), [2]);
+});
+
+test('[tooling/release] runs configured commands in order and stops on failure', async () => {
+  const calls = [];
+  const spawnProcess = (command) => {
+    calls.push(command);
+    const child = new EventEmitter();
+    queueMicrotask(() => child.emit('exit', command === 'bad' ? 2 : 0, null));
+    return child;
+  };
+  await assert.rejects(() => runCommandSequence([['one'], ['bad'], ['never']], {
+    spawnProcess,
+    logger: { log() {} }
+  }), /failed with code 2/);
+  assert.deepEqual(calls, ['one', 'bad']);
+});
+
+test('[modules/fusion] validates catalog integrity through injected eligibility policy', () => {
+  const artifacts = [
+    { id: 'a' }, { id: 'b' }, { id: 'result', fusionOnly: true }, { id: 'orphan', fusionOnly: true }
+  ];
+  const issues = validateFusionCatalog({
+    artifacts,
+    recipes: [{ id: 'recipe', ingredientArtifactIds: ['a', 'b'], resultArtifactId: 'result' }],
+    isIngredientEligible: (artifact) => artifact.id !== 'b'
+  });
+  assert.deepEqual(issues.map((issue) => issue.code), ['ineligible-ingredient', 'unreferenced-result']);
 });
 
 test('[tooling/provenance] validates injected roots and reports malformed metadata', () => {

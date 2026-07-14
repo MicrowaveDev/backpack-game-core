@@ -73,10 +73,11 @@ export function readPngHeader(filePath, { root = process.cwd() } = {}) {
   };
 }
 
-function decodePngToRgba(filePath, { allowRgb = false } = {}) {
-  const buf = fs.readFileSync(filePath);
+function decodePngToRgba(input, { allowRgb = false, label } = {}) {
+  const buf = Buffer.isBuffer(input) ? input : fs.readFileSync(input);
+  const sourceLabel = label || (Buffer.isBuffer(input) ? 'PNG buffer' : input);
   if (!buf.subarray(0, 8).equals(PNG_SIGNATURE)) {
-    throw new Error(`${filePath} is not a PNG`);
+    throw new Error(`${sourceLabel} is not a PNG`);
   }
 
   let offset = 8;
@@ -107,7 +108,7 @@ function decodePngToRgba(filePath, { allowRgb = false } = {}) {
   const isRgba = colorType === 6;
   const isRgb = colorType === 2;
   if (bitDepth !== 8 || (!isRgba && !(allowRgb && isRgb))) {
-    throw new Error(`${path.basename(filePath)} must be an 8-bit RGBA PNG after chroma-key removal`);
+    throw new Error(`${path.basename(sourceLabel)} must be an 8-bit RGBA PNG after chroma-key removal`);
   }
 
   const sourceBytesPerPixel = isRgba ? 4 : 3;
@@ -157,6 +158,10 @@ export function readPngAsRgba(filePath) {
   return decodePngToRgba(filePath, { allowRgb: true });
 }
 
+export function decodePngBuffer(buffer, options = {}) {
+  return decodePngToRgba(buffer, { allowRgb: true, label: options.label });
+}
+
 export function pngChunk(type, data = Buffer.alloc(0)) {
   const typeBuffer = Buffer.from(type, 'ascii');
   const length = Buffer.alloc(4);
@@ -191,6 +196,28 @@ export function encodeDeterministicPng({ width, height, rgba }) {
     pngChunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
     pngChunk('IEND')
   ]);
+}
+
+export function stitchVerticalImages(images) {
+  if (!Array.isArray(images) || images.length === 0) {
+    throw new Error('stitchVerticalImages requires at least one image');
+  }
+  const width = images[0].width;
+  if (!Number.isInteger(width) || width <= 0) throw new Error('image width must be a positive integer');
+  if (images.some((image) => image.width !== width)) {
+    throw new Error('all vertically stitched images must have the same width');
+  }
+  const height = images.reduce((sum, image) => sum + image.height, 0);
+  const rgba = Buffer.alloc(width * height * 4);
+  let targetY = 0;
+  for (const image of images) {
+    if (image.rgba.length !== image.width * image.height * 4) {
+      throw new Error('image RGBA buffer size does not match its dimensions');
+    }
+    image.rgba.copy(rgba, targetY * width * 4);
+    targetY += image.height;
+  }
+  return { width, height, rgba };
 }
 
 // ---------- alpha analysis ----------
