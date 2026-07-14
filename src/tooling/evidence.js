@@ -28,6 +28,12 @@ export function atomicWriteFile(filePath, value) {
   }
 }
 
+export function atomicWriteJson(filePath, value, { space = 2, trailingNewline = true } = {}) {
+  if (!Number.isInteger(space) || space < 0 || space > 10) throw new RangeError('JSON space must be an integer in [0, 10]');
+  const encoded = JSON.stringify(value, null, space) + (trailingNewline ? '\n' : '');
+  atomicWriteFile(filePath, encoded);
+}
+
 export function fileEvidence(filePath, { root = process.cwd(), id, optional = false } = {}) {
   if (!fs.existsSync(filePath)) {
     if (optional) return null;
@@ -87,6 +93,13 @@ export function writeEvidenceBundle({
   });
   atomicWriteFile(outputPath, outputBuffer);
   atomicWriteFile(manifestPath, jsonBuffer(built));
+  return built;
+}
+
+export function writeEvidenceManifest({ manifestPath, manifest, generatedAt, hashField }) {
+  if (!manifestPath) throw new Error('manifestPath is required');
+  const built = buildEvidenceManifest({ manifest, generatedAt, hashField });
+  atomicWriteJson(manifestPath, built);
   return built;
 }
 

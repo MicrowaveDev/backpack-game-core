@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { assertRasterImage, assertRasterRect } from './raster.js';
+import { assertRasterImage, assertRasterRect, createRaster, fillRaster } from './raster.js';
 
 function normalizeThreshold(value) {
   const threshold = value ?? 0;
@@ -173,6 +173,106 @@ export function connectedComponents(image, options = {}) {
   return components.sort((a, b) => b.pixels - a.pixels || a.y - b.y || a.x - b.x);
 }
 
+export function connectedComponentsFromMask(mask, options = {}) {
+  if (!mask || typeof mask !== 'object') throw new TypeError('mask must be an object');
+  const width = mask.width;
+  const height = mask.height;
+  if (!Number.isSafeInteger(width) || width < 1 || !Number.isSafeInteger(height) || height < 1) {
+    throw new TypeError('mask dimensions must be positive integers');
+  }
+  if (!mask.data || mask.data.length !== width * height) {
+    throw new RangeError('mask data size must match its dimensions');
+  }
+  const image = { width, height, rgba: Buffer.alloc(width * height * 4) };
+  for (let index = 0; index < mask.data.length; index += 1) {
+    if (mask.data[index]) image.rgba[index * 4 + 3] = 255;
+  }
+  return connectedComponents(image, { rect: options.rect, connectivity: options.connectivity });
+}
+
+function colorHex(red, green, blue) {
+  return `#${[red, green, blue].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function paletteRecords(counts, total) {
+  return [...counts.entries()].map(([key, count]) => {
+    const rgb = key.split(',').map(Number);
+    return { rgb, hex: colorHex(...rgb), count, ratio: total ? count / total : 0, pct: total ? count / total : 0 };
+  }).sort((first, second) => second.count - first.count || first.hex.localeCompare(second.hex));
+}
+
+export function paletteHistogram(image, options = {}) {
+  assertRasterImage(image);
+  const rect = containedRect(image, options.rect);
+  const alphaThreshold = normalizeThreshold(options.alphaThreshold);
+  const steps = options.quantizationSteps ?? [];
+  if (!Array.isArray(steps) || steps.some((step) => !Number.isInteger(step) || step < 1 || step > 255)) {
+    throw new RangeError('quantization steps must be integers in [1, 255]');
+  }
+  const exact = new Map();
+  const quantized = new Map(steps.map((step) => [step, new Map()]));
+  let includedPixels = 0;
+  let transparentPixels = 0;
+  let policyExcludedPixels = 0;
+  for (let y = rect.y; y < rect.y + rect.height; y += 1) {
+    for (let x = rect.x; x < rect.x + rect.width; x += 1) {
+      const index = y * image.width + x;
+      const offset = index * 4;
+      const rgba = [image.rgba[offset], image.rgba[offset + 1], image.rgba[offset + 2], image.rgba[offset + 3]];
+      if (rgba[3] <= alphaThreshold) {
+        transparentPixels += 1;
+        continue;
+      }
+      if (options.includePixel && !options.includePixel(rgba, { x, y, index })) {
+        policyExcludedPixels += 1;
+        continue;
+      }
+      includedPixels += 1;
+      const exactKey = rgba.slice(0, 3).join(',');
+      exact.set(exactKey, (exact.get(exactKey) || 0) + 1);
+      for (const [step, counts] of quantized) {
+        const key = rgba.slice(0, 3).map((channel) => {
+          const bucket = Math.floor(channel / step);
+          return Math.min(255, bucket * step + Math.floor(step / 2));
+        }).join(',');
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+    }
+  }
+  const totalPixels = rect.width * rect.height;
+  return {
+    totalPixels,
+    includedPixels,
+    excludedPixels: totalPixels - includedPixels,
+    transparentPixels,
+    policyExcludedPixels,
+    exact: paletteRecords(exact, includedPixels),
+    quantized: Object.fromEntries([...quantized].map(([step, counts]) => [step, paletteRecords(counts, includedPixels)]))
+  };
+}
+
+export function renderPaletteSwatch(records, options = {}) {
+  if (!Array.isArray(records)) throw new TypeError('palette records must be an array');
+  const columns = options.columns ?? 12;
+  const cell = options.cell ?? 18;
+  const gap = options.gap ?? 2;
+  const limit = options.limit ?? records.length;
+  for (const [label, value] of [['columns', columns], ['cell', cell], ['gap', gap], ['limit', limit]]) {
+    if (!Number.isInteger(value) || value < (label === 'gap' ? 0 : 1)) throw new RangeError(`${label} must be a valid integer`);
+  }
+  const colors = records.slice(0, limit);
+  const rows = Math.max(1, Math.ceil(colors.length / columns));
+  const image = createRaster(gap + columns * (cell + gap), gap + rows * (cell + gap), options.background ?? [46, 43, 52, 255]);
+  colors.forEach((record, index) => {
+    if (!record || !record.rgb) throw new TypeError('palette record rgb is required');
+    const x = gap + (index % columns) * (cell + gap);
+    const y = gap + Math.floor(index / columns) * (cell + gap);
+    fillRaster(image, options.border ?? [14, 13, 17, 255], { x, y, width: cell, height: cell });
+    if (cell > 2) fillRaster(image, record.rgb, { x: x + 1, y: y + 1, width: cell - 2, height: cell - 2 });
+  });
+  return image;
+}
+
 export function averageRegionRgb(image, rect = { x: 0, y: 0, width: image?.width, height: image?.height }) {
   assertRasterImage(image);
   const region = containedRect(image, rect);
@@ -216,6 +316,41 @@ export function averageEdgeRgb(image, side, options = {}) {
   else if (side === 'left') rect = { x: 0, y: start, width: depth, height: end - start };
   else rect = { x: image.width - depth, y: start, width: depth, height: end - start };
   return averageRegionRgb(image, rect);
+}
+
+export function opaqueMatteMetrics(image, options = {}) {
+  assertRasterImage(image);
+  const rect = containedRect(image, options.rect);
+  const alphaThreshold = normalizeThreshold(options.alphaThreshold ?? 0);
+  const cornerSize = options.cornerSize ?? Math.max(1, Math.floor(Math.min(rect.width, rect.height) * 0.08));
+  if (!Number.isInteger(cornerSize) || cornerSize < 1 || cornerSize > rect.width || cornerSize > rect.height) {
+    throw new RangeError('corner size must fit inside the analysis rectangle');
+  }
+  let opaquePixels = 0;
+  for (let y = rect.y; y < rect.y + rect.height; y += 1) {
+    for (let x = rect.x; x < rect.x + rect.width; x += 1) {
+      if (image.rgba[(y * image.width + x) * 4 + 3] > alphaThreshold) opaquePixels += 1;
+    }
+  }
+  const cornerRects = [
+    { x: rect.x, y: rect.y, width: cornerSize, height: cornerSize },
+    { x: rect.x + rect.width - cornerSize, y: rect.y, width: cornerSize, height: cornerSize },
+    { x: rect.x, y: rect.y + rect.height - cornerSize, width: cornerSize, height: cornerSize },
+    { x: rect.x + rect.width - cornerSize, y: rect.y + rect.height - cornerSize, width: cornerSize, height: cornerSize }
+  ];
+  const cornerAverages = cornerRects.map((corner) => averageRegionRgb(image, corner));
+  let maximumCornerDistance = 0;
+  for (let first = 0; first < cornerAverages.length; first += 1) {
+    for (let second = first + 1; second < cornerAverages.length; second += 1) {
+      maximumCornerDistance = Math.max(maximumCornerDistance, rgbDistance(cornerAverages[first], cornerAverages[second]));
+    }
+  }
+  return {
+    alphaCoverage: opaquePixels / (rect.width * rect.height),
+    cornerAverages,
+    maximumCornerDistance,
+    meanLuminance: cornerAverages.reduce((sum, rgb) => sum + luminance(rgb), 0) / cornerAverages.length
+  };
 }
 
 export function luminance(rgb) {

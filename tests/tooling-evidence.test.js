@@ -4,9 +4,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  atomicWriteJson,
   buildEvidenceManifest,
   fileEvidence,
   verifyEvidenceManifest,
+  writeEvidenceManifest,
   writeEvidenceBundle
 } from '@microwavedev/backpack-game-core/tooling/evidence';
 import { renderRasterReview } from '@microwavedev/backpack-game-core/tooling/image-review';
@@ -32,6 +34,25 @@ test('[tooling/evidence] writes deterministic hash-bound output and manifest fil
     assert.match(manifest.outputHash, /^[a-f0-9]{64}$/);
     assert.equal(verifyEvidenceManifest(manifest).valid, true);
     assert.deepEqual(JSON.parse(fs.readFileSync(manifestPath, 'utf8')), manifest);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('[tooling/evidence] writes atomic mutable JSON and manifest-only evidence', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'core-evidence-json-'));
+  try {
+    const recordPath = path.join(root, 'record.json');
+    atomicWriteJson(recordPath, { value: 1 });
+    atomicWriteJson(recordPath, { value: 2 }, { trailingNewline: false });
+    assert.equal(fs.readFileSync(recordPath, 'utf8'), '{\n  "value": 2\n}');
+    const manifest = writeEvidenceManifest({
+      manifestPath: path.join(root, 'manifest.json'),
+      generatedAt: null,
+      manifest: { schemaVersion: 1, entries: [] }
+    });
+    assert.equal(verifyEvidenceManifest(manifest).valid, true);
+    assert.equal(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8').endsWith('\n'), true);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -8,6 +8,13 @@ until package publishing starts.
 
 ### Post-baseline additions
 
+- Added residual review-tooling primitives for contain placement,
+  remainder-aware grids, alpha diagnostics/fitting, neutral RGB and edge
+  transforms, binary-mask connected components, configurable palette
+  histograms/swatches, opaque-matte metrics, atomic JSON records, and
+  manifest-only evidence. Product layouts, thresholds, art direction, and
+  workflow state remain consumer-owned.
+
 - Added product-neutral raster transforms, spritesheet/frame-grid helpers,
   pixel-analysis metrics, and atomic hash-bound review evidence. Raster APIs
   expose explicit resize and compositing modes so consumer review outputs can

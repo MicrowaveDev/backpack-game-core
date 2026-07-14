@@ -1,20 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  blendRasterOppositeEdges,
+  blendRasterTowardAverage,
   chromaKeyRaster,
   composeFrameGrid,
   compositeRaster,
+  compositeAlphaDiagnosticRaster,
+  compositeRasterToRect,
+  containRasterRect,
+  createAlphaDiagnosticRaster,
   createFrameGrid,
   createRaster,
   cropRaster,
   extractFrame,
   fillRaster,
+  fitRasterAlphaToCanvas,
   frameRect,
   padRaster,
   paintCheckerboard,
   resizeRasterNearest,
   resizeRasterBox,
   resizeRasterHybrid,
+  repeatRasterGrid,
+  shiftRasterRgb,
+  neutralizeRasterEdges,
   tileRaster,
   trimRasterAlpha
 } from '@microwavedev/backpack-game-core/tooling/raster';
@@ -41,6 +51,67 @@ test('[tooling/raster] creates, fills, and checkerboards RGB/RGBA rasters with c
   assert.throws(() => createRaster(100_000_001, 1), /excessive/);
   assert.throws(() => fillRaster(image, [256, 0, 0]), /\[0, 255\]/);
   assert.throws(() => cropRaster(image, { x: 2, y: 0, width: 2, height: 1 }), /inside image bounds/);
+});
+
+test('[tooling/raster] contains, composites, and repeats with last-cell remainders', () => {
+  const source = createRaster(4, 2, [100, 0, 0, 255]);
+  assert.deepEqual(containRasterRect(source, { x: 1, y: 2, width: 5, height: 5 }), {
+    x: 1, y: 3, width: 5, height: 3
+  });
+  assert.deepEqual(containRasterRect(source, { x: 0, y: 0, width: 8, height: 8 }, { allowUpscale: false }), {
+    x: 2, y: 3, width: 4, height: 2
+  });
+  const contained = createRaster(5, 5);
+  compositeRasterToRect(contained, source, { x: 0, y: 0, width: 5, height: 5 }, { fit: 'contain', mode: 'copy' });
+  assert.equal(contained.rgba[(1 * contained.width) * 4 + 3], 255);
+  const repeated = createRaster(10, 8);
+  repeatRasterGrid(repeated, createRaster(1, 1, [7, 8, 9, 255]), { x: 0, y: 0, width: 10, height: 8 }, {
+    rows: 3, columns: 3, mode: 'copy'
+  });
+  assert.equal(repeated.rgba[(7 * repeated.width + 9) * 4], 7);
+  assert.throws(() => compositeRasterToRect(contained, source, { x: 0, y: 0, width: 1, height: 1 }, { resize: 'magic' }), /resize mode/);
+  assert.throws(() => repeatRasterGrid(contained, source, { x: 0, y: 0, width: 1, height: 1 }, { rows: 2 }), /at least one pixel/);
+});
+
+test('[tooling/raster] renders alpha diagnostics and fits visible bounds deterministically', () => {
+  const source = { width: 3, height: 1, rgba: Buffer.from([
+    9, 8, 7, 0, 10, 20, 30, 128, 40, 50, 60, 255
+  ]) };
+  assert.deepEqual(pixels(createAlphaDiagnosticRaster(source, { mode: 'mask' })), [
+    0, 0, 0, 0, 128, 128, 128, 255, 255, 255, 255, 255
+  ]);
+  assert.deepEqual(pixels(createAlphaDiagnosticRaster(source, { mode: 'edge', edgeColor: [1, 2, 3] })), [
+    0, 0, 0, 0, 1, 2, 3, 255, 40, 50, 60, 255
+  ]);
+  const diagnostic = createRaster(2, 2, [9, 9, 9, 255]);
+  compositeAlphaDiagnosticRaster(diagnostic, createRaster(2, 1, [1, 2, 3, 255]), {
+    x: 1,
+    y: 0,
+    mode: 'color',
+    clip: false
+  });
+  assert.deepEqual(pixels(diagnostic), [
+    9, 9, 9, 255, 1, 2, 3, 255,
+    1, 2, 3, 255, 9, 9, 9, 255
+  ]);
+  const fitted = fitRasterAlphaToCanvas(source, { width: 5, height: 5, margin: 1 });
+  assert.deepEqual(fitted.bounds, { x: 1, y: 0, width: 2, height: 1 });
+  assert.equal(fitted.image.width, 5);
+  assert.equal(fitted.image.height, 5);
+  assert.equal(fitRasterAlphaToCanvas(createRaster(2, 2), { margin: 0 }).bounds, null);
+  assert.throws(() => fitRasterAlphaToCanvas(source, { width: 2, height: 2, margin: 1 }), /no target area/);
+});
+
+test('[tooling/raster] applies average and edge transforms without mutating inputs', () => {
+  const source = { width: 3, height: 3, rgba: Buffer.from(Array.from({ length: 9 }, (_, index) => [index * 10, 20, 30, 255]).flat()) };
+  const original = Buffer.from(source.rgba);
+  assert.deepEqual(shiftRasterRgb(source, [100, 100, 100], { strength: 0 }).rgba, original);
+  assert.equal(blendRasterTowardAverage(source, 1).rgba[0], 40);
+  assert.notDeepEqual(blendRasterOppositeEdges(source, { margin: 1 }).rgba, original);
+  assert.notDeepEqual(neutralizeRasterEdges(source, { margin: 1, strength: 1 }).rgba, original);
+  assert.deepEqual(source.rgba, original);
+  assert.throws(() => shiftRasterRgb(source, [0, 0, 0], { strength: 2 }), /\[0, 1\]/);
+  assert.throws(() => blendRasterOppositeEdges(source, { margin: 1, axes: ['diagonal'] }), /axes/);
 });
 
 test('[tooling/raster] nearest resize preserves pixels and source-over handles translucent targets', () => {

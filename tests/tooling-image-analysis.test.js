@@ -5,9 +5,13 @@ import {
   averageEdgeRgb,
   averageRegionRgb,
   connectedComponents,
+  connectedComponentsFromMask,
   frameDifference,
   frameHash,
   luminance,
+  opaqueMatteMetrics,
+  paletteHistogram,
+  renderPaletteSwatch,
   rgbDistance
 } from '@microwavedev/backpack-game-core/tooling/image-analysis';
 import { createRaster, fillRaster } from '@microwavedev/backpack-game-core/tooling/raster';
@@ -27,6 +31,32 @@ test('[tooling/image-analysis] reports alpha bounds and deterministic connected 
     { pixels: 1, x: 3, y: 2, width: 1, height: 1, minX: 3, minY: 2, maxX: 3, maxY: 2, touchesRectEdge: true }
   ]);
   assert.equal(connectedComponents(image, { rect: { x: 2, y: 1, width: 2, height: 2 } })[0].x, 3);
+});
+
+test('[tooling/image-analysis] analyzes injected masks with configurable connectivity', () => {
+  const mask = { width: 2, height: 2, data: Uint8Array.from([1, 0, 0, 1]) };
+  assert.equal(connectedComponentsFromMask(mask, { connectivity: 4 }).length, 2);
+  assert.equal(connectedComponentsFromMask(mask, { connectivity: 8 }).length, 1);
+  assert.deepEqual(connectedComponentsFromMask({ width: 1, height: 1, data: [0] }), []);
+  assert.throws(() => connectedComponentsFromMask({ width: 2, height: 2, data: [1] }), /data size/);
+});
+
+test('[tooling/image-analysis] builds policy-filtered palette histograms and swatches', () => {
+  const image = { width: 3, height: 1, rgba: Buffer.from([
+    10, 20, 30, 255, 10, 20, 30, 255, 250, 0, 250, 0
+  ]) };
+  const palette = paletteHistogram(image, {
+    alphaThreshold: 0,
+    quantizationSteps: [16],
+    includePixel: (rgba) => rgba[0] < 200
+  });
+  assert.equal(palette.includedPixels, 2);
+  assert.equal(palette.transparentPixels, 1);
+  assert.deepEqual(palette.exact[0], { rgb: [10, 20, 30], hex: '#0a141e', count: 2, ratio: 1, pct: 1 });
+  assert.equal(palette.quantized[16][0].hex, '#081818');
+  const swatch = renderPaletteSwatch(palette.exact, { columns: 1, cell: 4, gap: 1 });
+  assert.deepEqual({ width: swatch.width, height: swatch.height }, { width: 6, height: 6 });
+  assert.throws(() => paletteHistogram(image, { quantizationSteps: [0] }), /quantization steps/);
 });
 
 test('[tooling/image-analysis] hashes rows without stride bytes and compares frame metrics', () => {
@@ -57,5 +87,9 @@ test('[tooling/image-analysis] averages regions and edge bands and computes colo
   assert.deepEqual(averageEdgeRgb(image, 'right', { band: { start: 1, end: 2 } }), [120, 130, 140]);
   assert.ok(Math.abs(luminance([255, 255, 255]) - 255) < Number.EPSILON * 255);
   assert.equal(rgbDistance([0, 0, 0], [3, 4, 0]), 5);
+  const matte = opaqueMatteMetrics(image, { cornerSize: 1 });
+  assert.equal(matte.alphaCoverage, 0.5);
+  assert.equal(matte.cornerAverages.length, 4);
+  assert.ok(matte.maximumCornerDistance > 0);
   assert.throws(() => averageEdgeRgb(image, 'north'), /top, right, bottom, or left/);
 });

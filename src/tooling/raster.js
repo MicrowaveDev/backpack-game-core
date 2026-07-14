@@ -189,6 +189,77 @@ export function resizeRasterHybrid(image, width, height) {
     : resizeRasterBox(image, width, height);
 }
 
+function resizeRasterWithMode(image, width, height, mode) {
+  if (mode === 'nearest') return resizeRasterNearest(image, width, height);
+  if (mode === 'box') return resizeRasterBox(image, width, height);
+  if (mode === 'hybrid') return resizeRasterHybrid(image, width, height);
+  throw new RangeError('resize mode must be nearest, box, or hybrid');
+}
+
+export function containRasterRect(image, rect, options = {}) {
+  assertRasterImage(image);
+  assertRasterRect(rect);
+  const alignX = options.alignX ?? 0.5;
+  const alignY = options.alignY ?? 0.5;
+  if (!Number.isFinite(alignX) || alignX < 0 || alignX > 1
+    || !Number.isFinite(alignY) || alignY < 0 || alignY > 1) {
+    throw new RangeError('contain alignment must be finite numbers in [0, 1]');
+  }
+  const scale = Math.min(
+    options.allowUpscale === false ? 1 : Number.POSITIVE_INFINITY,
+    rect.width / image.width,
+    rect.height / image.height
+  );
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  return {
+    x: rect.x + Math.floor((rect.width - width) * alignX),
+    y: rect.y + Math.floor((rect.height - height) * alignY),
+    width,
+    height
+  };
+}
+
+export function compositeRasterToRect(destination, source, rect, options = {}) {
+  assertRasterImage(destination, 'destination');
+  assertRasterImage(source, 'source');
+  assertRasterRect(rect);
+  const fit = options.fit ?? 'stretch';
+  if (fit !== 'stretch' && fit !== 'contain') throw new RangeError('fit mode must be stretch or contain');
+  const target = fit === 'contain' ? containRasterRect(source, rect, options) : rect;
+  const resized = resizeRasterWithMode(source, target.width, target.height, options.resize ?? 'nearest');
+  return compositeRaster(destination, resized, {
+    x: target.x,
+    y: target.y,
+    mode: options.mode ?? 'source-over'
+  });
+}
+
+export function repeatRasterGrid(destination, source, rect, options = {}) {
+  assertRasterImage(destination, 'destination');
+  assertRasterImage(source, 'source');
+  assertRasterRect(rect);
+  const rows = options.rows ?? 1;
+  const columns = options.columns ?? 1;
+  assertInteger(rows, 'grid rows', { min: 1 });
+  assertInteger(columns, 'grid columns', { min: 1 });
+  const cellWidth = Math.floor(rect.width / columns);
+  const cellHeight = Math.floor(rect.height / rows);
+  if (cellWidth < 1 || cellHeight < 1) throw new RangeError('grid cells must be at least one pixel');
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const cell = {
+        x: rect.x + column * cellWidth,
+        y: rect.y + row * cellHeight,
+        width: column === columns - 1 ? rect.width - cellWidth * (columns - 1) : cellWidth,
+        height: row === rows - 1 ? rect.height - cellHeight * (rows - 1) : cellHeight
+      };
+      compositeRasterToRect(destination, source, cell, options);
+    }
+  }
+  return destination;
+}
+
 export function compositeRaster(destination, source, options = {}) {
   assertRasterImage(destination, 'destination');
   assertRasterImage(source, 'source');
@@ -359,6 +430,88 @@ export function chromaKeyRaster(image, keyColor, options = {}) {
   return output;
 }
 
+export function createAlphaDiagnosticRaster(image, options = {}) {
+  assertRasterImage(image);
+  const mode = options.mode ?? 'mask';
+  if (!['mask', 'edge'].includes(mode)) throw new RangeError('alpha diagnostic mode must be mask or edge');
+  const edgeThreshold = options.edgeThreshold ?? 245;
+  if (!Number.isInteger(edgeThreshold) || edgeThreshold < 0 || edgeThreshold > 255) {
+    throw new RangeError('edge threshold must be an integer in [0, 255]');
+  }
+  const edgeColor = normalizeColor(options.edgeColor ?? [255, 0, 255, 255], 'edgeColor');
+  const output = createRaster(image.width, image.height);
+  for (let offset = 0; offset < image.rgba.length; offset += 4) {
+    const alpha = image.rgba[offset + 3];
+    if (alpha === 0) continue;
+    if (mode === 'mask') {
+      output.rgba[offset] = alpha;
+      output.rgba[offset + 1] = alpha;
+      output.rgba[offset + 2] = alpha;
+    } else if (alpha < edgeThreshold) {
+      output.rgba[offset] = edgeColor[0];
+      output.rgba[offset + 1] = edgeColor[1];
+      output.rgba[offset + 2] = edgeColor[2];
+    } else {
+      output.rgba[offset] = image.rgba[offset];
+      output.rgba[offset + 1] = image.rgba[offset + 1];
+      output.rgba[offset + 2] = image.rgba[offset + 2];
+    }
+    output.rgba[offset + 3] = 255;
+  }
+  return output;
+}
+
+export function compositeAlphaDiagnosticRaster(destination, source, options = {}) {
+  assertRasterImage(destination, 'destination');
+  assertRasterImage(source, 'source');
+  const x = options.x ?? 0;
+  const y = options.y ?? 0;
+  assertCoordinate(x, 'diagnostic x');
+  assertCoordinate(y, 'diagnostic y');
+  const mode = options.mode ?? 'mask';
+  const clip = options.clip !== false;
+  if (!['color', 'mask', 'edge'].includes(mode)) {
+    throw new RangeError('alpha diagnostic composite mode must be color, mask, or edge');
+  }
+  const edgeThreshold = options.edgeThreshold ?? 245;
+  if (!Number.isInteger(edgeThreshold) || edgeThreshold < 0 || edgeThreshold > 255) {
+    throw new RangeError('edge threshold must be an integer in [0, 255]');
+  }
+  const edgeColor = normalizeColor(options.edgeColor ?? [255, 0, 255, 255], 'edgeColor');
+  for (let sourceY = 0; sourceY < source.height; sourceY += 1) {
+    const targetY = y + sourceY;
+    if (clip && (targetY < 0 || targetY >= destination.height)) continue;
+    for (let sourceX = 0; sourceX < source.width; sourceX += 1) {
+      const targetX = x + sourceX;
+      if (clip && (targetX < 0 || targetX >= destination.width)) continue;
+      const sourceOffset = (sourceY * source.width + sourceX) * 4;
+      const alphaByte = source.rgba[sourceOffset + 3];
+      if (alphaByte === 0) continue;
+      const targetOffset = (targetY * destination.width + targetX) * 4;
+      if (mode === 'mask') {
+        destination.rgba[targetOffset] = alphaByte;
+        destination.rgba[targetOffset + 1] = alphaByte;
+        destination.rgba[targetOffset + 2] = alphaByte;
+      } else if (mode === 'edge') {
+        const color = alphaByte < edgeThreshold ? edgeColor : source.rgba.subarray(sourceOffset, sourceOffset + 3);
+        destination.rgba[targetOffset] = color[0];
+        destination.rgba[targetOffset + 1] = color[1];
+        destination.rgba[targetOffset + 2] = color[2];
+      } else {
+        const alpha = alphaByte / 255;
+        for (let channel = 0; channel < 3; channel += 1) {
+          destination.rgba[targetOffset + channel] = Math.round(
+            source.rgba[sourceOffset + channel] * alpha
+            + destination.rgba[targetOffset + channel] * (1 - alpha)
+          );
+        }
+      }
+      destination.rgba[targetOffset + 3] = 255;
+    }
+  }
+  return destination;
+}
+
 function localAlphaBounds(image, threshold) {
   let minX = image.width;
   let minY = image.height;
@@ -405,4 +558,149 @@ export function padRaster(image, padding, color = [0, 0, 0, 0]) {
     color
   );
   return compositeRaster(output, image, { x: normalized.left, y: normalized.top });
+}
+
+export function fitRasterAlphaToCanvas(image, options = {}) {
+  assertRasterImage(image);
+  const width = options.width ?? image.width;
+  const height = options.height ?? image.height;
+  const margin = options.margin ?? 0;
+  const threshold = options.threshold ?? 0;
+  checkedPixelCount(width, height, 'fitted raster');
+  assertInteger(margin, 'fit margin');
+  if (!Number.isInteger(threshold) || threshold < 0 || threshold > 255) {
+    throw new RangeError('alpha threshold must be an integer in [0, 255]');
+  }
+  if (margin * 2 >= width || margin * 2 >= height) throw new RangeError('fit margin leaves no target area');
+  const bounds = localAlphaBounds(image, threshold);
+  if (!bounds) return { image: createRaster(width, height, options.color), bounds: null, scale: null };
+  const scale = Math.min((width - margin * 2) / bounds.width, (height - margin * 2) / bounds.height);
+  const fittedWidth = Math.max(1, Math.round(bounds.width * scale));
+  const fittedHeight = Math.max(1, Math.round(bounds.height * scale));
+  const target = createRaster(width, height, options.color);
+  const cropped = cropRaster(image, bounds);
+  const resized = resizeRasterWithMode(cropped, fittedWidth, fittedHeight, options.resize ?? 'nearest');
+  compositeRaster(target, resized, {
+    x: Math.round((width - fittedWidth) / 2),
+    y: Math.round((height - fittedHeight) / 2),
+    mode: options.mode ?? 'copy'
+  });
+  return { image: target, bounds, scale };
+}
+
+function smootherstep(value) {
+  const x = Math.max(0, Math.min(1, value));
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+function clampByte(value) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function rasterAverageRgb(image) {
+  const sums = [0, 0, 0];
+  const count = image.width * image.height;
+  for (let offset = 0; offset < image.rgba.length; offset += 4) {
+    for (let channel = 0; channel < 3; channel += 1) sums[channel] += image.rgba[offset + channel];
+  }
+  return sums.map((sum) => sum / count);
+}
+
+export function shiftRasterRgb(image, target, options = {}) {
+  assertRasterImage(image);
+  const color = normalizeColor(target, 'target');
+  const strength = options.strength ?? 1;
+  if (!Number.isFinite(strength) || strength < 0 || strength > 1) {
+    throw new RangeError('shift strength must be a finite number in [0, 1]');
+  }
+  const current = rasterAverageRgb(image);
+  const delta = current.map((value, channel) => (color[channel] - value) * strength);
+  const output = { width: image.width, height: image.height, rgba: Buffer.from(image.rgba) };
+  for (let offset = 0; offset < output.rgba.length; offset += 4) {
+    for (let channel = 0; channel < 3; channel += 1) {
+      output.rgba[offset + channel] = clampByte(output.rgba[offset + channel] + delta[channel]);
+    }
+  }
+  return output;
+}
+
+export function blendRasterTowardAverage(image, strength) {
+  assertRasterImage(image);
+  if (!Number.isFinite(strength) || strength < 0 || strength > 1) {
+    throw new RangeError('blend strength must be a finite number in [0, 1]');
+  }
+  const average = rasterAverageRgb(image);
+  const output = { width: image.width, height: image.height, rgba: Buffer.from(image.rgba) };
+  for (let offset = 0; offset < output.rgba.length; offset += 4) {
+    for (let channel = 0; channel < 3; channel += 1) {
+      output.rgba[offset + channel] = Math.round(
+        output.rgba[offset + channel] * (1 - strength) + average[channel] * strength
+      );
+    }
+  }
+  return output;
+}
+
+export function blendRasterOppositeEdges(image, options = {}) {
+  assertRasterImage(image);
+  const margin = options.margin ?? 1;
+  const strength = options.strength ?? 1;
+  const axes = options.axes ?? ['horizontal', 'vertical'];
+  assertInteger(margin, 'edge blend margin', { min: 1 });
+  if (!Number.isFinite(strength) || strength < 0 || strength > 1) {
+    throw new RangeError('edge blend strength must be a finite number in [0, 1]');
+  }
+  if (!Array.isArray(axes) || axes.some((axis) => axis !== 'horizontal' && axis !== 'vertical')) {
+    throw new RangeError('edge blend axes must contain horizontal or vertical');
+  }
+  const edge = Math.max(1, Math.min(margin, Math.floor(Math.min(image.width, image.height) / 3)));
+  const output = { width: image.width, height: image.height, rgba: Buffer.from(image.rgba) };
+  const blendPair = (first, second, weight) => {
+    for (let channel = 0; channel < 4; channel += 1) {
+      const average = Math.round((output.rgba[first + channel] + output.rgba[second + channel]) / 2);
+      output.rgba[first + channel] = Math.round(output.rgba[first + channel] * (1 - weight) + average * weight);
+      output.rgba[second + channel] = Math.round(output.rgba[second + channel] * (1 - weight) + average * weight);
+    }
+  };
+  if (axes.includes('horizontal')) {
+    for (let y = 0; y < image.height; y += 1) {
+      for (let distance = 0; distance < edge; distance += 1) {
+        blendPair((y * image.width + distance) * 4, (y * image.width + image.width - 1 - distance) * 4, (1 - smootherstep(distance / edge)) * strength);
+      }
+    }
+  }
+  if (axes.includes('vertical')) {
+    for (let x = 0; x < image.width; x += 1) {
+      for (let distance = 0; distance < edge; distance += 1) {
+        blendPair((distance * image.width + x) * 4, ((image.height - 1 - distance) * image.width + x) * 4, (1 - smootherstep(distance / edge)) * strength);
+      }
+    }
+  }
+  return output;
+}
+
+export function neutralizeRasterEdges(image, options = {}) {
+  assertRasterImage(image);
+  const margin = options.margin ?? 1;
+  const strength = options.strength ?? 1;
+  assertInteger(margin, 'edge neutralization margin', { min: 1 });
+  if (!Number.isFinite(strength) || strength < 0 || strength > 1) {
+    throw new RangeError('edge neutralization strength must be a finite number in [0, 1]');
+  }
+  const target = options.target ? normalizeColor(options.target, 'target') : rasterAverageRgb(image);
+  const edge = Math.max(1, Math.min(margin, Math.floor(Math.min(image.width, image.height) / 2)));
+  const output = { width: image.width, height: image.height, rgba: Buffer.from(image.rgba) };
+  for (let y = 0; y < image.height; y += 1) {
+    const dy = Math.min(y, image.height - 1 - y);
+    for (let x = 0; x < image.width; x += 1) {
+      const dx = Math.min(x, image.width - 1 - x);
+      const weight = (1 - smootherstep(Math.min(dx, dy) / edge)) * strength;
+      if (weight <= 0) continue;
+      const offset = (y * image.width + x) * 4;
+      for (let channel = 0; channel < 3; channel += 1) {
+        output.rgba[offset + channel] = clampByte(output.rgba[offset + channel] * (1 - weight) + target[channel] * weight);
+      }
+    }
+  }
+  return output;
 }
