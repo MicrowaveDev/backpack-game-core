@@ -1,5 +1,5 @@
 import net from 'node:net';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 export function parseSuiteRunnerArgs(argv, { suites, defaultSuite, extraFlags = [] }) {
   const suiteArg = argv.find((arg) => arg.startsWith('--suite='));
@@ -58,4 +58,23 @@ export function runChildProcess(command, args = [], { cwd, env = process.env, st
       }
     });
   });
+}
+
+export function runChildProcessSync(command, args = [], {
+  cwd,
+  env = process.env,
+  stdio = 'inherit',
+  encoding,
+  shell = process.platform === 'win32',
+  allowFailure = false,
+  spawnProcess = spawnSync
+} = {}) {
+  const result = spawnProcess(command, args, { cwd, env, stdio, encoding, shell });
+  if (result.error) throw result.error;
+  if (!allowFailure && result.status !== 0) {
+    const error = new Error(`${command} ${args.join(' ')} failed${result.signal ? ` with signal ${result.signal}` : ` with code ${result.status}`}`);
+    error.result = { command, args, code: result.status, signal: result.signal || null };
+    throw error;
+  }
+  return result;
 }

@@ -27,7 +27,8 @@ import {
 } from '@microwavedev/backpack-game-core/tooling/commands';
 import {
   parseSuiteRunnerArgs,
-  runConfiguredSuite
+  runConfiguredSuite,
+  runChildProcessSync
 } from '@microwavedev/backpack-game-core/tooling/runners';
 
 test('[tooling/image] deterministic PNGs round-trip and path roots are injected', () => {
@@ -243,4 +244,23 @@ test('[tooling/runners] parses configured suites and forwards child exit state',
   assert.deepEqual(exitState, { code: 2, signal: null });
   child.emit('exit', null, 'SIGTERM');
   assert.deepEqual(exitState, { code: null, signal: 'SIGTERM' });
+});
+
+test('[tooling/runners] normalizes synchronous command failures through an injected process', () => {
+  const ok = runChildProcessSync('tool', ['--check'], {
+    spawnProcess(command, args, options) {
+      assert.equal(command, 'tool');
+      assert.deepEqual(args, ['--check']);
+      assert.equal(options.stdio, 'inherit');
+      return { status: 0, signal: null };
+    }
+  });
+  assert.equal(ok.status, 0);
+  assert.throws(() => runChildProcessSync('tool', [], {
+    spawnProcess: () => ({ status: 3, signal: null })
+  }), /failed with code 3/);
+  assert.equal(runChildProcessSync('tool', [], {
+    allowFailure: true,
+    spawnProcess: () => ({ status: 3, signal: null })
+  }).status, 3);
 });
