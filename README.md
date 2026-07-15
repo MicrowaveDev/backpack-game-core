@@ -18,6 +18,11 @@ correct folder and public import before searching or adding code. New consumer
 code should prefer domain facades such as `modules/loadout`, `modules/gacha`,
 and `modules/wallet`; direct helper subpaths remain compatible.
 
+Shared script ownership and invocation are documented in
+[`docs/tooling-routing.md`](docs/tooling-routing.md). Agents should run consumer
+npm aliases; repository-targeted core commands require `--repo-root` and never
+infer a product from the nested submodule location.
+
 ## Release Discipline
 
 The current release channel is submodule-only: consumers pin a core Git commit
@@ -30,7 +35,7 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 - `tooling/image`, `tooling/frame-files`, `tooling/raster`, `tooling/image-analysis`,
   `tooling/image-review`, `tooling/image-validation`, `tooling/evidence`,
   `tooling/work-queue`, `tooling/release`, `tooling/provenance`,
-  `tooling/commands`, and `tooling/runners`: Node-only reusable script
+  `tooling/commands`, `tooling/cli`, and `tooling/runners`: Node-only reusable script
   primitives for deterministic PNG processing and review, configurable image
   policy, queue selection, release sequencing, provenance, command-manifest
   checks, and configured runners. Consumers own paths, catalogs, aliases,

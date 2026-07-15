@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add the repository-targeted `backpack-game-core` tooling CLI, require an
+  explicit `--repo-root`, and document CLI, configured-wrapper, and
+  product-only script routing.
 - Organize flat root mechanics into domain, client, and shared folders while
   preserving compatibility exports and documenting architecture routing.
 - Add structured indexed-animation preparation with configurable naming,

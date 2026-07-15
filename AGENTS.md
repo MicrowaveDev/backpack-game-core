@@ -75,6 +75,9 @@ this repo is checked out under the hub:
 
 ## Node Tooling
 
+- Read `docs/tooling-routing.md` before adding, moving, or invoking scripts.
+  Use its ownership test to decide between a core CLI command, a configured
+  consumer wrapper, and a product-only operation.
 - Reusable script engines live under the Node-only `tooling/*` exports. Keep
   repository roots, catalogs, command aliases, suite maps, environment policy,
   logging, and process exit policy in consumer wrappers.
@@ -82,3 +85,6 @@ this repo is checked out under the hub:
 - Product script entry points must import package subpaths, never core source
   paths. Browser tooling such as Puppeteer and Playwright remains a consumer
   dependency; core runner helpers only orchestrate injected commands.
+- Universal repository-targeted commands belong in the existing
+  `backpack-game-core` CLI, must require `--repo-root`, and must resolve relative
+  paths from that root. Consumers expose them through local npm aliases.

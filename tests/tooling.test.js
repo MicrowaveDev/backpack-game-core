@@ -26,6 +26,7 @@ import {
   formatScriptDocumentationResult,
   validateScriptDocumentation
 } from '@microwavedev/backpack-game-core/tooling/commands';
+import { runToolingCli } from '@microwavedev/backpack-game-core/tooling/cli';
 import {
   parseSuiteRunnerArgs,
   runConfiguredSuite,
@@ -230,6 +231,40 @@ test('[tooling/commands] validates configured manifests without product assumpti
       manifestPath: path.join(scriptsRoot, 'command-manifest.json'),
       readmePath: path.join(scriptsRoot, 'README.md')
     }).errors.length >= 2);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('[tooling/cli] targets an explicit consumer repository root', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'core-cli-'));
+  try {
+    const scriptsRoot = path.join(root, 'app', 'scripts');
+    fs.mkdirSync(path.join(scriptsRoot, 'checks'), { recursive: true });
+    fs.writeFileSync(path.join(scriptsRoot, 'checks', 'check.js'), '');
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({
+      scripts: { check: 'node app/scripts/checks/check.js' }
+    }));
+    fs.writeFileSync(path.join(scriptsRoot, 'command-manifest.json'), JSON.stringify({
+      directories: [{ id: 'checks', purpose: 'Checks', entryPoints: true }],
+      families: [{ id: 'quality', commands: ['check'] }],
+      compatibilityAliases: []
+    }));
+    fs.writeFileSync(path.join(scriptsRoot, 'README.md'), '<!-- command-family:quality -->\n`npm run check`\n');
+    let stdout = '';
+    let stderr = '';
+    const status = runToolingCli(['scripts:docs:check', '--repo-root', root], {
+      cwd: path.dirname(root),
+      stdout: { write(value) { stdout += value; } },
+      stderr: { write(value) { stderr += value; } }
+    });
+    assert.equal(status, 0, stderr);
+    assert.match(stdout, /Script documentation OK: 1 commands in 1 families and 1 directories/);
+    assert.equal(runToolingCli(['scripts:docs:check'], {
+      stdout: { write() {} },
+      stderr: { write(value) { stderr += value; } }
+    }), 2);
+    assert.match(stderr, /--repo-root is required/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

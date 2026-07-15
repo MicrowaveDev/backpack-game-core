@@ -37,7 +37,7 @@ barrels belong directly in it.
 | Browser-safe request adapters and view-model DTOs | `src/client/` | `.../client` or `.../client-view-model` |
 | Neutral Vue components and composables | `src/vue/` | `.../vue`, `.../vue/components`, or `.../vue/composables` |
 | Server module factories and middleware | `src/server/` | `.../server` or `.../server/middleware` |
-| Node-only scripts and image/release utilities | `src/tooling/` | Matching `.../tooling/<name>` export |
+| Node-only scripts and image/release utilities | `src/tooling/` | Matching `.../tooling/<name>` export; route execution through [`tooling-routing.md`](tooling-routing.md) |
 
 Artifacts are combat/loadout items. Assets are profile-owned cosmetics or
 other collectible inventory. Keep that naming distinction when routing code.
@@ -57,6 +57,10 @@ other collectible inventory. Keep that naming distinction when routing code.
    Modules must not depend on `server/`.
 6. `tooling/` stays Node-only and does not leak through the root, client, or Vue
    barrels.
+
+Executable tooling has an additional ownership and invocation contract in
+[`tooling-routing.md`](tooling-routing.md). In particular, consumer-targeted
+core commands require an explicit repository root.
 
 ## Public API Versus Files
 

@@ -4,6 +4,9 @@
   "description": "Reusable pure backpack game mechanics shared across Microwave games.",
   "type": "module",
   "types": "./src/index.d.ts",
+  "bin": {
+    "backpack-game-core": "./bin/backpack-game-core.js"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -92,6 +95,10 @@
     "./tooling/commands": {
       "types": "./src/tooling/commands.d.ts",
       "import": "./src/tooling/commands.js"
+    },
+    "./tooling/cli": {
+      "types": "./src/tooling/cli.d.ts",
+      "import": "./src/tooling/cli.js"
     },
     "./tooling/runners": {
       "types": "./src/tooling/runners.d.ts",
