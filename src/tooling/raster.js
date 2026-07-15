@@ -402,7 +402,8 @@ export function composeFrameGrid(frames, options) {
   for (let index = 0; index < frames.length; index += 1) {
     compositeRaster(output, frames[index], {
       x: (index % columns) * frameWidth,
-      y: Math.floor(index / columns) * frameHeight
+      y: Math.floor(index / columns) * frameHeight,
+      mode: options.mode
     });
   }
   return output;

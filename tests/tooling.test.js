@@ -8,6 +8,7 @@ import {
   decodePngBuffer,
   encodeDeterministicPng,
   fileSha256,
+  imageFileDataUrl,
   inputEntriesFromPaths,
   readPngRgba,
   stitchVerticalImages
@@ -47,6 +48,26 @@ test('[tooling/image] deterministic PNGs round-trip and path roots are injected'
     const invalid = path.join(root, 'invalid.png');
     fs.writeFileSync(invalid, 'not png');
     assert.throws(() => readPngRgba(invalid), /not a PNG/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('[tooling/image] embeds supported image files as MIME-aware data URLs', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'core-image-data-url-'));
+  try {
+    const pngPath = path.join(root, 'pixel.PNG');
+    const svgPath = path.join(root, 'mark.svg');
+    const emptyPath = path.join(root, 'empty.webp');
+    fs.writeFileSync(pngPath, Buffer.from([1, 2, 3]));
+    fs.writeFileSync(svgPath, '<svg/>');
+    fs.writeFileSync(emptyPath, '');
+    assert.equal(imageFileDataUrl(pngPath), 'data:image/png;base64,AQID');
+    assert.equal(imageFileDataUrl(svgPath), `data:image/svg+xml;base64,${Buffer.from('<svg/>').toString('base64')}`);
+    assert.equal(imageFileDataUrl(emptyPath), 'data:image/webp;base64,');
+    assert.equal(imageFileDataUrl(pngPath, { mime: 'application/octet-stream' }), 'data:application/octet-stream;base64,AQID');
+    assert.throws(() => imageFileDataUrl(path.join(root, 'unknown.bin')), /cannot infer image MIME type/);
+    assert.throws(() => imageFileDataUrl(path.join(root, 'missing.png')), /ENOENT/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

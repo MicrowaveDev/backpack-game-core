@@ -169,6 +169,24 @@ test('[tooling/raster] tiles repeatedly and extracts exact frame-grid edge cells
   assert.throws(() => extractFrame(sheet, grid, 2, 0), /outside the grid/);
 });
 
+test('[tooling/raster] frame-grid copy mode preserves hidden RGB and partial alpha', () => {
+  const hidden = { width: 1, height: 1, rgba: Buffer.from([9, 8, 7, 0]) };
+  const partial = { width: 1, height: 1, rgba: Buffer.from([6, 5, 4, 127]) };
+  const copied = composeFrameGrid([hidden, partial, partial, hidden], {
+    rows: 2,
+    columns: 2,
+    mode: 'copy'
+  });
+  assert.deepEqual(pixels(copied), [
+    9, 8, 7, 0, 6, 5, 4, 127,
+    6, 5, 4, 127, 9, 8, 7, 0
+  ]);
+  assert.throws(
+    () => composeFrameGrid([hidden], { rows: 1, columns: 1, mode: 'unknown' }),
+    /composite mode/
+  );
+});
+
 test('[tooling/raster] chroma-keys by tolerance, trims alpha, and pads empty images deterministically', () => {
   const source = { width: 3, height: 1, rgba: Buffer.from([
     255, 0, 255, 255, 250, 0, 250, 128, 0, 1, 2, 255

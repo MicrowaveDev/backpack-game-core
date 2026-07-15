@@ -48,6 +48,27 @@ export function escapeHtml(value) {
     .replaceAll('"', '&quot;');
 }
 
+const IMAGE_MIME_TYPES = new Map([
+  ['.gif', 'image/gif'],
+  ['.jpeg', 'image/jpeg'],
+  ['.jpg', 'image/jpeg'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml'],
+  ['.webp', 'image/webp']
+]);
+
+export function imageFileDataUrl(filePath, options = {}) {
+  if (typeof filePath !== 'string' || filePath.length === 0) {
+    throw new TypeError('image file path must be a non-empty string');
+  }
+  const inferredMime = IMAGE_MIME_TYPES.get(path.extname(filePath).toLowerCase());
+  const mime = options.mime ?? inferredMime;
+  if (typeof mime !== 'string' || mime.length === 0) {
+    throw new RangeError(`cannot infer image MIME type from ${path.extname(filePath) || 'a file without an extension'}`);
+  }
+  return `data:${mime};base64,${fs.readFileSync(filePath).toString('base64')}`;
+}
+
 // ---------- PNG decode ----------
 
 function paeth(a, b, c) {

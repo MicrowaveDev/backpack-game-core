@@ -4,6 +4,7 @@ export const PNG_SIGNATURE: Buffer;
 export function fileSha256(filePath: string): string;
 export function bufferSha256(buffer: Buffer): string;
 export function escapeHtml(value: unknown): string;
+export function imageFileDataUrl(filePath: string, options?: { mime?: string }): string;
 export function readPngHeader(filePath: string, options?: { root?: string }): PngHeader;
 export function readPngRgba(filePath: string): PngImage;
 export function readPngAsRgba(filePath: string): PngImage;

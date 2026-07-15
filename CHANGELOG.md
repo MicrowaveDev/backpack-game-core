@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add MIME-aware image file data URLs for shared review tooling.
+- Let frame-grid composition forward byte-preserving raster composite modes.
+
 ## 0.1.0 - Runtime/API Baseline
 
 `backpack-game-core` is still consumed from Git/submodule checkouts rather than

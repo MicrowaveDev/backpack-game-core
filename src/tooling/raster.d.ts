@@ -24,7 +24,7 @@ export function tileRaster(destination: RasterImage, tile: RasterImage, rect?: R
 export function createFrameGrid(image: RasterImage, options: { rows: number; columns: number; frameWidth?: number; frameHeight?: number }): FrameGrid;
 export function frameRect(grid: FrameGrid, row: number, column: number): RasterRect;
 export function extractFrame(image: RasterImage, grid: FrameGrid, row: number, column: number): RasterImage;
-export function composeFrameGrid(frames: RasterImage[], options: { rows: number; columns: number; color?: RasterColor }): RasterImage;
+export function composeFrameGrid(frames: RasterImage[], options: { rows: number; columns: number; color?: RasterColor; mode?: 'source-over' | 'max-alpha' | 'opaque' | 'copy' }): RasterImage;
 export function chromaKeyRaster(image: RasterImage, keyColor: RasterColor, options?: { tolerance?: number; clearRgb?: boolean }): RasterImage;
 export function createAlphaDiagnosticRaster(image: RasterImage, options?: { mode?: 'mask' | 'edge'; edgeThreshold?: number; edgeColor?: RasterColor }): RasterImage;
 export function compositeAlphaDiagnosticRaster(destination: RasterImage, source: RasterImage, options?: { x?: number; y?: number; mode?: 'color' | 'mask' | 'edge'; edgeThreshold?: number; edgeColor?: RasterColor; clip?: boolean }): RasterImage;
