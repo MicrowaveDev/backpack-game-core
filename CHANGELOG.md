@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add neutral normalized crop, resize dispatch, dimension-only frame-grid,
+  raster-detail normalization, frame clustering, and mask-boundary metrics.
 - Add MIME-aware image file data URLs for shared review tooling.
 - Let frame-grid composition forward byte-preserving raster composite modes.
 - Add indexed frame-file discovery and PNG frame-grid composition tooling.

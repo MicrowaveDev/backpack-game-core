@@ -24,12 +24,14 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   policy, queue selection, release sequencing, provenance, command-manifest
   checks, and configured runners. Consumers own paths, catalogs, aliases,
   browser dependencies, content policy, logs, and process policy.
-  Raster tooling includes contain/stretch placement, remainder-aware repeated
-  grids, alpha diagnostics and fitting, frame composition, and configurable
+  Raster tooling includes contain/stretch placement, normalized crops,
+  remainder-aware repeated grids, resize dispatch, alpha diagnostics and
+  fitting, detail normalization, frame composition, and configurable
   average/edge transforms. Frame-file tooling adds configurable indexed-file
   discovery and deterministic PNG frame-grid loading/composition without
   owning product filename conventions. Image analysis includes mask components,
-  palette histograms/swatches, and opaque-corner metrics; evidence tooling
+  mask-boundary alpha metrics, frame clustering, palette histograms/swatches,
+  and opaque-corner metrics; evidence tooling
   distinguishes self-hashed immutable manifests from atomic mutable JSON records.
 
 - `bag-shape`: shape masks, quarter-turn rotation, effective dimensions, and

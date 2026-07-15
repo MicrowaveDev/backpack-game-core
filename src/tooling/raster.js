@@ -139,6 +139,34 @@ export function cropRaster(image, rect) {
   return output;
 }
 
+export function cropRasterNormalized(image, options) {
+  assertRasterImage(image);
+  if (!options || typeof options !== 'object') throw new TypeError('normalized crop options are required');
+  const center = options.center;
+  if (!center || typeof center !== 'object'
+    || !Number.isFinite(center.x) || center.x < 0 || center.x > 1
+    || !Number.isFinite(center.y) || center.y < 0 || center.y > 1) {
+    throw new RangeError('normalized crop center must contain finite x and y values in [0, 1]');
+  }
+  const widthRatio = options.widthRatio;
+  const heightRatio = options.heightRatio;
+  if (!Number.isFinite(widthRatio) || widthRatio <= 0 || widthRatio > 1
+    || !Number.isFinite(heightRatio) || heightRatio <= 0 || heightRatio > 1) {
+    throw new RangeError('normalized crop ratios must be finite numbers in (0, 1]');
+  }
+  const width = Math.max(1, Math.floor(image.width * widthRatio));
+  const height = Math.max(1, Math.floor(image.height * heightRatio));
+  const centerX = Math.round(image.width * center.x);
+  const centerY = Math.round(image.height * center.y);
+  const rect = {
+    x: Math.max(0, Math.min(image.width - width, centerX - Math.floor(width / 2))),
+    y: Math.max(0, Math.min(image.height - height, centerY - Math.floor(height / 2))),
+    width,
+    height
+  };
+  return { image: cropRaster(image, rect), rect };
+}
+
 export function resizeRasterNearest(image, width, height) {
   assertRasterImage(image);
   const output = createRaster(width, height);
@@ -189,7 +217,8 @@ export function resizeRasterHybrid(image, width, height) {
     : resizeRasterBox(image, width, height);
 }
 
-function resizeRasterWithMode(image, width, height, mode) {
+export function resizeRaster(image, width, height, options = {}) {
+  const mode = options.mode ?? 'hybrid';
   if (mode === 'nearest') return resizeRasterNearest(image, width, height);
   if (mode === 'box') return resizeRasterBox(image, width, height);
   if (mode === 'hybrid') return resizeRasterHybrid(image, width, height);
@@ -227,7 +256,7 @@ export function compositeRasterToRect(destination, source, rect, options = {}) {
   const fit = options.fit ?? 'stretch';
   if (fit !== 'stretch' && fit !== 'contain') throw new RangeError('fit mode must be stretch or contain');
   const target = fit === 'contain' ? containRasterRect(source, rect, options) : rect;
-  const resized = resizeRasterWithMode(source, target.width, target.height, options.resize ?? 'nearest');
+  const resized = resizeRaster(source, target.width, target.height, { mode: options.resize ?? 'nearest' });
   return compositeRaster(destination, resized, {
     x: target.x,
     y: target.y,
@@ -343,21 +372,29 @@ function compositePixel(destination, targetOffset, source, sourceOffset) {
   destination.rgba[targetOffset + 3] = Math.round(outputAlpha * 255);
 }
 
-export function createFrameGrid(image, options) {
-  assertRasterImage(image);
+export function createFrameGridFromDimensions(dimensions, options) {
+  if (!dimensions || typeof dimensions !== 'object') throw new TypeError('frame grid dimensions are required');
+  const width = dimensions.width;
+  const height = dimensions.height;
+  checkedPixelCount(width, height, 'frame grid');
   if (!options || typeof options !== 'object') throw new TypeError('frame grid options are required');
   const rows = options.rows;
   const columns = options.columns;
   assertInteger(rows, 'frame grid rows', { min: 1 });
   assertInteger(columns, 'frame grid columns', { min: 1 });
-  const frameWidth = options.frameWidth ?? image.width / columns;
-  const frameHeight = options.frameHeight ?? image.height / rows;
+  const frameWidth = options.frameWidth ?? width / columns;
+  const frameHeight = options.frameHeight ?? height / rows;
   assertInteger(frameWidth, 'frame width', { min: 1 });
   assertInteger(frameHeight, 'frame height', { min: 1 });
-  if (frameWidth * columns !== image.width || frameHeight * rows !== image.height) {
+  if (frameWidth * columns !== width || frameHeight * rows !== height) {
     throw new RangeError('frame grid must exactly cover the image');
   }
   return { rows, columns, frameWidth, frameHeight };
+}
+
+export function createFrameGrid(image, options) {
+  assertRasterImage(image);
+  return createFrameGridFromDimensions(image, options);
 }
 
 export function frameRect(grid, row, column) {
@@ -580,7 +617,7 @@ export function fitRasterAlphaToCanvas(image, options = {}) {
   const fittedHeight = Math.max(1, Math.round(bounds.height * scale));
   const target = createRaster(width, height, options.color);
   const cropped = cropRaster(image, bounds);
-  const resized = resizeRasterWithMode(cropped, fittedWidth, fittedHeight, options.resize ?? 'nearest');
+  const resized = resizeRaster(cropped, fittedWidth, fittedHeight, { mode: options.resize ?? 'nearest' });
   compositeRaster(target, resized, {
     x: Math.round((width - fittedWidth) / 2),
     y: Math.round((height - fittedHeight) / 2),
@@ -609,7 +646,13 @@ function rasterAverageRgb(image) {
 
 export function shiftRasterRgb(image, target, options = {}) {
   assertRasterImage(image);
-  const color = normalizeColor(target, 'target');
+  if ((!Array.isArray(target) && !ArrayBuffer.isView(target)) || target.length < 3) {
+    throw new TypeError('target must contain at least three channels');
+  }
+  const color = Array.from(target).slice(0, 3);
+  if (color.some((channel) => !Number.isFinite(channel) || channel < 0 || channel > 255)) {
+    throw new RangeError('target channels must be finite numbers in [0, 255]');
+  }
   const strength = options.strength ?? 1;
   if (!Number.isFinite(strength) || strength < 0 || strength > 1) {
     throw new RangeError('shift strength must be a finite number in [0, 1]');
@@ -700,6 +743,58 @@ export function neutralizeRasterEdges(image, options = {}) {
       const offset = (y * image.width + x) * 4;
       for (let channel = 0; channel < 3; channel += 1) {
         output.rgba[offset + channel] = clampByte(output.rgba[offset + channel] * (1 - weight) + target[channel] * weight);
+      }
+    }
+  }
+  return output;
+}
+
+function averageRasterNeighbors(image, x, y, minimumAlpha) {
+  const samples = [
+    [x - 1, y, 1], [x + 1, y, 1], [x, y - 1, 1], [x, y + 1, 1],
+    [x - 1, y - 1, 0.5], [x + 1, y - 1, 0.5],
+    [x - 1, y + 1, 0.5], [x + 1, y + 1, 0.5]
+  ];
+  const totals = [0, 0, 0];
+  let totalWeight = 0;
+  for (const [sampleX, sampleY, weight] of samples) {
+    if (sampleX < 0 || sampleX >= image.width || sampleY < 0 || sampleY >= image.height) continue;
+    const offset = (sampleY * image.width + sampleX) * 4;
+    if (image.rgba[offset + 3] < minimumAlpha) continue;
+    totalWeight += weight;
+    for (let channel = 0; channel < 3; channel += 1) totals[channel] += image.rgba[offset + channel] * weight;
+  }
+  return totalWeight ? totals.map((total) => total / totalWeight) : null;
+}
+
+export function normalizeRasterDetail(image, options) {
+  assertRasterImage(image);
+  if (!options || typeof options !== 'object') throw new TypeError('detail normalization options are required');
+  const { quantizeStep, neighborBlend, minimumAlpha } = options;
+  if (!Number.isInteger(quantizeStep) || quantizeStep < 1 || quantizeStep > 255) {
+    throw new RangeError('quantizeStep must be an integer in [1, 255]');
+  }
+  if (!Number.isFinite(neighborBlend) || neighborBlend < 0 || neighborBlend > 1) {
+    throw new RangeError('neighborBlend must be a finite number in [0, 1]');
+  }
+  if (!Number.isInteger(minimumAlpha) || minimumAlpha < 0 || minimumAlpha > 255) {
+    throw new RangeError('minimumAlpha must be an integer in [0, 255]');
+  }
+  const output = { width: image.width, height: image.height, rgba: Buffer.from(image.rgba) };
+  for (let y = 0; y < image.height; y += 1) {
+    for (let x = 0; x < image.width; x += 1) {
+      const offset = (y * image.width + x) * 4;
+      if (image.rgba[offset + 3] < minimumAlpha) {
+        output.rgba.fill(0, offset, offset + 4);
+        continue;
+      }
+      const average = neighborBlend > 0 ? averageRasterNeighbors(image, x, y, minimumAlpha) : null;
+      for (let channel = 0; channel < 3; channel += 1) {
+        const source = image.rgba[offset + channel];
+        const blended = average
+          ? source * (1 - neighborBlend) + average[channel] * neighborBlend
+          : source;
+        output.rgba[offset + channel] = Math.max(0, Math.min(255, Math.round(blended / quantizeStep) * quantizeStep));
       }
     }
   }

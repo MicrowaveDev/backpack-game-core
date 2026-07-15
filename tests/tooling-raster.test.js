@@ -11,14 +11,18 @@ import {
   containRasterRect,
   createAlphaDiagnosticRaster,
   createFrameGrid,
+  createFrameGridFromDimensions,
   createRaster,
   cropRaster,
+  cropRasterNormalized,
   extractFrame,
   fillRaster,
   fitRasterAlphaToCanvas,
   frameRect,
+  normalizeRasterDetail,
   padRaster,
   paintCheckerboard,
+  resizeRaster,
   resizeRasterNearest,
   resizeRasterBox,
   resizeRasterHybrid,
@@ -106,6 +110,7 @@ test('[tooling/raster] applies average and edge transforms without mutating inpu
   const source = { width: 3, height: 3, rgba: Buffer.from(Array.from({ length: 9 }, (_, index) => [index * 10, 20, 30, 255]).flat()) };
   const original = Buffer.from(source.rgba);
   assert.deepEqual(shiftRasterRgb(source, [100, 100, 100], { strength: 0 }).rgba, original);
+  assert.deepEqual([...shiftRasterRgb(createRaster(1, 1, [10, 20, 30, 255]), [10.5, 20.25, 30.75]).rgba], [11, 20, 31, 255]);
   assert.equal(blendRasterTowardAverage(source, 1).rgba[0], 40);
   assert.notDeepEqual(blendRasterOppositeEdges(source, { margin: 1 }).rgba, original);
   assert.notDeepEqual(neutralizeRasterEdges(source, { margin: 1, strength: 1 }).rgba, original);
@@ -125,6 +130,28 @@ test('[tooling/raster] nearest resize preserves pixels and source-over handles t
   const clipped = createRaster(1, 1);
   compositeRaster(clipped, source, { x: -1, y: 0 });
   assert.deepEqual(pixels(clipped), [40, 50, 60, 255]);
+});
+
+test('[tooling/raster] crops normalized rectangles with clamped centers and dispatches resize modes', () => {
+  const source = {
+    width: 4,
+    height: 2,
+    rgba: Buffer.from(Array.from({ length: 8 }, (_, index) => [index, 0, 0, 255]).flat())
+  };
+  const cropped = cropRasterNormalized(source, {
+    center: { x: 1, y: 0 },
+    widthRatio: 0.5,
+    heightRatio: 0.5
+  });
+  assert.deepEqual(cropped.rect, { x: 2, y: 0, width: 2, height: 1 });
+  assert.deepEqual(pixels(cropped.image), [2, 0, 0, 255, 3, 0, 0, 255]);
+  assert.deepEqual(resizeRaster(source, 8, 2), resizeRasterHybrid(source, 8, 2));
+  assert.deepEqual(resizeRaster(source, 8, 2, { mode: 'nearest' }), resizeRasterNearest(source, 8, 2));
+  assert.deepEqual(resizeRaster(source, 2, 1, { mode: 'box' }), resizeRasterBox(source, 2, 1));
+  assert.throws(() => resizeRaster(source, 2, 1, { mode: 'smooth' }), /resize mode/);
+  assert.throws(() => cropRasterNormalized(source, {
+    center: { x: -1, y: 0.5 }, widthRatio: 1, heightRatio: 1
+  }), /crop center/);
 });
 
 test('[tooling/raster] compatibility modes preserve straight-channel box resize and review compositing', () => {
@@ -154,6 +181,7 @@ test('[tooling/raster] tiles repeatedly and extracts exact frame-grid edge cells
     5, 0, 0, 255, 6, 0, 0, 255, 7, 0, 0, 255, 8, 0, 0, 255
   ]) };
   const grid = createFrameGrid(sheet, { rows: 2, columns: 2 });
+  assert.deepEqual(createFrameGridFromDimensions({ width: 4, height: 2 }, { rows: 2, columns: 2 }), grid);
   assert.deepEqual(frameRect(grid, 1, 1), { x: 2, y: 1, width: 2, height: 1 });
   assert.deepEqual(pixels(extractFrame(sheet, grid, 1, 1)), [7, 0, 0, 255, 8, 0, 0, 255]);
   assert.deepEqual(composeFrameGrid([
@@ -165,8 +193,31 @@ test('[tooling/raster] tiles repeatedly and extracts exact frame-grid edge cells
     rgba: Buffer.from([1, 0, 0, 255, 2, 0, 0, 255, 7, 0, 0, 255, 8, 0, 0, 255])
   });
   assert.throws(() => createFrameGrid(sheet, { rows: 1, columns: 3 }), /integer/);
+  assert.throws(() => createFrameGridFromDimensions({ width: 4, height: 2 }, { rows: 1, columns: 3 }), /integer/);
   assert.throws(() => composeFrameGrid([tile], { rows: 1, columns: 2 }), /frame count/);
   assert.throws(() => extractFrame(sheet, grid, 2, 0), /outside the grid/);
+});
+
+test('[tooling/raster] normalizes detail from immutable source pixels', () => {
+  const source = { width: 3, height: 1, rgba: Buffer.from([
+    10, 20, 30, 5,
+    20, 30, 40, 255,
+    100, 110, 120, 255
+  ]) };
+  const original = Buffer.from(source.rgba);
+  assert.deepEqual(pixels(normalizeRasterDetail(source, {
+    quantizeStep: 10,
+    neighborBlend: 0.5,
+    minimumAlpha: 10
+  })), [
+    0, 0, 0, 0,
+    60, 70, 80, 255,
+    60, 70, 80, 255
+  ]);
+  assert.deepEqual(source.rgba, original);
+  assert.throws(() => normalizeRasterDetail(source, {
+    quantizeStep: 0, neighborBlend: 0, minimumAlpha: 0
+  }), /quantizeStep/);
 });
 
 test('[tooling/raster] frame-grid copy mode preserves hidden RGB and partial alpha', () => {

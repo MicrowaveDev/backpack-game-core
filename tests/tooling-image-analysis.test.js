@@ -2,13 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   alphaBounds,
+  analyzeMaskBoundaryAlpha,
   averageEdgeRgb,
   averageRegionRgb,
+  clusterFramesByDifference,
   connectedComponents,
   connectedComponentsFromMask,
   frameDifference,
   frameHash,
   luminance,
+  maskBoundaryEdges,
   opaqueMatteMetrics,
   paletteHistogram,
   renderPaletteSwatch,
@@ -74,6 +77,61 @@ test('[tooling/image-analysis] hashes rows without stride bytes and compares fra
   });
   assert.equal(frameDifference(first, second, { colorThreshold: 9 }).differentPixels, 0);
   assert.throws(() => frameDifference(first, createRaster(1, 1)), /same dimensions/);
+});
+
+test('[tooling/image-analysis] clusters frame rectangles by stable first representatives', () => {
+  const image = { width: 6, height: 1, rgba: Buffer.from([
+    0, 0, 0, 255, 0, 0, 0, 255,
+    1, 0, 0, 255, 0, 0, 0, 255,
+    1, 0, 0, 255, 1, 0, 0, 255
+  ]) };
+  const rects = [0, 2, 4].map((x) => ({ x, y: 0, width: 2, height: 1 }));
+  assert.deepEqual(clusterFramesByDifference(image, rects, {
+    minDifferentPixels: 2
+  }), {
+    groups: [
+      { representativeIndex: 0, representativeRect: rects[0], memberIndexes: [0, 1] },
+      { representativeIndex: 2, representativeRect: rects[2], memberIndexes: [2] }
+    ],
+    distinctCount: 2
+  });
+  assert.deepEqual(clusterFramesByDifference(image, []), { groups: [], distinctCount: 0 });
+  assert.throws(() => clusterFramesByDifference(image, rects, { minimumDifferentPixels: 0 }), /integer >= 1/);
+});
+
+test('[tooling/image-analysis] reports internal mask boundary alpha metrics without policy verdicts', () => {
+  const mask = { width: 2, height: 2, data: Uint8Array.from([1, 0, 1, 1]) };
+  assert.deepEqual(maskBoundaryEdges(mask), [
+    { column: 0, row: 0, direction: 'right', emptyColumn: 1, emptyRow: 0 },
+    { column: 1, row: 1, direction: 'top', emptyColumn: 1, emptyRow: 0 }
+  ]);
+  const image = createRaster(4, 4);
+  fillRaster(image, [0, 0, 0, 255], { x: 1, y: 0, width: 1, height: 2 });
+  fillRaster(image, [0, 0, 0, 255], { x: 2, y: 2, width: 1, height: 1 });
+  const analysis = analyzeMaskBoundaryAlpha(image, mask, {
+    stripWidth: 1,
+    alphaThreshold: 48,
+    inset: 0
+  });
+  assert.deepEqual({ cellWidth: analysis.cellWidth, cellHeight: analysis.cellHeight }, { cellWidth: 2, cellHeight: 2 });
+  assert.deepEqual(analysis.edges.map((edge) => ({
+    direction: edge.direction,
+    maximumAlphas: edge.maximumAlphas,
+    aboveThresholdCount: edge.aboveThresholdCount,
+    aboveThresholdRatio: edge.aboveThresholdRatio,
+    longestAboveThresholdRun: edge.longestAboveThresholdRun,
+    longestAboveThresholdRunRatio: edge.longestAboveThresholdRunRatio
+  })), [
+    {
+      direction: 'right', maximumAlphas: [255, 255], aboveThresholdCount: 2,
+      aboveThresholdRatio: 1, longestAboveThresholdRun: 2, longestAboveThresholdRunRatio: 1
+    },
+    {
+      direction: 'top', maximumAlphas: [255, 0], aboveThresholdCount: 1,
+      aboveThresholdRatio: 0.5, longestAboveThresholdRun: 1, longestAboveThresholdRunRatio: 0.5
+    }
+  ]);
+  assert.throws(() => analyzeMaskBoundaryAlpha(createRaster(3, 4), mask), /divisible/);
 });
 
 test('[tooling/image-analysis] averages regions and edge bands and computes color metrics', () => {

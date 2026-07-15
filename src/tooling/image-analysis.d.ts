@@ -14,12 +14,24 @@ export interface ConnectedComponent extends RasterRect {
 }
 export interface BinaryMask { width: number; height: number; data: ArrayLike<number> }
 export interface PaletteColor { rgb: [number, number, number]; hex: string; count: number; ratio: number; pct: number }
+export interface FrameDifferenceGroup { representativeIndex: number; representativeRect: RasterRect; memberIndexes: number[] }
+export type MaskBoundaryDirection = 'left' | 'right' | 'top' | 'bottom';
+export interface MaskBoundaryEdge { column: number; row: number; direction: MaskBoundaryDirection; emptyColumn: number; emptyRow: number }
+export interface MaskBoundaryAlphaMetrics extends MaskBoundaryEdge {
+  edgeLength: number; inset: number; sampleCount: number;
+  aboveThresholdCount: number; aboveThresholdRatio: number;
+  longestAboveThresholdRun: number; longestAboveThresholdRunRatio: number;
+  maximumAlphas: number[];
+}
 
 export function alphaBounds(image: RasterImage, options?: { rect?: RasterRect; threshold?: number }): AlphaBounds | null;
 export function frameHash(image: RasterImage, rect?: RasterRect): string;
 export function frameDifference(first: RasterImage, second: RasterImage, options?: { firstRect?: RasterRect; secondRect?: RasterRect; alphaThreshold?: number; colorThreshold?: number; visibleAlphaThreshold?: number }): FrameDifference;
+export function clusterFramesByDifference(image: RasterImage, rects: RasterRect[], options?: { minDifferentPixels?: number; minimumDifferentPixels?: number; alphaThreshold?: number; colorThreshold?: number; visibleAlphaThreshold?: number }): { groups: FrameDifferenceGroup[]; distinctCount: number };
 export function connectedComponents(image: RasterImage, options?: { rect?: RasterRect; threshold?: number; connectivity?: 4 | 8 }): ConnectedComponent[];
 export function connectedComponentsFromMask(mask: BinaryMask, options?: { rect?: RasterRect; connectivity?: 4 | 8 }): ConnectedComponent[];
+export function maskBoundaryEdges(mask: BinaryMask): MaskBoundaryEdge[];
+export function analyzeMaskBoundaryAlpha(image: RasterImage, mask: BinaryMask, options?: { stripPx?: number; stripWidth?: number; alphaThreshold?: number; inset?: number }): { cellWidth: number; cellHeight: number; edges: MaskBoundaryAlphaMetrics[] };
 export function paletteHistogram(image: RasterImage, options?: { rect?: RasterRect; alphaThreshold?: number; quantizationSteps?: number[]; includePixel?: (rgba: [number, number, number, number], position: { x: number; y: number; index: number }) => boolean }): { totalPixels: number; includedPixels: number; excludedPixels: number; transparentPixels: number; policyExcludedPixels: number; exact: PaletteColor[]; quantized: Record<number, PaletteColor[]> };
 export function renderPaletteSwatch(records: PaletteColor[], options?: { columns?: number; cell?: number; gap?: number; limit?: number; background?: import('./raster.js').RasterColor; border?: import('./raster.js').RasterColor }): RasterImage;
 export function averageRegionRgb(image: RasterImage, rect?: RasterRect): [number, number, number];

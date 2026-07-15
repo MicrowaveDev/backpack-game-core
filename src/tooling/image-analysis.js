@@ -109,6 +109,39 @@ export function frameDifference(first, second, options = {}) {
   };
 }
 
+export function clusterFramesByDifference(image, rects, options = {}) {
+  assertRasterImage(image);
+  if (!Array.isArray(rects)) throw new TypeError('frame rects must be an array');
+  const minimumDifferentPixels = options.minimumDifferentPixels ?? options.minDifferentPixels ?? 1;
+  if (!Number.isSafeInteger(minimumDifferentPixels) || minimumDifferentPixels < 1) {
+    throw new RangeError('minimumDifferentPixels must be an integer >= 1');
+  }
+  const differenceOptions = {
+    alphaThreshold: options.alphaThreshold,
+    colorThreshold: options.colorThreshold,
+    visibleAlphaThreshold: options.visibleAlphaThreshold
+  };
+  const groups = [];
+  rects.forEach((rect, index) => {
+    const normalized = containedRect(image, rect);
+    const group = groups.find((candidate) => frameDifference(image, image, {
+      ...differenceOptions,
+      firstRect: normalized,
+      secondRect: candidate.representativeRect
+    }).differentPixels < minimumDifferentPixels);
+    if (group) {
+      group.memberIndexes.push(index);
+      return;
+    }
+    groups.push({
+      representativeIndex: index,
+      representativeRect: { ...normalized },
+      memberIndexes: [index]
+    });
+  });
+  return { groups, distinctCount: groups.length };
+}
+
 export function connectedComponents(image, options = {}) {
   assertRasterImage(image);
   const rect = containedRect(image, options.rect);
@@ -188,6 +221,124 @@ export function connectedComponentsFromMask(mask, options = {}) {
     if (mask.data[index]) image.rgba[index * 4 + 3] = 255;
   }
   return connectedComponents(image, { rect: options.rect, connectivity: options.connectivity });
+}
+
+function assertBinaryMask(mask) {
+  if (!mask || typeof mask !== 'object') throw new TypeError('mask must be an object');
+  if (!Number.isSafeInteger(mask.width) || mask.width < 1
+    || !Number.isSafeInteger(mask.height) || mask.height < 1) {
+    throw new TypeError('mask dimensions must be positive integers');
+  }
+  if (!mask.data || mask.data.length !== mask.width * mask.height) {
+    throw new RangeError('mask data size must match its dimensions');
+  }
+  return mask;
+}
+
+export function maskBoundaryEdges(mask) {
+  assertBinaryMask(mask);
+  const edges = [];
+  for (let row = 0; row < mask.height; row += 1) {
+    for (let column = 0; column < mask.width; column += 1) {
+      if (!mask.data[row * mask.width + column]) continue;
+      const neighbors = [
+        { direction: 'left', emptyColumn: column - 1, emptyRow: row },
+        { direction: 'right', emptyColumn: column + 1, emptyRow: row },
+        { direction: 'top', emptyColumn: column, emptyRow: row - 1 },
+        { direction: 'bottom', emptyColumn: column, emptyRow: row + 1 }
+      ];
+      for (const edge of neighbors) {
+        if (edge.emptyColumn < 0 || edge.emptyColumn >= mask.width
+          || edge.emptyRow < 0 || edge.emptyRow >= mask.height
+          || mask.data[edge.emptyRow * mask.width + edge.emptyColumn]) {
+          continue;
+        }
+        edges.push({ column, row, ...edge });
+      }
+    }
+  }
+  return edges;
+}
+
+function longestThresholdRun(values, threshold) {
+  let longest = 0;
+  let current = 0;
+  let count = 0;
+  for (const value of values) {
+    if (value > threshold) {
+      current += 1;
+      count += 1;
+      longest = Math.max(longest, current);
+    } else {
+      current = 0;
+    }
+  }
+  return { longest, count };
+}
+
+export function analyzeMaskBoundaryAlpha(image, mask, options = {}) {
+  assertRasterImage(image);
+  assertBinaryMask(mask);
+  if (image.width % mask.width !== 0 || image.height % mask.height !== 0) {
+    throw new RangeError('image dimensions must be divisible by mask dimensions');
+  }
+  const stripWidth = options.stripWidth ?? options.stripPx ?? 4;
+  const alphaThreshold = options.alphaThreshold ?? 48;
+  const requestedInset = options.inset;
+  if (!Number.isSafeInteger(stripWidth) || stripWidth < 1) {
+    throw new RangeError('stripWidth must be an integer >= 1');
+  }
+  if (!Number.isInteger(alphaThreshold) || alphaThreshold < 0 || alphaThreshold > 255) {
+    throw new RangeError('alphaThreshold must be an integer in [0, 255]');
+  }
+  if (requestedInset != null && (!Number.isSafeInteger(requestedInset) || requestedInset < 0)) {
+    throw new RangeError('inset must be an integer >= 0');
+  }
+  const cellWidth = image.width / mask.width;
+  const cellHeight = image.height / mask.height;
+  const alphaAt = (x, y) => image.rgba[(y * image.width + x) * 4 + 3];
+  const edges = maskBoundaryEdges(mask).map((edge) => {
+    const vertical = edge.direction === 'left' || edge.direction === 'right';
+    const edgeLength = vertical ? cellHeight : cellWidth;
+    const inset = Math.min(requestedInset ?? Math.min(10, Math.floor(edgeLength * 0.08)), Math.floor(edgeLength / 2));
+    const maximumAlphas = [];
+    for (let position = inset; position < edgeLength - inset; position += 1) {
+      let maximumAlpha = 0;
+      for (let stripOffset = 0; stripOffset < Math.min(stripWidth, vertical ? cellWidth : cellHeight); stripOffset += 1) {
+        let x;
+        let y;
+        if (edge.direction === 'left') {
+          x = edge.column * cellWidth + stripOffset;
+          y = edge.row * cellHeight + position;
+        } else if (edge.direction === 'right') {
+          x = (edge.column + 1) * cellWidth - 1 - stripOffset;
+          y = edge.row * cellHeight + position;
+        } else if (edge.direction === 'top') {
+          x = edge.column * cellWidth + position;
+          y = edge.row * cellHeight + stripOffset;
+        } else {
+          x = edge.column * cellWidth + position;
+          y = (edge.row + 1) * cellHeight - 1 - stripOffset;
+        }
+        maximumAlpha = Math.max(maximumAlpha, alphaAt(x, y));
+      }
+      maximumAlphas.push(maximumAlpha);
+    }
+    const { longest, count } = longestThresholdRun(maximumAlphas, alphaThreshold);
+    const sampleCount = maximumAlphas.length;
+    return {
+      ...edge,
+      edgeLength,
+      inset,
+      sampleCount,
+      aboveThresholdCount: count,
+      aboveThresholdRatio: sampleCount ? count / sampleCount : 0,
+      longestAboveThresholdRun: longest,
+      longestAboveThresholdRunRatio: sampleCount ? longest / sampleCount : 0,
+      maximumAlphas
+    };
+  });
+  return { cellWidth, cellHeight, edges };
 }
 
 function colorHex(red, green, blue) {
