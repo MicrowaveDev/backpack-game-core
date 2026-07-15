@@ -4,6 +4,7 @@
 
 - Add MIME-aware image file data URLs for shared review tooling.
 - Let frame-grid composition forward byte-preserving raster composite modes.
+- Add indexed frame-file discovery and PNG frame-grid composition tooling.
 
 ## 0.1.0 - Runtime/API Baseline
 

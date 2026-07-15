@@ -16,7 +16,7 @@ release policy, compatibility rules, and cross-consumer gate are documented in
 
 ## Current Modules
 
-- `tooling/image`, `tooling/raster`, `tooling/image-analysis`,
+- `tooling/image`, `tooling/frame-files`, `tooling/raster`, `tooling/image-analysis`,
   `tooling/image-review`, `tooling/image-validation`, `tooling/evidence`,
   `tooling/work-queue`, `tooling/release`, `tooling/provenance`,
   `tooling/commands`, and `tooling/runners`: Node-only reusable script
@@ -26,9 +26,11 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   browser dependencies, content policy, logs, and process policy.
   Raster tooling includes contain/stretch placement, remainder-aware repeated
   grids, alpha diagnostics and fitting, frame composition, and configurable
-  average/edge transforms. Image analysis includes mask components, palette
-  histograms/swatches, and opaque-corner metrics; evidence tooling distinguishes
-  self-hashed immutable manifests from atomic mutable JSON records.
+  average/edge transforms. Frame-file tooling adds configurable indexed-file
+  discovery and deterministic PNG frame-grid loading/composition without
+  owning product filename conventions. Image analysis includes mask components,
+  palette histograms/swatches, and opaque-corner metrics; evidence tooling
+  distinguishes self-hashed immutable manifests from atomic mutable JSON records.
 
 - `bag-shape`: shape masks, quarter-turn rotation, effective dimensions, and
   shape-cell checks for irregular bags.
@@ -173,6 +175,7 @@ compatibility, and now also exposes Geesome-inspired module paths:
 - `@microwavedev/backpack-game-core/artifact-capabilities`
 - `@microwavedev/backpack-game-core/client`
 - `@microwavedev/backpack-game-core/client-view-model`
+- `@microwavedev/backpack-game-core/tooling/frame-files`
 - `@microwavedev/backpack-game-core/server`
 - `@microwavedev/backpack-game-core/server/middleware`
 - `@microwavedev/backpack-game-core/vue`
