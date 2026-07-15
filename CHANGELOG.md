@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add structured indexed-animation preparation with configurable naming,
+  fallback detection, frame-count checks, composition, and output validation.
 - Add neutral normalized crop, resize dispatch, dimension-only frame-grid,
   raster-detail normalization, frame clustering, and mask-boundary metrics.
 - Add MIME-aware image file data URLs for shared review tooling.

@@ -80,3 +80,99 @@ export function composePngFrameGrid(frameFiles, options = {}) {
     mode: options.mode ?? 'copy'
   });
 }
+
+export function prepareIndexedPngAnimation(options = {}) {
+  const root = options.root ?? process.cwd();
+  const sourcePath = options.sourcePath;
+  if (typeof sourcePath !== 'string' || sourcePath.length === 0) {
+    throw new TypeError('animation source path must be a non-empty string');
+  }
+  if (!Number.isSafeInteger(options.expectedFrames) || options.expectedFrames < 1) {
+    throw new TypeError('expected animation frame count must be an integer >= 1');
+  }
+  const sourceSuffix = options.sourceSuffix ?? '.source.png';
+  const frameMarker = options.frameMarker ?? '.frame_';
+  const frameSuffix = options.frameSuffix ?? sourceSuffix;
+  if ([sourceSuffix, frameMarker, frameSuffix].some((value) => typeof value !== 'string')) {
+    throw new TypeError('animation source suffix, frame marker, and frame suffix must be strings');
+  }
+  const hasOutputWidth = options.outputWidth !== undefined;
+  const hasOutputHeight = options.outputHeight !== undefined;
+  if (hasOutputWidth !== hasOutputHeight) {
+    throw new TypeError('animation output width and height must be provided together');
+  }
+  if (hasOutputWidth && (!Number.isSafeInteger(options.outputWidth) || options.outputWidth < 1
+    || !Number.isSafeInteger(options.outputHeight) || options.outputHeight < 1)) {
+    throw new TypeError('animation output dimensions must be integers >= 1');
+  }
+
+  const sourceDirectory = path.dirname(sourcePath);
+  const sourceBaseName = path.basename(sourcePath, sourceSuffix);
+  const prefix = `${sourceBaseName}${frameMarker}`;
+  const frameFiles = findIndexedFiles(sourceDirectory, { root, prefix, suffix: frameSuffix });
+  const absoluteSource = path.isAbsolute(sourcePath) ? sourcePath : path.resolve(root, sourcePath);
+
+  if (frameFiles.length === 0) {
+    if (fs.existsSync(absoluteSource)) {
+      return { ok: true, kind: 'fallback', sourcePath, frameFiles };
+    }
+    const framePattern = path.join(sourceDirectory, `${prefix}N${frameSuffix}`);
+    return {
+      ok: false,
+      code: 'frames-and-fallback-missing',
+      message: `no indexed frame files matching ${framePattern} and no fallback source at ${sourcePath}`,
+      sourcePath,
+      framePattern,
+      frameFiles
+    };
+  }
+
+  if (frameFiles.length !== options.expectedFrames) {
+    return {
+      ok: false,
+      code: 'frame-count-mismatch',
+      message: `expected ${options.expectedFrames} frame files, found ${frameFiles.length}`,
+      expectedFrames: options.expectedFrames,
+      actualFrames: frameFiles.length,
+      frameFiles
+    };
+  }
+
+  let image;
+  try {
+    image = composePngFrameGrid(frameFiles.map(({ file }) => file), {
+      root,
+      frameWidth: options.frameWidth,
+      frameHeight: options.frameHeight,
+      rows: options.rows,
+      columns: options.columns,
+      resize: options.resize,
+      mode: options.mode,
+      color: options.color
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      code: 'frame-processing-failed',
+      message: error instanceof Error ? error.message : String(error),
+      error,
+      frameFiles
+    };
+  }
+
+  if (hasOutputWidth && (image.width !== options.outputWidth || image.height !== options.outputHeight)) {
+    return {
+      ok: false,
+      code: 'output-dimensions-mismatch',
+      message: `composed frame grid ${image.width}x${image.height} != expected ${options.outputWidth}x${options.outputHeight}`,
+      expectedWidth: options.outputWidth,
+      expectedHeight: options.outputHeight,
+      actualWidth: image.width,
+      actualHeight: image.height,
+      image,
+      frameFiles
+    };
+  }
+
+  return { ok: true, kind: 'frames', image, frameFiles };
+}

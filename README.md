@@ -28,8 +28,8 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   remainder-aware repeated grids, resize dispatch, alpha diagnostics and
   fitting, detail normalization, frame composition, and configurable
   average/edge transforms. Frame-file tooling adds configurable indexed-file
-  discovery and deterministic PNG frame-grid loading/composition without
-  owning product filename conventions. Image analysis includes mask components,
+  discovery plus a configurable indexed-animation preparation pipeline with
+  fallback, count, processing, and output-dimension outcomes. Image analysis includes mask components,
   mask-boundary alpha metrics, frame clustering, palette histograms/swatches,
   and opaque-corner metrics; evidence tooling
   distinguishes self-hashed immutable manifests from atomic mutable JSON records.
