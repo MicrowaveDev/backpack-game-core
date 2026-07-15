@@ -1,4 +1,4 @@
-import type { Rng } from './rng.js';
+import type { Rng } from '../../shared/rng.js';
 
 export type BattleSide = 'left' | 'right' | string;
 export type WinnerSide = 'left' | 'right' | null;

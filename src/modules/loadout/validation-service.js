@@ -1,4 +1,4 @@
-import { createLoadoutValidator } from '../../loadout-validation.js';
+import { createLoadoutValidator } from './validation.js';
 
 export const LOADOUT_VALIDATION_PROVIDER_NAMES = [
   'getArtifactId',

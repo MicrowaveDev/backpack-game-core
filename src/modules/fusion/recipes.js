@@ -1,7 +1,7 @@
 import {
   findFusionMatches,
   fusionIngredientRowIdSet
-} from './fusion-matching.js';
+} from './matching.js';
 
 function normalizeId(value) {
   return value == null ? '' : String(value);

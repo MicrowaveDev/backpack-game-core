@@ -1,6 +1,6 @@
-export * from '../../battle-simulation.js';
+export * from './simulation.js';
 export {
   createSeededRng,
   randomInt,
   shuffleWithRng
-} from '../../rng.js';
+} from '../../shared/rng.js';

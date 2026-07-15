@@ -1,6 +1,6 @@
 import { getEffectiveShape } from './bag-shape.js';
 import { pieceCells } from './grid-geometry.js';
-import { shuffleWithRng } from './rng.js';
+import { shuffleWithRng } from '../../shared/rng.js';
 
 function defaultGetItemId(item) {
   return item?.id ?? item?.artifactId;

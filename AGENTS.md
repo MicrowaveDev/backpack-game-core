@@ -3,6 +3,25 @@
 This repo contains reusable backpack-game mechanics consumed by Mushroom
 Battles and Meat Master. Keep it product-neutral.
 
+## Efficient Routing
+
+- Read `docs/architecture-routing.md` before broad source searches or moving
+  code. Use its domain table to open only the relevant folder first.
+- Keep `src/` flat only for `index.js` and `index.d.ts`. Put implementations in
+  `shared/`, `modules/`, `client/`, `vue/`, `server/`, or `tooling/` according
+  to the routing document.
+- Prefer an existing `src/modules/<domain>` over creating a new top-level
+  concept. Combat artifacts belong to `modules/artifacts`; profile cosmetics
+  belong to `modules/assets`.
+- Consumers must use package exports. Core internals and core tests may use
+  relative source imports; never teach a consumer to deep-import `src/*`.
+- When physically reorganizing code, move files rather than recreating them,
+  keep `.js` and `.d.ts` pairs together, preserve compatibility specifiers in
+  `package.json`, and update the owning domain barrel.
+- Search narrowly after routing, for example `rg <name> src/modules/gacha
+  tests`, instead of scanning every server port, model, Vue component, and
+  tooling engine.
+
 ## Core Boundary
 
 - Do not import Mushroom or Meat code from core.

@@ -10,60 +10,60 @@
       "import": "./src/index.js"
     },
     "./bag-shape": {
-      "types": "./src/bag-shape.d.ts",
-      "import": "./src/bag-shape.js"
+      "types": "./src/modules/loadout/bag-shape.d.ts",
+      "import": "./src/modules/loadout/bag-shape.js"
     },
     "./grid-geometry": {
-      "types": "./src/grid-geometry.d.ts",
-      "import": "./src/grid-geometry.js"
+      "types": "./src/modules/loadout/grid-geometry.d.ts",
+      "import": "./src/modules/loadout/grid-geometry.js"
     },
     "./rng": {
-      "types": "./src/rng.d.ts",
-      "import": "./src/rng.js"
+      "types": "./src/shared/rng.d.ts",
+      "import": "./src/shared/rng.js"
     },
     "./fusion-matching": {
-      "types": "./src/fusion-matching.d.ts",
-      "import": "./src/fusion-matching.js"
+      "types": "./src/modules/fusion/matching.d.ts",
+      "import": "./src/modules/fusion/matching.js"
     },
     "./artifact-fusion-recipes": {
-      "types": "./src/artifact-fusion-recipes.d.ts",
-      "import": "./src/artifact-fusion-recipes.js"
+      "types": "./src/modules/fusion/recipes.d.ts",
+      "import": "./src/modules/fusion/recipes.js"
     },
     "./shop-offer": {
-      "types": "./src/shop-offer.d.ts",
-      "import": "./src/shop-offer.js"
+      "types": "./src/modules/shop/offers.d.ts",
+      "import": "./src/modules/shop/offers.js"
     },
     "./backpack-loadout": {
-      "types": "./src/backpack-loadout.d.ts",
-      "import": "./src/backpack-loadout.js"
+      "types": "./src/modules/loadout/backpack-loadout.d.ts",
+      "import": "./src/modules/loadout/backpack-loadout.js"
     },
     "./artifact-capabilities": {
-      "types": "./src/artifact-capabilities.d.ts",
-      "import": "./src/artifact-capabilities.js"
+      "types": "./src/modules/artifacts/capabilities.d.ts",
+      "import": "./src/modules/artifacts/capabilities.js"
     },
     "./artifact-visual-classification": {
-      "types": "./src/artifact-visual-classification.d.ts",
-      "import": "./src/artifact-visual-classification.js"
+      "types": "./src/modules/artifacts/visual-classification.d.ts",
+      "import": "./src/modules/artifacts/visual-classification.js"
     },
     "./loadout-validation": {
-      "types": "./src/loadout-validation.d.ts",
-      "import": "./src/loadout-validation.js"
+      "types": "./src/modules/loadout/validation.d.ts",
+      "import": "./src/modules/loadout/validation.js"
     },
     "./battle-simulation": {
-      "types": "./src/battle-simulation.d.ts",
-      "import": "./src/battle-simulation.js"
+      "types": "./src/modules/battle/simulation.d.ts",
+      "import": "./src/modules/battle/simulation.js"
     },
     "./asset-gacha": {
-      "types": "./src/asset-gacha.d.ts",
-      "import": "./src/asset-gacha.js"
+      "types": "./src/modules/gacha/engine.d.ts",
+      "import": "./src/modules/gacha/engine.js"
     },
     "./wallet-accounting": {
-      "types": "./src/wallet-accounting.d.ts",
-      "import": "./src/wallet-accounting.js"
+      "types": "./src/modules/wallet/accounting.d.ts",
+      "import": "./src/modules/wallet/accounting.js"
     },
     "./profile-asset-state": {
-      "types": "./src/profile-asset-state.d.ts",
-      "import": "./src/profile-asset-state.js"
+      "types": "./src/modules/assets/profile-state.d.ts",
+      "import": "./src/modules/assets/profile-state.js"
     },
     "./tooling/image": {
       "types": "./src/tooling/image.d.ts",
@@ -118,8 +118,8 @@
       "import": "./src/client/index.js"
     },
     "./client-view-model": {
-      "types": "./src/client-view-model.d.ts",
-      "import": "./src/client-view-model.js"
+      "types": "./src/client/view-model.d.ts",
+      "import": "./src/client/view-model.js"
     },
     "./server": {
       "types": "./src/server/index.d.ts",
@@ -160,6 +160,10 @@
     "./modules/gacha": {
       "types": "./src/modules/gacha/index.d.ts",
       "import": "./src/modules/gacha/index.js"
+    },
+    "./modules/artifacts": {
+      "types": "./src/modules/artifacts/index.d.ts",
+      "import": "./src/modules/artifacts/index.js"
     },
     "./modules/gacha/interface": {
       "types": "./src/modules/gacha/interface.d.ts",

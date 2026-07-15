@@ -3,8 +3,8 @@ import {
   normalizeAssetGachaDuplicatePolicy,
   resolveAssetGachaRollCandidates,
   selectAssetGachaRollResults
-} from '../../asset-gacha.js';
-import { createSeededRng } from '../../rng.js';
+} from './engine.js';
+import { createSeededRng } from '../../shared/rng.js';
 
 export const DEFAULT_ASSET_GACHA_SIMULATION_TRIALS = 10_000;
 export const DEFAULT_ASSET_GACHA_SIMULATION_MAX_TRIALS = 1_000_000;

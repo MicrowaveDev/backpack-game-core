@@ -2,8 +2,8 @@ import type {
   AssetGachaCatalogAsset,
   AssetGachaPack,
   AssetGachaPityRule
-} from '../../asset-gacha.js';
-import type { Rng } from '../../rng.js';
+} from './engine.js';
+import type { Rng } from '../../shared/rng.js';
 
 export const DEFAULT_ASSET_GACHA_SIMULATION_TRIALS: 10000;
 export const DEFAULT_ASSET_GACHA_SIMULATION_MAX_TRIALS: 1000000;

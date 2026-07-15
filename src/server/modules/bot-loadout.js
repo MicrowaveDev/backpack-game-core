@@ -1,6 +1,6 @@
-import { generateBackpackLoadout } from '../../backpack-loadout.js';
-import { getEffectiveShape } from '../../bag-shape.js';
-import { randomInt } from '../../rng.js';
+import { generateBackpackLoadout } from '../../modules/loadout/backpack-loadout.js';
+import { getEffectiveShape } from '../../modules/loadout/bag-shape.js';
+import { randomInt } from '../../shared/rng.js';
 
 function requiredProvider(name, value) {
   if (typeof value !== 'function') {

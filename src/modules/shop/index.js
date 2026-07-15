@@ -1,1 +1,1 @@
-export * from '../../shop-offer.js';
+export * from './offers.js';

@@ -2,10 +2,21 @@
 
 Reusable pure mechanics for backpack/grid games.
 
-This package intentionally contains no database, HTTP, payment, catalog, UI, or
-product-lore code. Product games should pass plain data objects into these
-helpers and keep persistence, asset ownership, wallet state, and game-specific
-catalogs in their own repos.
+This package contains no product-owned database runtime, concrete HTTP app,
+payment SDK, catalog, visual theme, or product lore. It may expose neutral
+route descriptors, settlement planners, DTOs, and UI primitives. Product games
+pass plain data and adapters into these helpers while keeping persistence,
+credentials, transactions, catalogs, copy, and deployment in their own repos.
+
+## Architecture
+
+Implementations are grouped by ownership under `src/modules`, `src/client`,
+`src/vue`, `src/server`, `src/tooling`, and `src/shared`; only package barrels
+live directly under `src`. Use
+[`docs/architecture-routing.md`](docs/architecture-routing.md) to choose the
+correct folder and public import before searching or adding code. New consumer
+code should prefer domain facades such as `modules/loadout`, `modules/gacha`,
+and `modules/wallet`; direct helper subpaths remain compatible.
 
 ## Release Discipline
 
@@ -158,6 +169,7 @@ The package keeps the original root and direct helper subpaths for
 compatibility, and now also exposes Geesome-inspired module paths:
 
 - `@microwavedev/backpack-game-core/modules/gacha`
+- `@microwavedev/backpack-game-core/modules/artifacts`
 - `@microwavedev/backpack-game-core/modules/gacha/validation`
 - `@microwavedev/backpack-game-core/modules/gacha/simulation`
 - `@microwavedev/backpack-game-core/modules/gacha/simulation-service`

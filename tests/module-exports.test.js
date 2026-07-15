@@ -76,6 +76,10 @@ import {
   createArtifactVisualClassifier
 } from '@microwavedev/backpack-game-core/artifact-visual-classification';
 import {
+  FAMILY_CAPS as FAMILY_CAPS_FROM_ARTIFACTS,
+  artifactVisualClassification as artifactVisualClassificationFromArtifacts
+} from '@microwavedev/backpack-game-core/modules/artifacts';
+import {
   createArtifactFusionEvaluator,
   normalizeArtifactFusionRecipes
 } from '@microwavedev/backpack-game-core/artifact-fusion-recipes';
@@ -727,6 +731,11 @@ test('[modules] asset facade exposes profile asset result DTO shapers', () => {
     instances: [instance],
     catalog: [asset]
   })[0].path, '/portraits/ruby-rare.png');
+});
+
+test('[modules] artifact facade exposes combat capability and visual helpers', () => {
+  assert.equal(FAMILY_CAPS_FROM_ARTIFACTS, FAMILY_CAPS);
+  assert.equal(artifactVisualClassificationFromArtifacts, artifactVisualClassification);
 });
 
 test('[server] server facade exposes module and middleware helpers', () => {

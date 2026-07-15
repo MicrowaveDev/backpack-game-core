@@ -1,5 +1,5 @@
-export * from '../../fusion-matching.js';
-export * from '../../artifact-fusion-recipes.js';
+export * from './matching.js';
+export * from './recipes.js';
 
 export function validateFusionCatalog({ recipes = [], artifacts = [], isIngredientEligible } = {}) {
   const issues = [];

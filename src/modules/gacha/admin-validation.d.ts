@@ -2,7 +2,7 @@ import type {
   AssetGachaCatalogAsset,
   AssetGachaPack,
   AssetGachaValidationResult
-} from '../../asset-gacha.js';
+} from './engine.js';
 
 export const DEFAULT_GACHA_ADMIN_FIXTURE_SCHEMA_VERSION: 'gacha-admin-fixture/v1';
 export const DEFAULT_GACHA_ADMIN_CURRENCY_CODE: 'soft_coin';

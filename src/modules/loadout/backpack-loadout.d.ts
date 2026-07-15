@@ -1,5 +1,5 @@
 import type { BagShape, BagShapeLike } from './bag-shape.js';
-import type { Rng } from './rng.js';
+import type { Rng } from '../../shared/rng.js';
 
 export type ItemId = string | number;
 

@@ -1,4 +1,4 @@
-import { getEffectiveShape, isCellInShape, normalizeRotation } from './bag-shape.js';
+import { getEffectiveShape, isCellInShape, normalizeRotation } from '../modules/loadout/bag-shape.js';
 
 function artifactLookup(getArtifact) {
   if (typeof getArtifact === 'function') return getArtifact;

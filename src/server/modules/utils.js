@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { createSeededRng } from '../../rng.js';
+import { createSeededRng } from '../../shared/rng.js';
 
 export function nowIso() {
   return new Date().toISOString();

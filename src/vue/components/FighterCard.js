@@ -1,4 +1,4 @@
-import { prepareGridProps } from '../../client-view-model.js';
+import { prepareGridProps } from '../../client/view-model.js';
 
 function combatantName(combatant) {
   return combatant?.displayName

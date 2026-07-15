@@ -115,10 +115,18 @@ const forbiddenProductPatterns = [
 ];
 
 const browserSafeEntryPatterns = [
-  /(^|\/)client-view-model\.(js|d\.ts)$/,
+  /(^|\/)client\/view-model\.(js|d\.ts)$/,
   /(^|\/)client\//,
   /(^|\/)vue\//
 ];
+
+test('[boundaries] source root contains barrels only', () => {
+  const rootFiles = fs.readdirSync(srcRoot, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .sort();
+  assert.deepEqual(rootFiles, ['index.d.ts', 'index.js']);
+});
 
 test('[boundaries] core source does not import product or provider code', () => {
   for (const file of sourceFiles()) {

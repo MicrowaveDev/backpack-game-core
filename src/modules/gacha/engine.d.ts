@@ -1,4 +1,4 @@
-import type { Rng } from './rng.js';
+import type { Rng } from '../../shared/rng.js';
 
 export type AssetGachaRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'secret' | string;
 export type AssetGachaPackStatus = 'active' | 'future' | 'expired' | 'disabled' | string;

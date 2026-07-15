@@ -3,7 +3,7 @@ import {
   createRunShopRefreshPlan,
   createRunShopSellPlan,
   generateShopOffer as generateCoreShopOffer
-} from '../../../../shop-offer.js';
+} from '../../../../modules/shop/offers.js';
 
 function requiredDependency(name, value) {
   if (value == null) {

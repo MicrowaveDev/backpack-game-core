@@ -3,7 +3,7 @@ import type {
   CreateLoadoutValidatorOptions,
   LoadoutItemLike,
   LoadoutValidator
-} from '../../loadout-validation.js';
+} from './validation.js';
 
 export declare const LOADOUT_VALIDATION_PROVIDER_NAMES: readonly [
   'getArtifactId',

@@ -17,11 +17,11 @@ export type {
   AssetGachaSelectedItem,
   AssetGachaValidationIssue,
   AssetGachaValidationResult
-} from '../../asset-gacha.js';
+} from './engine.js';
 
-export type { AssetGachaCatalogAsset as GachaCatalogAsset } from '../../asset-gacha.js';
-export type { AssetGachaPack as GachaPack } from '../../asset-gacha.js';
-export type { AssetGachaPackItem as GachaPackItem } from '../../asset-gacha.js';
-export type { AssetGachaValidationResult as GachaValidationResult } from '../../asset-gacha.js';
-export type { AssetGachaSelectedItem as GachaSelectedItem } from '../../asset-gacha.js';
-export type { AssetGachaCandidate as GachaCandidate } from '../../asset-gacha.js';
+export type { AssetGachaCatalogAsset as GachaCatalogAsset } from './engine.js';
+export type { AssetGachaPack as GachaPack } from './engine.js';
+export type { AssetGachaPackItem as GachaPackItem } from './engine.js';
+export type { AssetGachaValidationResult as GachaValidationResult } from './engine.js';
+export type { AssetGachaSelectedItem as GachaSelectedItem } from './engine.js';
+export type { AssetGachaCandidate as GachaCandidate } from './engine.js';

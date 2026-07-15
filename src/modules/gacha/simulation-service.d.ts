@@ -1,7 +1,7 @@
 import type {
   AssetGachaCatalogAsset,
   AssetGachaPack
-} from '../../asset-gacha.js';
+} from './engine.js';
 import type {
   AssetGachaSimulationResult
 } from './simulation.js';

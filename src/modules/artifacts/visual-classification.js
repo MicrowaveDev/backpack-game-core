@@ -2,8 +2,8 @@ import {
   artifactTileFootprintDimensions,
   artifactTileFootprintShape,
   artifactTileFootprintType
-} from './client-view-model.js';
-import { getBagShape } from './bag-shape.js';
+} from '../../client/view-model.js';
+import { getBagShape } from '../loadout/bag-shape.js';
 
 export const DEFAULT_ARTIFACT_ROLE_CLASSES = {
   damage: {

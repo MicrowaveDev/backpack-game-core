@@ -7,53 +7,53 @@ export {
   normalizeRotation,
   rotateShape,
   shapeArea
-} from './bag-shape.js';
+} from './modules/loadout/bag-shape.js';
 
 export {
   cellKey,
   cellSet,
   pieceCells,
   setsIntersect
-} from './grid-geometry.js';
+} from './modules/loadout/grid-geometry.js';
 
 export {
   createSeededRng,
   randomInt,
   shuffleWithRng
-} from './rng.js';
+} from './shared/rng.js';
 
 export {
   findFusionMatches,
   fusionIngredientRowIdSet
-} from './fusion-matching.js';
+} from './modules/fusion/matching.js';
 
-export * from './artifact-fusion-recipes.js';
+export * from './modules/fusion/recipes.js';
 
 export {
   createRunShopPurchasePlan,
   createRunShopRefreshPlan,
   createRunShopSellPlan,
   generateShopOffer
-} from './shop-offer.js';
+} from './modules/shop/offers.js';
 
 export {
   generateBackpackLoadout
-} from './backpack-loadout.js';
+} from './modules/loadout/backpack-loadout.js';
 
-export * from './artifact-capabilities.js';
-export * from './artifact-visual-classification.js';
-export * from './run-lifecycle.js';
+export * from './modules/artifacts/capabilities.js';
+export * from './modules/artifacts/visual-classification.js';
+export * from './modules/run/lifecycle.js';
 
 export {
   createLoadoutValidator
-} from './loadout-validation.js';
+} from './modules/loadout/validation.js';
 
 export {
   simulateBattle
-} from './battle-simulation.js';
+} from './modules/battle/simulation.js';
 
-export * from './wallet-accounting.js';
-export * from './profile-asset-state.js';
-export * from './asset-gacha.js';
-export * from './client-view-model.js';
+export * from './modules/wallet/accounting.js';
+export * from './modules/assets/profile-state.js';
+export * from './modules/gacha/engine.js';
+export * from './client/view-model.js';
 export * from './client/index.js';

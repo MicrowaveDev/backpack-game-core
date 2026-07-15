@@ -9,7 +9,7 @@ import {
   isBag,
   isCombatArtifact,
   isContainerItem
-} from '../src/artifact-capabilities.js';
+} from '../src/modules/artifacts/capabilities.js';
 
 test('FAMILY_CAPS preserves the default backpack family capabilities', () => {
   assert.equal(FAMILY_CAPS, DEFAULT_ARTIFACT_FAMILY_CAPABILITIES);

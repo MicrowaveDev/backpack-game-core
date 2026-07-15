@@ -1,8 +1,8 @@
 import {
   randomInt,
   shuffleWithRng
-} from '../../../../rng.js';
-import { simulateBattle as simulateCoreBattle } from '../../../../battle-simulation.js';
+} from '../../../../shared/rng.js';
+import { simulateBattle as simulateCoreBattle } from '../../../../modules/battle/simulation.js';
 
 export { randomInt, shuffleWithRng };
 

@@ -1,4 +1,4 @@
-import { randomInt } from './rng.js';
+import { randomInt } from '../../shared/rng.js';
 
 function defaultGetItemId(item) {
   return typeof item === 'string' ? item : item?.id;

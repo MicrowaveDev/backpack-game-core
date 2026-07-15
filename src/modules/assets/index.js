@@ -1,1 +1,1 @@
-export * from '../../profile-asset-state.js';
+export * from './profile-state.js';

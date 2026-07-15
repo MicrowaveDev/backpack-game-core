@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Organize flat root mechanics into domain, client, and shared folders while
+  preserving compatibility exports and documenting architecture routing.
 - Add structured indexed-animation preparation with configurable naming,
   fallback detection, frame-count checks, composition, and output validation.
 - Add neutral normalized crop, resize dispatch, dimension-only frame-grid,

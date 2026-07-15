@@ -1,4 +1,4 @@
-import { shapeArtifactStatRows } from '../../client-view-model.js';
+import { shapeArtifactStatRows } from '../../client/view-model.js';
 
 function nonEmptyArray(value) {
   return Array.isArray(value) ? value : [];
