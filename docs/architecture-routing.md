@@ -32,11 +32,13 @@ barrels belong directly in it.
 | Gacha selection, validation, simulation, and admin planning | `src/modules/gacha/` | `@microwavedev/backpack-game-core/modules/gacha` |
 | Wallet accounting and settlement planning | `src/modules/wallet/` | `@microwavedev/backpack-game-core/modules/wallet` |
 | Profile-owned assets and equipment state | `src/modules/assets/` | `@microwavedev/backpack-game-core/modules/assets` |
+| Browser-safe Telegram links, keyboards, commands, update normalization, and score payloads | `src/modules/telegram/` | `@microwavedev/backpack-game-core/modules/telegram` |
 | Auth, config, season, support, community, and social-preview contracts | Matching `src/modules/<domain>/` | Matching `.../modules/<domain>` export |
 | Shared deterministic RNG | `src/shared/` | Package root or compatibility `.../rng` export |
 | Browser-safe request adapters and view-model DTOs | `src/client/` | `.../client` or `.../client-view-model` |
 | Neutral Vue components and composables | `src/vue/` | `.../vue`, `.../vue/components`, or `.../vue/composables` |
 | Server module factories and middleware | `src/server/` | `.../server` or `.../server/middleware` |
+| Node-only Telegram init-data verification, Bot API transport, update routing, and reusable bot runtime | `src/server/telegram/` | `.../server/telegram` |
 | Node-only scripts and image/release utilities | `src/tooling/` | Matching `.../tooling/<name>` export; route execution through [`tooling-routing.md`](tooling-routing.md) |
 
 Artifacts are combat/loadout items. Assets are profile-owned cosmetics or
@@ -85,3 +87,10 @@ credentials, environment policy, persistence implementations, migrations,
 transactions, visual themes, and deployment topology. Quarantined Mushroom
 server ports and models are migration surfaces, not templates for new neutral
 modules.
+
+Telegram follows the same adapter boundary. Core owns provider-protocol
+normalization, signature verification, transport retries, neutral update
+routing, and callback orchestration. Each game owns its bot identity, secrets,
+public Mini App URL, commands, response copy, webhook mounting, payment policy,
+and product services. Browser code imports `modules/telegram`; server code may
+import `server/telegram`.

@@ -136,6 +136,10 @@
       "types": "./src/server/middleware/index.d.ts",
       "import": "./src/server/middleware/index.js"
     },
+    "./server/telegram": {
+      "types": "./src/server/telegram/index.d.ts",
+      "import": "./src/server/telegram/index.js"
+    },
     "./server/models/mushroom": {
       "types": "./src/server/models/mushroom/index.d.ts",
       "import": "./src/server/models/mushroom/index.js"
@@ -199,6 +203,10 @@
     "./modules/auth": {
       "types": "./src/modules/auth/index.d.ts",
       "import": "./src/modules/auth/index.js"
+    },
+    "./modules/telegram": {
+      "types": "./src/modules/telegram/index.d.ts",
+      "import": "./src/modules/telegram/index.js"
     },
     "./modules/wallet": {
       "types": "./src/modules/wallet/index.d.ts",

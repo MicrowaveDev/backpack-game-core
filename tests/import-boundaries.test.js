@@ -98,6 +98,7 @@ const quarantinedMushroomModelFiles = new Set([
 ]);
 
 const sequelizePattern = /\bsequelize\b/i;
+const telegramPattern = /\btelegram\b/i;
 
 const forbiddenProductPatterns = [
   /\bmushroom-master\b/i,
@@ -109,7 +110,7 @@ const forbiddenProductPatterns = [
   /(?:^|['"])web\/public\//,
   /\bexpress\b/,
   sequelizePattern,
-  /\btelegram\b/i,
+  telegramPattern,
   /\bbtcpay\b/i,
   /\bnowpayments\b/i
 ];
@@ -117,7 +118,8 @@ const forbiddenProductPatterns = [
 const browserSafeEntryPatterns = [
   /(^|\/)client\/view-model\.(js|d\.ts)$/,
   /(^|\/)client\//,
-  /(^|\/)vue\//
+  /(^|\/)vue\//,
+  /(^|\/)modules\/telegram\//
 ];
 
 test('[boundaries] source root contains barrels only', () => {
@@ -135,6 +137,10 @@ test('[boundaries] core source does not import product or provider code', () => 
     for (const pattern of forbiddenProductPatterns) {
       if (quarantinedMushroomPortFiles.has(relativeFile)) continue;
       if (pattern === sequelizePattern && quarantinedMushroomModelFiles.has(relativeFile)) continue;
+      if (
+        pattern === telegramPattern &&
+        (relativeFile.startsWith('src/modules/telegram/') || relativeFile.startsWith('src/server/telegram/'))
+      ) continue;
       assert.doesNotMatch(content, pattern, `${relativeFile} should not match forbidden product/provider pattern ${pattern}`);
     }
   }

@@ -236,7 +236,7 @@ const context = setupBackpackServerModules([
   coreWalletModule(),
   coreAssetsModule(),
   coreGachaModule(),
-  mushroomTelegramModule(),
+  mushroomTelegramModule(), // configures core Telegram adapters
   mushroomPaymentsModule()
 ], baseContext);
 ```
@@ -253,8 +253,11 @@ DTO shaping, and jobs/health-check descriptors over injected repositories and
 policies.
 
 Core modules must not import product repos, database models, provider SDKs,
-Telegram helpers, payment webhook code, product catalogs, generated art,
-support secrets, or deploy env directly.
+payment webhook code, product catalogs, generated art, support secrets, or
+deploy env directly. Neutral Telegram protocol and Bot API adapters live in
+the explicit `modules/telegram` and `server/telegram` exports; bot identity,
+credentials, commands, copy, webhook policy, and product callbacks stay in the
+consumer.
 
 Product apps still own final app composition, middleware ordering, auth
 attachment, rate-limit policy, database lifecycle, migrations, static files,

@@ -27,9 +27,11 @@ is introduced, the Git commit SHA is the release identity.
 - Existing public helpers should remain backward compatible across the current
   Mushroom and Meat `main` consumers unless the same change updates both
   adapters in one release.
-- Browser-safe exports (`client`, `client-view-model`, `vue`) must not import
-  Node-only modules, product files, product assets, Express/Sequelize,
-  Telegram helpers, payment providers, or support/admin policy code.
+- Browser-safe exports (`client`, `client-view-model`, `vue`, and
+  `modules/telegram`) must not import Node-only modules, product files, product
+  assets, Express/Sequelize, payment providers, or support/admin policy code.
+  Node-only Telegram transport and signature verification are isolated behind
+  `server/telegram`.
 - Vue is an optional peer dependency. Core Vue modules provide neutral
   props/events/slots and class hooks; product repos keep routes, copy, images,
   page shells, haptics, auth wrappers, adult-content policy, and final themes.

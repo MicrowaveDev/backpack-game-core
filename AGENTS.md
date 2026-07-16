@@ -26,8 +26,11 @@ Battles and Meat Master. Keep it product-neutral.
 
 - Do not import Mushroom or Meat code from core.
 - Do not add product catalogs, art paths, copy, themes, product route maps,
-  Telegram helpers, payment SDKs, support/admin policy, or provider
-  credentials here.
+  payment SDKs, support/admin policy, or provider credentials here.
+- Product-neutral Telegram protocol helpers belong in `modules/telegram` and
+  Node-only Bot API, init-data, update-routing, and runtime adapters belong in
+  `server/telegram`. Products retain bot tokens, usernames, webhook secrets,
+  public URLs, commands, copy, payment callbacks, and deployment policy.
 - Do not add migrations, database clients, Postgres code, or SQLite code to
   core. Product repos own persistence, transactions, deployment, and repository
   implementations.

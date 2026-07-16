@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add stable browser-safe `modules/telegram` and Node-only `server/telegram`
+  facades for Mini App links, keyboards, update normalization, init-data
+  verification, Bot API transport, update routing, and reusable bot runtime.
+  Keep credentials, commands, copy, webhook mounting, and product callbacks in
+  consumers, with the former Mushroom port retained as a compatibility export.
 - Add the repository-targeted `backpack-game-core` tooling CLI, require an
   explicit `--repo-root`, and document CLI, configured-wrapper, and
   product-only script routing.

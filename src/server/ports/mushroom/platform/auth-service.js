@@ -1,3 +1,5 @@
+import { verifyTelegramInitData as verifyStableTelegramInitData } from '../../../telegram/index.js';
+
 const TELEGRAM_INIT_DATA_MAX_AGE_SECONDS = 24 * 60 * 60;
 const TELEGRAM_INIT_DATA_FUTURE_SKEW_SECONDS = 5 * 60;
 
@@ -27,43 +29,13 @@ export function createMushroomAuthServicePort(options = {}) {
     throw new Error('createMushroomAuthServicePort requires crypto.createHmac and crypto.randomUUID');
   }
 
-function telegramSecret(botToken) {
-  return crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
-}
-
 function verifyTelegramInitData(initData, botToken) {
-  if (!initData || !botToken) {
-    return false;
-  }
-
-  const params = new URLSearchParams(initData);
-  const hash = params.get('hash');
-  if (!hash) {
-    return false;
-  }
-  const authDate = Number(params.get('auth_date'));
-  const nowSeconds = Math.floor(nowDate().getTime() / 1000);
-  if (
-    !Number.isFinite(authDate) ||
-    authDate < nowSeconds - TELEGRAM_INIT_DATA_MAX_AGE_SECONDS ||
-    authDate > nowSeconds + TELEGRAM_INIT_DATA_FUTURE_SKEW_SECONDS
-  ) {
-    return false;
-  }
-
-  params.delete('hash');
-
-  const dataCheckString = [...params.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('\n');
-
-  const calculated = crypto
-    .createHmac('sha256', telegramSecret(botToken))
-    .update(dataCheckString)
-    .digest('hex');
-
-  return calculated === hash;
+  return verifyStableTelegramInitData(initData, {
+    botToken,
+    maxAgeSeconds: TELEGRAM_INIT_DATA_MAX_AGE_SECONDS,
+    futureSkewSeconds: TELEGRAM_INIT_DATA_FUTURE_SKEW_SECONDS,
+    nowSeconds: Math.floor(nowDate().getTime() / 1000)
+  }).ok;
 }
 
 function parseTelegramUser(initData) {
