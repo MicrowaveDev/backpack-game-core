@@ -170,7 +170,12 @@ export interface MushroomRunServicePortOptions {
 
 export interface MushroomRunServicePort {
   abandonGameRun(playerId: string, gameRunId: string): Promise<unknown>;
-  applyRunLoadoutPlacements(playerId: string, gameRunId: string, items: unknown[]): Promise<unknown>;
+  applyRunLoadoutPlacements(
+    playerId: string,
+    gameRunId: string,
+    items: unknown[],
+    options?: { expectedRound?: number | null }
+  ): Promise<unknown>;
   createChallengeRun(challengerPlayerId: string, inviteePlayerId: string, challengeId: string): Promise<unknown>;
   getActiveGameRun(playerId: string, characterId?: string | null): Promise<unknown>;
   getActiveGameRuns(playerId: string): Promise<unknown[]>;

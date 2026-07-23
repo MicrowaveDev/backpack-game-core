@@ -1401,7 +1401,9 @@ async function resolveRound(playerId, gameRunId) {
  * docs/client-row-id-refactor.md made it duplicate-safe. Treat this
  * endpoint shape as the permanent contract, not a transitional one.
  */
-async function applyRunLoadoutPlacements(playerId, gameRunId, items) {
+async function applyRunLoadoutPlacements(playerId, gameRunId, items, {
+  expectedRound = null
+} = {}) {
   return withRunLock(gameRunId, () => withTransaction(async (client) => {
     const runResult = await client.query(
       `SELECT current_round FROM game_runs WHERE id = $1 AND status = 'active'`,
@@ -1410,7 +1412,10 @@ async function applyRunLoadoutPlacements(playerId, gameRunId, items) {
     if (!runResult.rowCount) {
       throw new Error('Game run not found or already ended');
     }
-    const currentRound = runResult.rows[0].current_round;
+    const currentRound = Number(runResult.rows[0].current_round);
+    if (expectedRound != null && Number(expectedRound) !== currentRound) {
+      throw new Error(`Stale loadout save for round ${expectedRound}; active round is ${currentRound}`);
+    }
 
     const grpResult = await client.query(
       `SELECT id FROM game_run_players WHERE game_run_id = $1 AND player_id = $2 AND is_active = 1`,
@@ -1421,7 +1426,7 @@ async function applyRunLoadoutPlacements(playerId, gameRunId, items) {
     }
 
     await applyRunPlacements(client, gameRunId, playerId, currentRound, items);
-    return { ok: true };
+    return { ok: true, roundNumber: currentRound };
   }));
 }
 
