@@ -295,6 +295,12 @@ restart_with_retry() {
 
   [[ "$first_attempt_exit" -ne 0 ]] || return
 
+  if [[ "$CACHE_CLEANUP" -eq 1 && "$AGGRESSIVE_CLEANUP" -eq 1 ]]; then
+    echo ""
+    echo "Docker restart/build failed after aggressive cleanup; not repeating the same build."
+    return "$first_attempt_exit"
+  fi
+
   echo ""
   echo "Docker restart/build failed on the first attempt. Retrying after aggressive cache cleanup..."
   cleanup_docker_space "aggressive" "1"
