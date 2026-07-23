@@ -8,3 +8,4 @@ export const LeaderboardScreen: Component;
 export const SettingsScreen: Component;
 export const FriendsScreen: Component;
 export const RecipesScreen: Component;
+export const HistoryScreen: Component;

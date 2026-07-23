@@ -4,6 +4,7 @@ import {
   AuthScreen,
   CharactersScreen,
   FriendsScreen,
+  HistoryScreen,
   LeaderboardScreen,
   OnboardingScreen,
   ProfileScreen,
@@ -45,6 +46,11 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(ProfileScreen.template, /profile-character-rows/);
   assert.match(ProfileScreen.template, /achievement-journal/);
   assert.doesNotMatch(ProfileScreen.template, /mushroom|spore|mycel|telegram|meat/i);
+
+  assert.equal(HistoryScreen.name, 'HistoryScreen');
+  assert.match(HistoryScreen.template, /open\(run\)/);
+  assert.match(HistoryScreen.template, /@keydown\.enter/);
+  assert.doesNotMatch(HistoryScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 });
 
 test('[vue/pages] friends page delegates provider and browser behavior to adapters', async () => {
