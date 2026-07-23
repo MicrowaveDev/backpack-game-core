@@ -45,7 +45,9 @@ export type {
 export {
   AuthScreen,
   CharactersScreen,
+  FriendsScreen,
   LeaderboardScreen,
   OnboardingScreen,
+  RecipesScreen,
   SettingsScreen
 } from './pages.js';

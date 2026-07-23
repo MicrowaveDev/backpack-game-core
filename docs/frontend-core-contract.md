@@ -116,6 +116,15 @@ Vue installed.
   class hooks, and catalog content through slots. Core owns only the generic
   page frame; product copy, route placement, catalog browser/data wiring, and
   final styling remain product-local.
+- `RecipesScreen` composes the shared catalog page frame with a
+  product-provided catalog slot. Products continue to own
+  artifact catalogs, fusion recipe sources, locale projection, image/grid
+  rendering, and route placement.
+- `FriendsScreen` receives a neutral profile, friend rows, challenge state,
+  locale-ready labels, and injected invite-link, clipboard, and share
+  functions. Core owns the stable page DOM, copied-state feedback, and neutral
+  social events; products own provider links, browser fallbacks, API calls,
+  locale dictionaries, and challenge policy.
 - Replay shells such as `ReplayDuel` should receive already-shaped fighter DTOs,
   prepared grid props, role summaries, attribution groups, visual-effect DTOs,
   labels, and replay-speed state from the product app. Core owns the duel

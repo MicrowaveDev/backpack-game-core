@@ -96,3 +96,8 @@ routing, and callback orchestration. Each game owns its bot identity, secrets,
 public Mini App URL, commands, response copy, webhook mounting, payment policy,
 and product services. Browser code imports `modules/telegram`; server code may
 import `server/telegram`.
+
+Shared social and catalog pages follow the same boundary: `vue/pages` owns
+stable DOM and neutral events, while consumers inject localized labels,
+catalog components, profile DTOs, invite-link construction, clipboard access,
+and provider-specific sharing.
