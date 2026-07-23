@@ -1,5 +1,6 @@
 import type { Component } from 'vue';
 
+export const AuthScreen: Component;
 export const OnboardingScreen: Component;
 export const CharactersScreen: Component;
 export const LeaderboardScreen: Component;

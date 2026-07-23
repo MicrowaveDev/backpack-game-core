@@ -35,6 +35,7 @@ export {
 } from './composables.js';
 
 export {
+  AuthScreen,
   CharactersScreen,
   LeaderboardScreen,
   OnboardingScreen,
