@@ -46,7 +46,8 @@ debug root/path routing or when adding the first wrapper in a new consumer.
 | --- | --- | --- |
 | Same operation and defaults for every consumer; only repository paths differ | Core CLI | Consumer npm alias passing `--repo-root .` |
 | Shared algorithm, but product catalogs, thresholds, suites, outputs, or mutation policy differ | Core `tooling/*` library plus consumer wrapper | Consumer npm alias |
-| Product database, provider, lore, art direction, queue semantics, deployment, or credentials | Consumer only | Consumer npm alias or documented operator entry point |
+| Product database, provider, lore, art direction, queue semantics, deployment topology/policy, or credentials | Consumer only | Consumer npm alias or documented operator entry point |
+| Docker Compose restart, cache cleanup, container diagnostics, and HTTP health waiting | Core shell runner plus consumer bootstrap/config wrapper | Consumer `bash/update-production-server.sh` |
 | Reusable helper with no complete argument validation or process policy | Core library only | Import from a package subpath; never execute directly |
 
 Moving a helper into core does not automatically make it a CLI command. Add a
@@ -68,6 +69,32 @@ core command only when its defaults and safety behavior are genuinely shared.
 | Queue parsing and pending-work selection | `tooling/work-queue` | Library | Queue format, prompts, workflow transitions |
 | Ordered release command execution | `tooling/release` | Library | Command sequence and release policy |
 | Child processes, ports, and configured suites | `tooling/runners` | Library | Suite map, environment, browser package, exit policy |
+| Production container update engine | `bash/update-production-server.sh` | Shell runner | Git pull/bootstrap, env and compose paths, service name, health contract, credentials, topology |
+
+## Production Update Contract
+
+Run production updates from the consumer repository:
+
+```bash
+bash/update-production-server.sh
+```
+
+The consumer wrapper is intentionally small. It owns the branch, verifies a
+clean checkout, pulls the product repository, and runs:
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive --progress
+```
+
+Only after bootstrap may it call the pinned core runner. The wrapper passes
+`--project-root`, `--env-file`, `--compose-file`, `--service`, and health
+settings explicitly. Do not invoke the nested core script directly on a
+production host: doing so bypasses product Git/bootstrap policy and makes the
+deployment depend on an already-initialized submodule.
+
+The core runner never pulls Git, selects a product branch, guesses credentials,
+or defines Compose services. It never prunes Docker volumes.
 
 ## Adding A Shared Command
 

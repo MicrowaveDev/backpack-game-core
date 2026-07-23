@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a product-neutral production container update runner for Docker Compose
+  rebuild/restart, cache cleanup, diagnostics, and HTTP health waiting. Consumer
+  wrappers retain Git/submodule bootstrap, topology, credentials, and product
+  defaults.
 - Add stable browser-safe `modules/telegram` and Node-only `server/telegram`
   facades for Mini App links, keyboards, update normalization, init-data
   verification, Bot API transport, update routing, and reusable bot runtime.

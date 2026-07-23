@@ -6,7 +6,10 @@ This package contains no product-owned database runtime, concrete HTTP app,
 payment SDK, catalog, visual theme, or product lore. It may expose neutral
 route descriptors, settlement planners, DTOs, and UI primitives. Product games
 pass plain data and adapters into these helpers while keeping persistence,
-credentials, transactions, catalogs, copy, and deployment in their own repos.
+credentials, transactions, catalogs, copy, deployment topology, and bootstrap
+policy in their own repos. Core provides a configured production-container
+update engine, but never selects a product branch, compose file, service, or
+credentials.
 
 ## Architecture
 
@@ -49,6 +52,9 @@ release policy, compatibility rules, and cross-consumer gate are documented in
   mask-boundary alpha metrics, frame clustering, palette histograms/swatches,
   and opaque-corner metrics; evidence tooling
   distinguishes self-hashed immutable manifests from atomic mutable JSON records.
+  The shell runner at `bash/update-production-server.sh` provides shared Docker
+  Compose restart, cache cleanup, diagnostics, and HTTP health-wait behavior;
+  each game exposes a small bootstrap wrapper with its own deployment contract.
 
 - `bag-shape`: shape masks, quarter-turn rotation, effective dimensions, and
   shape-cell checks for irregular bags.

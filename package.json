@@ -275,6 +275,7 @@
   },
   "files": [
     "src",
+    "bash",
     "docs",
     "CHANGELOG.md"
   ],

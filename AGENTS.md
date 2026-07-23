@@ -32,8 +32,11 @@ Battles and Meat Master. Keep it product-neutral.
   `server/telegram`. Products retain bot tokens, usernames, webhook secrets,
   public URLs, commands, copy, payment callbacks, and deployment policy.
 - Do not add migrations, database clients, Postgres code, or SQLite code to
-  core. Product repos own persistence, transactions, deployment, and repository
-  implementations.
+  core. Product repos own persistence, transactions, deployment topology,
+  credentials, Git/bootstrap policy, and repository implementations. The
+  product-neutral Docker Compose restart, cache cleanup, diagnostics, and
+  health-wait engine lives in `bash/update-production-server.sh`; consumers
+  invoke it only through their own bootstrap wrapper.
 - The only current Sequelize exception is the quarantined legacy model
   definition package at `src/server/models/mushroom`. It is a migration surface
   for Mushroom table definitions, not a stable cross-game repository layer.
@@ -91,3 +94,7 @@ this repo is checked out under the hub:
 - Universal repository-targeted commands belong in the existing
   `backpack-game-core` CLI, must require `--repo-root`, and must resolve relative
   paths from that root. Consumers expose them through local npm aliases.
+- Shell deployment is the documented exception to the npm-alias rule:
+  consumers keep `bash/update-production-server.sh` as the public entry point,
+  bootstrap the nested core checkout, then call the core runner with explicit
+  product paths, service, and health settings.
