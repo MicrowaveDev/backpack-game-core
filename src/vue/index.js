@@ -33,3 +33,10 @@ export {
   bindReducedMotionTracker,
   createReducedMotionTracker
 } from './composables.js';
+
+export {
+  CharactersScreen,
+  LeaderboardScreen,
+  OnboardingScreen,
+  SettingsScreen
+} from './pages.js';

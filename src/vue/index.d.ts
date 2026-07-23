@@ -41,3 +41,10 @@ export type {
 export type {
   ReducedMotionTracker
 } from './composables.js';
+
+export {
+  CharactersScreen,
+  LeaderboardScreen,
+  OnboardingScreen,
+  SettingsScreen
+} from './pages.js';

@@ -168,6 +168,10 @@
       "types": "./src/vue/composables.d.ts",
       "import": "./src/vue/composables.js"
     },
+    "./vue/pages": {
+      "types": "./src/vue/pages.d.ts",
+      "import": "./src/vue/pages.js"
+    },
     "./modules/gacha": {
       "types": "./src/modules/gacha/index.d.ts",
       "import": "./src/modules/gacha/index.js"

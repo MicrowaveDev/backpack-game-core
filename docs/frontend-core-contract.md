@@ -7,8 +7,14 @@ themes, routes, copy, haptics, images, payment UX, and policy.
 ## Public Vue Exports
 
 - `@microwavedev/backpack-game-core/vue`
+- `@microwavedev/backpack-game-core/vue/pages`
 - `@microwavedev/backpack-game-core/vue/components`
 - `@microwavedev/backpack-game-core/vue/composables`
+
+The core may own complete product-neutral page and application shells when two
+consumers require identical structure and behavior. Products still inject
+locale-ready labels, catalog DTOs, asset resolvers, service ports, route
+extensions, integrations, feature policy, and theme tokens.
 
 The root package export stays framework-neutral. Vue components are plain Vue 3
 option objects so the core package does not require a build step. Browser-safe
@@ -98,8 +104,10 @@ Vue installed.
 - Animation shells such as `FusionReveal` should own timing, structural
   classes, and layout math while receiving already-resolved artifact DTOs,
   labels, and visual slots from product wrappers.
-- Product repos own final CSS, responsive page layout, route callbacks,
-  localization, image resolvers, Telegram wrappers, haptics, and policy.
+- Core may own structural CSS, responsive layout, stable class hooks, and
+  interaction states for shared pages. Product repos own theme tokens,
+  localization, image resolvers, Telegram wrappers, haptics, route extensions,
+  payment/compliance policy, and any truly product-only page.
 
 ## Composable Rules
 
