@@ -18,6 +18,14 @@ test('[package-types] package exposes TypeScript declarations for every export',
 
   for (const [specifier, entry] of Object.entries(manifest.exports)) {
     assert.equal(typeof entry, 'object', `${specifier} export should use condition map`);
+    if (specifier.endsWith('.css')) {
+      assert.match(entry.default, /\.css$/, `${specifier} default target should be CSS`);
+      assert.ok(
+        fs.existsSync(path.join(repoRoot, entry.default)),
+        `${specifier} CSS target missing: ${entry.default}`
+      );
+      continue;
+    }
     assert.match(entry.import, /\.js$/, `${specifier} import target should be JavaScript`);
     assert.match(entry.types, /\.d\.ts$/, `${specifier} types target should be a declaration file`);
     assert.ok(

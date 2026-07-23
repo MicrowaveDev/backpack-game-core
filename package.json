@@ -172,6 +172,9 @@
       "types": "./src/vue/pages.d.ts",
       "import": "./src/vue/pages.js"
     },
+    "./vue/styles.css": {
+      "default": "./src/vue/styles/index.css"
+    },
     "./modules/gacha": {
       "types": "./src/modules/gacha/index.d.ts",
       "import": "./src/modules/gacha/index.js"
