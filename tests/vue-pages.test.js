@@ -6,6 +6,7 @@ import {
   FriendsScreen,
   LeaderboardScreen,
   OnboardingScreen,
+  ProfileScreen,
   RecipesScreen,
   SettingsScreen
 } from '@microwavedev/backpack-game-core/vue/pages';
@@ -39,6 +40,11 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(RecipesScreen.template, /slot name="catalog"/);
   assert.match(RecipesScreen.template, /recipes-screen/);
   assert.doesNotMatch(RecipesScreen.template, /mushroom|spore|mycel|telegram|meat/i);
+
+  assert.equal(ProfileScreen.name, 'ProfileScreen');
+  assert.match(ProfileScreen.template, /profile-character-rows/);
+  assert.match(ProfileScreen.template, /achievement-journal/);
+  assert.doesNotMatch(ProfileScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 });
 
 test('[vue/pages] friends page delegates provider and browser behavior to adapters', async () => {
