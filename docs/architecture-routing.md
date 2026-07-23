@@ -36,7 +36,9 @@ barrels belong directly in it.
 | Auth, config, season, support, community, and social-preview contracts | Matching `src/modules/<domain>/` | Matching `.../modules/<domain>` export |
 | Shared deterministic RNG | `src/shared/` | Package root or compatibility `.../rng` export |
 | Browser-safe request adapters and view-model DTOs | `src/client/` | `.../client` or `.../client-view-model` |
-| Neutral Vue app shells, pages, components, and composables | `src/vue/` | `.../vue`, `.../vue/pages`, `.../vue/components`, or `.../vue/composables` |
+| Browser-safe application adapter, service-port, and normalized-error contracts | `src/client/application/` | `.../client/application` |
+| Neutral Vue application shell and screen registry | `src/vue/app/` | `.../vue/app` |
+| Neutral Vue pages, components, and composables | Matching folder under `src/vue/` | `.../vue/pages`, `.../vue/components`, or `.../vue/composables` |
 | Server module factories and middleware | `src/server/` | `.../server` or `.../server/middleware` |
 | Node-only Telegram init-data verification, Bot API transport, update routing, and reusable bot runtime | `src/server/telegram/` | `.../server/telegram` |
 | Node-only scripts and image/release utilities | `src/tooling/` | Matching `.../tooling/<name>` export; route execution through [`tooling-routing.md`](tooling-routing.md) |

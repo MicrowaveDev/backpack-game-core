@@ -124,6 +124,10 @@
       "types": "./src/client/index.d.ts",
       "import": "./src/client/index.js"
     },
+    "./client/application": {
+      "types": "./src/client/application/index.d.ts",
+      "import": "./src/client/application/index.js"
+    },
     "./client-view-model": {
       "types": "./src/client/view-model.d.ts",
       "import": "./src/client/view-model.js"
@@ -159,6 +163,10 @@
     "./vue": {
       "types": "./src/vue/index.d.ts",
       "import": "./src/vue/index.js"
+    },
+    "./vue/app": {
+      "types": "./src/vue/app/index.d.ts",
+      "import": "./src/vue/app/index.js"
     },
     "./vue/components": {
       "types": "./src/vue/components.d.ts",

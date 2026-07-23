@@ -6,7 +6,9 @@ themes, routes, copy, haptics, images, payment UX, and policy.
 
 ## Public Vue Exports
 
+- `@microwavedev/backpack-game-core/client/application`
 - `@microwavedev/backpack-game-core/vue`
+- `@microwavedev/backpack-game-core/vue/app`
 - `@microwavedev/backpack-game-core/vue/pages`
 - `@microwavedev/backpack-game-core/vue/components`
 - `@microwavedev/backpack-game-core/vue/composables`
@@ -20,6 +22,39 @@ The root package export stays framework-neutral. Vue components are plain Vue 3
 option objects so the core package does not require a build step. Browser-safe
 composables may be plain JavaScript helpers when they do not need Vue runtime
 imports.
+
+## Application Facades
+
+The `client/application` facade defines the product boundary without depending
+on a Vue singleton:
+
+- `validateGameApplicationAdapter` validates locale, asset, capability,
+  integration, route-extension, and service-port contracts.
+- `createApplicationServiceRegistry` owns the standard domain-port names:
+  `session`, `catalog`, `profile`, `run`, `replay`, `social`, `wallet`,
+  `assets`, `settings`, and `support`.
+- Registries expose optional lookup through `get` and fail-fast lookup through
+  `getRequired`.
+- Consumers may declare service requirements per capability. A service is
+  mandatory only when its capability is enabled.
+- `ApplicationError` and `normalizeApplicationError` give page controllers a
+  stable error shape without prescribing HTTP, persistence, or provider
+  behavior.
+
+The `vue/app` facade owns the common shell layer:
+
+- `createScreenRegistry` combines core screens with product route extensions,
+  applies capability gates, and evaluates injected route guards.
+- `createNavigationItems` derives ordered navigation from currently available
+  screens.
+- `ScreenOutlet`, `GameShell`, and `GameApplicationRoot` are plain Vue option
+  objects with stable structural classes and neutral events.
+- `createGameApplication` returns `{ rootComponent, rootProps }`. The consumer
+  supplies Vue's `createApp` and decides where and when to mount.
+
+Application facades do not read `window`, history, storage, timers, endpoint
+constants, SDK globals, or product assets. Those behaviors enter through the
+adapter, service ports, host integrations, and route context.
 
 ## Peer Dependency
 
@@ -108,6 +143,10 @@ Vue installed.
   interaction states for shared pages. Product repos own theme tokens,
   localization, image resolvers, Telegram wrappers, haptics, route extensions,
   payment/compliance policy, and any truly product-only page.
+- Shared application pages and shells consume service ports and route context.
+  They must not import product stores, endpoint strings, or consumer code.
+- Optional product pages are route extensions registered with the same shell;
+  they must not fork navigation or application initialization.
 
 ## Composable Rules
 
