@@ -4,7 +4,9 @@ function nonEmptyArray(value) {
 
 export { AchievementBadge } from './components/AchievementBadge.js';
 export { ArtifactCatalogBrowser } from './components/ArtifactCatalogBrowser.js';
+export { ArtifactGridBoard } from './components/ArtifactGridBoard.js';
 export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
+export { BackpackGrid } from './components/BackpackGrid.js';
 export { BattleLog } from './components/BattleLog.js';
 export { BackpackZone } from './components/BackpackZone.js';
 export { CatalogPageScreen } from './components/CatalogPageScreen.js';
@@ -537,7 +539,7 @@ export const ShopItemList = {
   `
 };
 
-export const BackpackGrid = {
+const LegacyBackpackGrid = {
   name: 'BackpackGrid',
   props: {
     cells: {

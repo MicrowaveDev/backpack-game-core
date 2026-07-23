@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   AchievementBadge,
   ArtifactCatalogBrowser,
+  ArtifactGridBoard,
   ArtifactStatSummary,
   ArtifactTile,
   AssetRollResultPanel,
@@ -30,6 +31,16 @@ import {
   ShopItemList,
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue/components';
+
+test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', () => {
+  assert.equal(ArtifactGridBoard.name, 'ArtifactGridBoard');
+  assert.equal(ArtifactGridBoard.props.inventoryColumns.default, 6);
+  assert.equal(ArtifactGridBoard.props.inventoryRows.default, 6);
+  assert.equal(ArtifactGridBoard.props.artifactFigureComponent.default, null);
+  assert.equal(ArtifactGridBoard.props.artifactImageFor.default({ imagePath: '/item.png' }), '/item.png');
+  assert.match(ArtifactGridBoard.template, /artifactFigureComponent/);
+  assert.doesNotMatch(ArtifactGridBoard.template, /mushroom|spore|mycelium/i);
+});
 
 test('[vue] AssetRollResultPanel exposes neutral panel rendering contract', () => {
   assert.equal(AssetRollResultPanel.name, 'AssetRollResultPanel');
