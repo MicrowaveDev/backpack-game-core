@@ -26,6 +26,7 @@ export const BackpackGrid = {
     interactiveCells: { type: Boolean, default: false },
     clickablePieces: { type: Boolean, default: false },
     rotatablePieces: { type: Boolean, default: false },
+    draggablePieces: { type: Boolean, default: false },
     droppable: { type: Boolean, default: false },
     rotateLabel: { type: String, default: 'Rotate' },
     rotateText: { type: String, default: 'Rotate' }
@@ -37,7 +38,9 @@ export const BackpackGrid = {
     'cell-drop',
     'cell-touch-drop',
     'piece-click',
-    'piece-rotate'
+    'piece-rotate',
+    'piece-drag-start',
+    'piece-drag-end'
   ],
   computed: {
     renderedCells() {
@@ -84,6 +87,12 @@ export const BackpackGrid = {
     emitPieceRotate(piece, event) {
       event?.stopPropagation?.();
       this.$emit('piece-rotate', { piece, event });
+    },
+    emitPieceDragStart(piece, event) {
+      if (this.draggablePieces) this.$emit('piece-drag-start', { piece, event });
+    },
+    emitPieceDragEnd(piece, event) {
+      if (this.draggablePieces) this.$emit('piece-drag-end', { piece, event });
     }
   },
   template: `
@@ -134,7 +143,10 @@ export const BackpackGrid = {
             :class="piece.className || piece.classNames || null"
             :style="piece.style || null"
             :title="piece.title || null"
+            :draggable="draggablePieces"
             v-bind="piece.attrs || {}"
+            @dragstart="emitPieceDragStart(piece, $event)"
+            @dragend="emitPieceDragEnd(piece, $event)"
           >
             <slot name="piece" :piece="piece">
               <component

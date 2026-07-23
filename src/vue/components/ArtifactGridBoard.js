@@ -334,6 +334,12 @@ export const ArtifactGridBoard = {
     handlePieceRotate({ piece, event }) {
       this.rotatePiece(piece, event);
     },
+    handlePieceDragStart({ piece, event }) {
+      this.$emit('piece-drag-start', { ...piece, event });
+    },
+    handlePieceDragEnd({ piece, event }) {
+      this.$emit('piece-drag-end', { ...piece, event });
+    },
     pieceDataset(item) {
       const dataset = item.dataset || {};
       return {
@@ -367,6 +373,7 @@ export const ArtifactGridBoard = {
       :interactive-cells="interactiveCells"
       :clickable-pieces="clickablePieces"
       :rotatable-pieces="rotatablePieces"
+      :draggable-pieces="draggablePieces"
       :droppable="droppable"
       rotate-text="↻"
       @cell-click="clickCell"
@@ -376,6 +383,8 @@ export const ArtifactGridBoard = {
       @cell-touch-drop="handleCellTouchDrop"
       @piece-click="handlePieceClick"
       @piece-rotate="handlePieceRotate"
+      @piece-drag-start="handlePieceDragStart"
+      @piece-drag-end="handlePieceDragEnd"
     >
       <template #piece-content="{ piece }">
         <component

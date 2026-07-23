@@ -922,6 +922,7 @@ test('[vue] BackpackGrid exposes neutral board rendering contract', () => {
   const context = {
     interactiveCells: true,
     clickablePieces: true,
+    draggablePieces: true,
     droppable: true,
     $emit: (event, payload) => emitted.push([event, payload])
   };
@@ -930,12 +931,16 @@ test('[vue] BackpackGrid exposes neutral board rendering contract', () => {
   BackpackGrid.methods.emitCellDrop.call(context, cells[0], { type: 'drop' });
   BackpackGrid.methods.emitPieceClick.call(context, pieces[0], { stopPropagation() {} });
   BackpackGrid.methods.emitPieceRotate.call(context, pieces[0], { stopPropagation() {} });
+  BackpackGrid.methods.emitPieceDragStart.call(context, pieces[0], { type: 'dragstart' });
+  BackpackGrid.methods.emitPieceDragEnd.call(context, pieces[0], { type: 'dragend' });
   assert.deepEqual(emitted.map(([event]) => event), [
     'cell-click',
     'cell-dragover',
     'cell-drop',
     'piece-click',
-    'piece-rotate'
+    'piece-rotate',
+    'piece-drag-start',
+    'piece-drag-end'
   ]);
 });
 
