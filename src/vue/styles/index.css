@@ -4689,7 +4689,7 @@ select {
   width: min(460px, 70%);
   height: 110px;
   pointer-events: none;
-  background-image: var(--game-panel-trim-image, url('/ui/mushroom-panel-trim.png'));
+  background-image: var(--game-panel-trim-image, none);
   background-repeat: no-repeat;
   background-position: left bottom;
   background-size: contain;
