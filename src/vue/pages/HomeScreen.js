@@ -33,7 +33,8 @@ export const HomeScreen = {
     'renderArtifactFigure', 'getArtifact', 'getCharacter',
     'describeRun', 'formatDelta', 'formatArtifactBonus', 'portraitPosition', 'portraitPositionFor',
     'getSeasonProgressSummary', 'getAchievementsByIds', 'getNextAchievementHint',
-    'resolveWalletSurface', 'buildInviteLink', 'shareInviteValue', 'fusionRecipes'
+    'resolveWalletSurface', 'buildInviteLink', 'shareInviteValue', 'fusionRecipes',
+    'progressionCurrencyIcon'
   ],
   emits: [
     'resume-run', 'start-run', 'abandon-run',
@@ -573,7 +574,7 @@ export const HomeScreen = {
                 >
                   <span class="home-character-level">{{ t.level }} {{ m.level }}</span>
                   <span class="home-character-progressionCurrency">
-                    <span class="home-character-progressionCurrency-icon" aria-hidden="true">🍄</span>{{ m.progressionCurrency }}<span v-if="pulsingCharacterDeltas[m.id]" class="home-character-progressionCurrency-delta">+{{ pulsingCharacterDeltas[m.id] }}</span>
+                    <span class="home-character-progressionCurrency-icon" aria-hidden="true">{{ progressionCurrencyIcon || '◆' }}</span>{{ m.progressionCurrency }}<span v-if="pulsingCharacterDeltas[m.id]" class="home-character-progressionCurrency-delta">+{{ pulsingCharacterDeltas[m.id] }}</span>
                   </span>
                   <span v-if="m.wins || m.losses || m.draws" class="home-character-record">
                     <span class="home-character-record-stat home-character-record-stat--win">{{ m.wins }}</span>
@@ -584,7 +585,7 @@ export const HomeScreen = {
                     <p class="home-character-stats-popover-title">{{ t.statsLegendTitle }}</p>
                     <ul>
                       <li>
-                        <span class="home-character-progressionCurrency-icon" aria-hidden="true">🍄</span>
+                        <span class="home-character-progressionCurrency-icon" aria-hidden="true">{{ progressionCurrencyIcon || '◆' }}</span>
                         <span>{{ t.progressionCurrency }}</span>
                       </li>
                       <li>
