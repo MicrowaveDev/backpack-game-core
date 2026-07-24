@@ -16,6 +16,7 @@ export declare const BackpackZone: VueComponentOption;
 export declare const CatalogPageScreen: VueComponentOption;
 export declare const FighterCard: VueComponentOption;
 export declare const FusionReveal: VueComponentOption;
+export declare const HomeSocialSidebar: VueComponentOption;
 export declare const InventoryZone: VueComponentOption;
 export declare const PrepScreen: VueComponentOption;
 export declare const PrepActions: VueComponentOption;

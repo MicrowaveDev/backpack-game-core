@@ -12,6 +12,7 @@ export { BackpackZone } from './components/BackpackZone.js';
 export { CatalogPageScreen } from './components/CatalogPageScreen.js';
 export { FighterCard } from './components/FighterCard.js';
 export { FusionReveal } from './components/FusionReveal.js';
+export { HomeSocialSidebar } from './components/HomeSocialSidebar.js';
 export { InventoryZone } from './components/InventoryZone.js';
 export { PrepScreen } from './components/PrepScreen.js';
 export { PrepActions } from './components/PrepActions.js';

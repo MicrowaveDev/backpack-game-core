@@ -7,4 +7,5 @@ export { SettingsScreen } from './pages/SettingsScreen.js';
 export { FriendsScreen } from './pages/FriendsScreen.js';
 export { RecipesScreen } from './pages/RecipesScreen.js';
 export { HistoryScreen } from './pages/HistoryScreen.js';
+export { HomeScreen } from './pages/HomeScreen.js';
 export { SupportAdminScreen } from './pages/SupportAdminScreen.js';

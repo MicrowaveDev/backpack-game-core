@@ -4,6 +4,7 @@ import {
   AuthScreen,
   CharactersScreen,
   FriendsScreen,
+  HomeScreen,
   HistoryScreen,
   LeaderboardScreen,
   OnboardingScreen,
@@ -52,6 +53,11 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(HistoryScreen.template, /open\(run\)/);
   assert.match(HistoryScreen.template, /@keydown\.enter/);
   assert.doesNotMatch(HistoryScreen.template, /mushroom|spore|mycel|telegram|meat/i);
+
+  assert.equal(HomeScreen.name, 'HomeScreen');
+  assert.match(HomeScreen.template, /home-character-list/);
+  assert.match(HomeScreen.template, /home-social-sidebar/);
+  assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 
   assert.equal(SupportAdminScreen.name, 'SupportAdminScreen');
   assert.equal(typeof SupportAdminScreen.props.request, 'object');
