@@ -223,3 +223,13 @@ export class BackpackGameClient {
 export function createBackpackGameClient(options = {}) {
   return new BackpackGameClient(options);
 }
+
+export {
+  BATTLE_EFFECTS,
+  STATUS_EFFECTS,
+  replayFighterEffects
+} from './replay/effects.js';
+export {
+  formatReplayEvent,
+  getReplayCombatantName
+} from './replay/format.js';

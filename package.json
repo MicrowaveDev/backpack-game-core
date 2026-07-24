@@ -176,6 +176,10 @@
       "types": "./src/vue/composables.d.ts",
       "import": "./src/vue/composables.js"
     },
+    "./vue/configured": {
+      "types": "./src/vue/configured/index.d.ts",
+      "import": "./src/vue/configured/index.js"
+    },
     "./vue/pages": {
       "types": "./src/vue/pages.d.ts",
       "import": "./src/vue/pages.js"

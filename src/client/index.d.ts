@@ -104,3 +104,55 @@ export class BackpackGameClient {
 }
 
 export function createBackpackGameClient(options?: BackpackGameClientOptions): BackpackGameClient;
+
+export interface ReplayEffectDefinition {
+  label: Record<string, string>;
+  className: string;
+}
+
+export interface ReplayFloatingLabel {
+  id: string;
+  text: string;
+  className: string;
+}
+
+export interface ReplayFighterEffects {
+  side?: string;
+  key: string;
+  classes: string[];
+  floatingLabels: ReplayFloatingLabel[];
+  statusBadges: Array<ReplayEffectDefinition & { label: string }>;
+}
+
+export const STATUS_EFFECTS: Record<string, ReplayEffectDefinition>;
+export const BATTLE_EFFECTS: Record<string, ReplayEffectDefinition>;
+
+export function replayFighterEffects(options?: {
+  event?: Record<string, any>;
+  side?: string;
+  replayState?: Record<string, any>;
+  replayIndex?: number;
+  lang?: string;
+}): ReplayFighterEffects;
+
+export function getReplayCombatantName(
+  currentBattle: Record<string, any> | null | undefined,
+  side: string,
+  resolveName: (characterId: string) => string
+): string;
+
+export interface FormattedReplayEvent {
+  logText: string;
+  speechText: string;
+  speechParts?: Array<{ text: string; kind?: string }>;
+  statusText: string;
+  speechSide: string | null;
+}
+
+export function formatReplayEvent(
+  event: Record<string, any> | null | undefined,
+  currentBattle: Record<string, any> | null | undefined,
+  resolveName: (characterId: string) => string,
+  resolveActionName?: ((characterId: string) => string) | null,
+  lang?: string
+): FormattedReplayEvent;

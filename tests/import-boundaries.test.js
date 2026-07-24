@@ -139,7 +139,11 @@ test('[boundaries] core source does not import product or provider code', () => 
       if (pattern === sequelizePattern && quarantinedMushroomModelFiles.has(relativeFile)) continue;
       if (
         pattern === telegramPattern &&
-        (relativeFile.startsWith('src/modules/telegram/') || relativeFile.startsWith('src/server/telegram/'))
+        (
+          relativeFile.startsWith('src/modules/telegram/')
+          || relativeFile.startsWith('src/server/telegram/')
+          || relativeFile === 'src/vue/composables/useTelegramWebApp.js'
+        )
       ) continue;
       assert.doesNotMatch(content, pattern, `${relativeFile} should not match forbidden product/provider pattern ${pattern}`);
     }

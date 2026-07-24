@@ -1,6 +1,16 @@
-export function normalizeTelegramBotUsername(value) {
-  return String(value || '').trim().replace(/^@+/, '');
-}
+import { normalizeTelegramBotUsername } from './browser-links.js';
+
+export {
+  buildFriendInviteLink,
+  buildFriendRefParam,
+  buildTelegramMiniAppLink,
+  buildTelegramShareUrl,
+  buildWebsiteFriendInviteLink,
+  getTelegramWebApp,
+  isTelegramMiniAppEnvironment,
+  normalizeTelegramBotUsername,
+  shareTelegramText
+} from './browser-links.js';
 
 export function normalizeTelegramChatTarget(target) {
   if (target == null || String(target).trim() === '') {
@@ -10,20 +20,6 @@ export function normalizeTelegramChatTarget(target) {
   if (value.startsWith('@') || /^-\d+$/.test(value)) return value;
   if (/^\d+$/.test(value)) return `-100${value}`;
   return `@${value.replace(/^https:\/\/t\.me\//, '').replace(/^@/, '')}`;
-}
-
-export function buildTelegramMiniAppLink({
-  botUsername,
-  miniAppName = 'app',
-  startParam
-} = {}) {
-  const username = normalizeTelegramBotUsername(botUsername);
-  if (!username) throw new Error('Telegram bot username is required');
-  const appName = String(miniAppName || 'app').trim();
-  const suffix = startParam
-    ? `${appName}?startapp=${encodeURIComponent(startParam)}`
-    : appName;
-  return `https://t.me/${username}/${suffix}`;
 }
 
 export function buildTelegramDmStartLink({ botUsername, startParam } = {}) {
