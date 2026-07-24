@@ -450,6 +450,7 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
   assert.equal(ShopZone.name, 'ShopZone');
   assert.match(ShopZone.template, /slot name="visual"/);
   assert.match(ShopZone.template, /:class="visualClass"/);
+  assert.match(ShopZone.template, /data-artifact-family/);
   assert.match(ShopZone.template, /sell-zone/);
 
   const row = {

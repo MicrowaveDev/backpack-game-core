@@ -221,6 +221,7 @@ export const ShopZone = {
           :class="classFor(row)"
           :data-artifact-draggable="row.canAfford ? 'true' : 'false'"
           :data-artifact-id="row.artifactId || null"
+          :data-artifact-family="row.artifact?.family || null"
           :data-artifact-width="previewWidth(row)"
           :data-artifact-height="previewHeight(row)"
           v-bind="attrsFor(row)"
