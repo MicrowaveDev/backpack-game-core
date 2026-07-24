@@ -486,7 +486,7 @@ export const HomeScreen = {
     }
   },
   template: `
-    <section class="home">
+    <section class="home" data-testid="home-screen">
       <div class="home-action-rail" :class="{ 'home-action-rail--mobile': mobileActionMode === 'side' }">
         <button class="home-action-btn home-action-btn--notifications" :aria-label="t.notifications" @click="openSocialPanel('notifications')">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 17H9m10-2-1.2-1.2A2.7 2.7 0 0 1 17 11.9V9a5 5 0 0 0-10 0v2.9c0 .7-.3 1.4-.8 1.9L5 15h14Zm-5.3 3a2 2 0 0 1-3.4 0"/></svg>
@@ -734,7 +734,7 @@ export const HomeScreen = {
         <article class="panel home-section">
           <div class="home-section-header">
             <h3>{{ t.gameRuns }}</h3>
-            <button v-if="!state.gameRun && activeCharacter" class="primary home-start-btn" :disabled="state.startingRun || state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit" :title="state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit ? t.dailyLimitReached : ''" @click="$emit('start-run', 'solo')">{{ state.startingRun ? t.startingRun : t.startRun }}</button>
+            <button v-if="!state.gameRun && activeCharacter" class="primary home-start-btn" data-testid="home-start-run" :disabled="state.startingRun || state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit" :title="state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit ? t.dailyLimitReached : ''" @click="$emit('start-run', 'solo')">{{ state.startingRun ? t.startingRun : t.startRun }}</button>
             <button v-if="state.bootstrap.gameRunHistory?.length" class="link" @click="$emit('go', 'history')">{{ t.viewAll }}</button>
           </div>
 
@@ -747,7 +747,7 @@ export const HomeScreen = {
               <strong>{{ t.round }} {{ state.gameRun.currentRound }}</strong>
               <span class="home-run-item-stats">{{ t.wins }} {{ state.gameRun.player?.wins || 0 }} · {{ t.lives }} {{ state.gameRun.player?.livesRemaining || 0 }}</span>
             </div>
-            <button class="primary home-run-item-action" @click.stop="$emit('resume-run')">{{ t.continueRound }}</button>
+            <button class="primary home-run-item-action" data-testid="home-resume-run" @click.stop="$emit('resume-run')">{{ t.continueRound }}</button>
           </div>
 
           <!-- Recent runs (1 row per game run, not per battle — per Req 1-A) -->
