@@ -34,7 +34,7 @@ export const HomeScreen = {
     'describeRun', 'formatDelta', 'formatArtifactBonus', 'portraitPosition', 'portraitPositionFor',
     'getSeasonProgressSummary', 'getAchievementsByIds', 'getNextAchievementHint',
     'resolveWalletSurface', 'buildInviteLink', 'shareInviteValue', 'fusionRecipes',
-    'progressionCurrencyIcon', 'characterPickerCompatibilityClass'
+    'progressionCurrencyIcon', 'compatibilityClasses'
   ],
   emits: [
     'resume-run', 'start-run', 'abandon-run',
@@ -68,6 +68,9 @@ export const HomeScreen = {
     HomeSocialSidebar
   },
   methods: {
+    compatibilityClass(key) {
+      return this.compatibilityClasses?.[key] || '';
+    },
     toggleStatsPopover(id, event) {
       if (event) event.stopPropagation();
       this.openStatsPopover = this.openStatsPopover === id ? null : id;
@@ -547,7 +550,15 @@ export const HomeScreen = {
           <div v-for="m in roster" :key="m.id" class="home-character-card">
             <div
               class="home-character-row"
-              :class="{ 'home-character-row--active': m.isActive, 'home-character-row--selected': selectedCharacter?.id === m.id, 'home-character-row--pulse': pulsingCharacterIds[m.id] }"
+              :class="[
+                compatibilityClass('row'),
+                {
+                  'home-character-row--active': m.isActive,
+                  'home-character-row--selected': selectedCharacter?.id === m.id,
+                  'home-character-row--pulse': pulsingCharacterIds[m.id],
+                  [compatibilityClass('rowActive')]: m.isActive
+                }
+              ]"
               @click="focusCharacter(m)"
               @keydown.enter.prevent="focusCharacter(m)"
               @keydown.space.prevent="focusCharacter(m)"
@@ -563,7 +574,13 @@ export const HomeScreen = {
                 <span class="home-character-style">{{ m.styleTag }}</span>
                 <span
                   class="home-character-stats"
-                  :class="{ 'home-character-stats--open': openStatsPopover === m.id }"
+                  :class="[
+                    compatibilityClass('stats'),
+                    {
+                      'home-character-stats--open': openStatsPopover === m.id,
+                      [compatibilityClass('statsOpen')]: openStatsPopover === m.id
+                    }
+                  ]"
                   role="button"
                   tabindex="0"
                   :aria-expanded="openStatsPopover === m.id"
@@ -581,7 +598,7 @@ export const HomeScreen = {
                     <span class="home-character-record-stat home-character-record-stat--loss">{{ m.losses }}</span>
                     <span v-if="m.draws" class="home-character-record-stat home-character-record-stat--draw">{{ m.draws }}</span>
                   </span>
-                  <div class="home-character-stats-popover" role="tooltip">
+                  <div class="home-character-stats-popover" :class="compatibilityClass('statsPopover')" role="tooltip">
                     <p class="home-character-stats-popover-title">{{ t.statsLegendTitle }}</p>
                     <ul>
                       <li>
@@ -633,7 +650,7 @@ export const HomeScreen = {
         <div
           v-if="selectedCharacter && expandedCharacterId === selectedCharacter.id"
           class="home-character-picker"
-          :class="characterPickerCompatibilityClass"
+          :class="compatibilityClass('picker')"
         >
           <div v-if="selectedCharacter.portraits.length > 1" class="home-picker-section">
             <span class="home-picker-label">{{ t.portraits }}</span>

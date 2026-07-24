@@ -58,7 +58,7 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
 
   assert.equal(HomeScreen.name, 'HomeScreen');
   assert.match(HomeScreen.template, /home-character-list/);
-  assert.match(HomeScreen.template, /characterPickerCompatibilityClass/);
+  assert.match(HomeScreen.template, /compatibilityClass\('picker'\)/);
   assert.match(HomeScreen.template, /home-social-sidebar/);
   assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 
