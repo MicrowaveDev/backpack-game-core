@@ -34,7 +34,7 @@ export const HomeScreen = {
     'describeRun', 'formatDelta', 'formatArtifactBonus', 'portraitPosition', 'portraitPositionFor',
     'getSeasonProgressSummary', 'getAchievementsByIds', 'getNextAchievementHint',
     'resolveWalletSurface', 'buildInviteLink', 'shareInviteValue', 'fusionRecipes',
-    'progressionCurrencyIcon'
+    'progressionCurrencyIcon', 'characterPickerCompatibilityClass'
   ],
   emits: [
     'resume-run', 'start-run', 'abandon-run',
@@ -630,7 +630,11 @@ export const HomeScreen = {
             >{{ t.changeSkin }}</button>
           </div>
         </div>
-        <div v-if="selectedCharacter && expandedCharacterId === selectedCharacter.id" class="home-character-picker">
+        <div
+          v-if="selectedCharacter && expandedCharacterId === selectedCharacter.id"
+          class="home-character-picker"
+          :class="characterPickerCompatibilityClass"
+        >
           <div v-if="selectedCharacter.portraits.length > 1" class="home-picker-section">
             <span class="home-picker-label">{{ t.portraits }}</span>
             <div class="home-portrait-swatches">

@@ -7,6 +7,7 @@ export const AuthScreen = {
     catalogCounts: { type: Object, default: () => ({ characters: 0, artifacts: 0 }) },
     authCode: { type: Object, default: null },
     devAuthEnabled: { type: Boolean, default: false },
+    portraitDataAttribute: { type: String, default: '' },
     copyText: {
       type: Function,
       default: (text) => globalThis.navigator?.clipboard?.writeText?.(text)
@@ -32,6 +33,11 @@ export const AuthScreen = {
     }
   },
   methods: {
+    portraitAttributes(portrait) {
+      return this.portraitDataAttribute
+        ? { [this.portraitDataAttribute]: portrait.id }
+        : {};
+    },
     async copyBotStartCommand() {
       if (!this.botStartCommand) return;
       try {
@@ -55,6 +61,7 @@ export const AuthScreen = {
             :key="portrait.id"
             :src="portrait.src"
             :data-character-id="portrait.id"
+            v-bind="portraitAttributes(portrait)"
             :style="{ objectPosition: portrait.objectPosition }"
             alt=""
             class="auth-portrait"

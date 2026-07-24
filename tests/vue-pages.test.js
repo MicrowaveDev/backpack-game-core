@@ -18,6 +18,7 @@ import {
 test('[vue/pages] common account pages expose product-neutral contracts', () => {
   assert.equal(AuthScreen.name, 'AuthScreen');
   assert.match(AuthScreen.template, /data-character-id/);
+  assert.match(AuthScreen.template, /portraitAttributes/);
   assert.doesNotMatch(AuthScreen.template, /mushroom|spore|meat/i);
   assert.equal(OnboardingScreen.name, 'OnboardingScreen');
   assert.match(OnboardingScreen.template, /characters/);
@@ -57,6 +58,7 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
 
   assert.equal(HomeScreen.name, 'HomeScreen');
   assert.match(HomeScreen.template, /home-character-list/);
+  assert.match(HomeScreen.template, /characterPickerCompatibilityClass/);
   assert.match(HomeScreen.template, /home-social-sidebar/);
   assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 
