@@ -42,7 +42,7 @@ function formatDate(value) {
 
 function rowPlayerLabel(player) {
   if (!player) return '';
-  return player.telegramUsername || player.name || player.friendCode || player.id;
+  return player.providerUsername || player.name || player.friendCode || player.id;
 }
 
 function localizedName(value) {
@@ -1194,11 +1194,11 @@ export const SupportAdminScreen = {
           <h3>Players</h3>
           <div class="support-admin-table-wrap">
             <table class="support-admin-table" data-testid="support-players-table">
-              <thead><tr><th>Player</th><th>Telegram</th><th>Mirror</th><th>Created</th></tr></thead>
+              <thead><tr><th>Player</th><th>Provider</th><th>Mirror</th><th>Created</th></tr></thead>
               <tbody>
                 <tr v-for="player in lookup.players" :key="player.id" :data-player-id="player.id">
                   <td><strong>{{ rowPlayerLabel(player) }}</strong><small>{{ player.id }}</small></td>
-                  <td>{{ player.telegramId || '-' }}</td>
+                  <td>{{ player.providerId || '-' }}</td>
                   <td>{{ player.walletMirrorBalance }}</td>
                   <td>{{ formatDate(player.createdAt) }}</td>
                 </tr>

@@ -65,6 +65,8 @@ function rowToPlayer(row) {
     id: row.id,
     telegramId: row.telegram_id,
     telegramUsername: row.telegram_username || null,
+    providerId: row.telegram_id,
+    providerUsername: row.telegram_username || null,
     name: row.name || null,
     lang: row.lang || null,
     friendCode: row.friend_code || null,
