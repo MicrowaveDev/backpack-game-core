@@ -696,6 +696,8 @@ test('[vue] ReplayScreen exposes neutral replay page shell contract', () => {
   assert.equal(ReplayScreen.components.BattleLog.name, 'BattleLog');
   assert.match(ReplayScreen.template, /name="battle-stage"/);
   assert.match(ReplayScreen.template, /battle-log/);
+  assert.match(ReplayScreen.template, /data-testid="battle-result"/);
+  assert.match(ReplayScreen.template, /data-testid="battle-log"/);
   assert.ok(ReplayScreen.emits.includes('toggle-result'));
   assert.ok(ReplayScreen.emits.includes('go-results'));
   assert.ok(ReplayScreen.emits.includes('select-log-row'));

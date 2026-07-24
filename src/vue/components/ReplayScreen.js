@@ -105,7 +105,7 @@ export const ReplayScreen = {
           <div class="replay-sheet-body">
             <div class="replay-result-hero" :class="'replay-result-hero--' + heroTone">
               <p class="replay-result-kicker">{{ hero.kicker }}</p>
-              <h3>{{ hero.title }}</h3>
+              <h3 data-testid="battle-result">{{ hero.title }}</h3>
               <p v-if="hero.summary" class="replay-result-summary">{{ hero.summary }}</p>
             </div>
             <div
@@ -170,6 +170,7 @@ export const ReplayScreen = {
       </section>
       <battle-log
         v-else
+        data-testid="battle-log"
         :rows="renderedLogRows"
         :root-class="logRootClass"
         :row-class="logRowClass"
