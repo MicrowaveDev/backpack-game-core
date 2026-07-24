@@ -38,8 +38,11 @@ export {
   AuthScreen,
   CharactersScreen,
   FriendsScreen,
+  HistoryScreen,
   LeaderboardScreen,
   OnboardingScreen,
+  ProfileScreen,
   RecipesScreen,
-  SettingsScreen
+  SettingsScreen,
+  SupportAdminScreen
 } from './pages.js';

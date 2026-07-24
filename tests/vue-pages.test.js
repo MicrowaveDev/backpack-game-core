@@ -9,7 +9,8 @@ import {
   OnboardingScreen,
   ProfileScreen,
   RecipesScreen,
-  SettingsScreen
+  SettingsScreen,
+  SupportAdminScreen
 } from '@microwavedev/backpack-game-core/vue/pages';
 
 test('[vue/pages] common account pages expose product-neutral contracts', () => {
@@ -51,6 +52,11 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(HistoryScreen.template, /open\(run\)/);
   assert.match(HistoryScreen.template, /@keydown\.enter/);
   assert.doesNotMatch(HistoryScreen.template, /mushroom|spore|mycel|telegram|meat/i);
+
+  assert.equal(SupportAdminScreen.name, 'SupportAdminScreen');
+  assert.equal(typeof SupportAdminScreen.props.request, 'object');
+  assert.match(SupportAdminScreen.template, /gacha-season-plan/);
+  assert.doesNotMatch(SupportAdminScreen.template, /mushroom|spore|mycel|meat/i);
 });
 
 test('[vue/pages] friends page delegates provider and browser behavior to adapters', async () => {
