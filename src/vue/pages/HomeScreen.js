@@ -1,3 +1,4 @@
+import { defineAsyncComponent } from 'vue/dist/vue.esm-bundler.js';
 import {
   formatWalletBundlePrice as formatCoreWalletBundlePrice,
   shapeAssetPackCardRows,
@@ -7,7 +8,6 @@ import {
   summarizeAssetRollPacks
 } from '@microwavedev/backpack-game-core/client-view-model';
 import { AssetRollResultPanel, GachaPackCardList } from '../components.js';
-import { ArtifactGridBoard } from '../components/ArtifactGridBoard.js';
 import { SeasonRankEmblem } from '../components/SeasonRankEmblem.js';
 import { AchievementBadge } from '../components/AchievementBadge.js';
 import { HomeSocialSidebar } from '../components/HomeSocialSidebar.js';
@@ -59,7 +59,9 @@ export const HomeScreen = {
   components: {
     AssetRollResultPanel,
     GachaPackCardList,
-    ArtifactGridBoard,
+    ArtifactGridBoard: defineAsyncComponent(() => (
+      import('../components/ArtifactGridBoard.js').then((module) => module.ArtifactGridBoard)
+    )),
     SeasonRankEmblem,
     AchievementBadge,
     HomeSocialSidebar
