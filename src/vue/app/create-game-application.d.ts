@@ -13,6 +13,12 @@ export interface CreateGameApplicationOptions {
   routeContext?: Record<string, unknown>;
   labels?: Record<string, string>;
   title?: string;
+  authenticated?: boolean;
+  authStatus?: string;
+  locale?: string;
+  locales?: readonly (string | { id: string; label: string })[];
+  menuOpen?: boolean;
+  showLogout?: boolean;
   requiredServices?: readonly string[];
   allowUnknownServices?: boolean;
 }
@@ -27,6 +33,12 @@ export interface GameApplicationDefinition {
     routeContext: Record<string, unknown>;
     labels: Record<string, string>;
     title: string;
+    authenticated: boolean;
+    authStatus: string;
+    locale: string;
+    locales: readonly (string | { id: string; label: string })[];
+    menuOpen: boolean;
+    showLogout: boolean;
   };
   adapter: GameApplicationAdapter;
   registry: ScreenRegistry;
