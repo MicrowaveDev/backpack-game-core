@@ -38,7 +38,13 @@ export function createGameApplication(adapterInput, options = {}) {
       initialScreenProps: options.initialScreenProps || {},
       routeContext: options.routeContext || {},
       labels: options.labels || {},
-      title: options.title || ''
+      title: options.title || '',
+      authenticated: options.authenticated ?? true,
+      authStatus: options.authStatus || '',
+      locale: options.locale || '',
+      locales: options.locales || [],
+      menuOpen: options.menuOpen ?? false,
+      showLogout: options.showLogout ?? false
     }),
     adapter,
     registry

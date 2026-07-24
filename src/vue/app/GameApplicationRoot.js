@@ -11,9 +11,23 @@ export const GameApplicationRoot = {
     initialScreenProps: { type: Object, default: () => ({}) },
     routeContext: { type: Object, default: () => ({}) },
     labels: { type: Object, default: () => ({}) },
-    title: { type: String, default: '' }
+    title: { type: String, default: '' },
+    authenticated: { type: Boolean, default: true },
+    authStatus: { type: String, default: '' },
+    locale: { type: String, default: '' },
+    locales: { type: Array, default: () => [] },
+    menuOpen: { type: Boolean, default: false },
+    showLogout: { type: Boolean, default: false }
   },
-  emits: ['navigate', 'navigation-blocked'],
+  emits: [
+    'navigate',
+    'navigation-blocked',
+    'logout',
+    'locale-change',
+    'update:locale',
+    'menu-change',
+    'update:menuOpen'
+  ],
   data() {
     return {
       currentScreenId: this.initialScreenId
@@ -59,7 +73,18 @@ export const GameApplicationRoot = {
       :title="title"
       :theme-class="adapter.themeClass"
       :labels="labels"
+      :authenticated="authenticated"
+      :auth-status="authStatus"
+      :locale="locale"
+      :locales="locales"
+      :menu-open="menuOpen"
+      :show-logout="showLogout"
       @navigate="navigate"
+      @logout="$emit('logout')"
+      @locale-change="$emit('locale-change', $event)"
+      @update:locale="$emit('update:locale', $event)"
+      @menu-change="$emit('menu-change', $event)"
+      @update:menuOpen="$emit('update:menuOpen', $event)"
     >
       <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
         <slot :name="slotName" v-bind="slotProps || {}" />
