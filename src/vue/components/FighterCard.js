@@ -106,7 +106,7 @@ export const FighterCard = {
         </div>
         <div class="fighter-portrait-inner">
           <img
-            v-if="resolvedCombatant"
+            v-if="resolvedCombatant && portraitSrc"
             :src="portraitSrc"
             :alt="portraitAlt"
             class="fighter-portrait"

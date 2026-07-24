@@ -115,6 +115,7 @@ test('[vue] ArtifactTile exposes neutral artifact tile rendering contract', () =
 test('[vue] FighterCard exposes neutral combatant and grid rendering contract', () => {
   assert.equal(FighterCard.name, 'FighterCard');
   assert.match(FighterCard.template, /resolvedCombatant/);
+  assert.match(FighterCard.template, /resolvedCombatant && portraitSrc/);
   assert.match(FighterCard.template, /gridBoardComponent/);
   assert.equal(FighterCard.computed.resolvedCombatant.call({
     combatant: { id: 'fighter_1' }
