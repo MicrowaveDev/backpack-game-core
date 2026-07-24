@@ -9,6 +9,7 @@ import {
   LeaderboardScreen,
   OnboardingScreen,
   ProfileScreen,
+  ReplayDetailScreen,
   RecipesScreen,
   SettingsScreen,
   SupportAdminScreen
@@ -58,6 +59,11 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(HomeScreen.template, /home-character-list/);
   assert.match(HomeScreen.template, /home-social-sidebar/);
   assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
+
+  assert.equal(ReplayDetailScreen.name, 'ReplayDetailScreen');
+  assert.match(ReplayDetailScreen.template, /core-replay-screen/);
+  assert.match(ReplayDetailScreen.template, /replayDuelComponent/);
+  assert.doesNotMatch(ReplayDetailScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 
   assert.equal(SupportAdminScreen.name, 'SupportAdminScreen');
   assert.equal(typeof SupportAdminScreen.props.request, 'object');

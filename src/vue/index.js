@@ -44,6 +44,7 @@ export {
   LeaderboardScreen,
   OnboardingScreen,
   ProfileScreen,
+  ReplayDetailScreen,
   RecipesScreen,
   SettingsScreen,
   SupportAdminScreen

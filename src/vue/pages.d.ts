@@ -10,4 +10,5 @@ export const FriendsScreen: Component;
 export const RecipesScreen: Component;
 export const HistoryScreen: Component;
 export const HomeScreen: Component;
+export const ReplayDetailScreen: Component;
 export const SupportAdminScreen: Component;

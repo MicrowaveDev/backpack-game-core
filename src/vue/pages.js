@@ -8,4 +8,5 @@ export { FriendsScreen } from './pages/FriendsScreen.js';
 export { RecipesScreen } from './pages/RecipesScreen.js';
 export { HistoryScreen } from './pages/HistoryScreen.js';
 export { HomeScreen } from './pages/HomeScreen.js';
+export { ReplayDetailScreen } from './pages/ReplayDetailScreen.js';
 export { SupportAdminScreen } from './pages/SupportAdminScreen.js';
