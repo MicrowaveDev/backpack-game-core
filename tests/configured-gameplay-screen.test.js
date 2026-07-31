@@ -70,6 +70,29 @@ test('[configured gameplay] delegates product data, locale, text, and services t
   );
 });
 
+test('[configured gameplay] returns home after closing a run summary', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const calls = [];
+  const context = {
+    activeRun: { id: 'completed-run' },
+    controller: {
+      state: { selectedHistoryRun: { id: 'completed-run' } }
+    },
+    async refreshBootstrap() {
+      calls.push('refresh');
+    },
+    navigate(screenId) {
+      calls.push(`navigate:${screenId}`);
+    }
+  };
+
+  await component.methods.closeSummary.call(context);
+
+  assert.equal(context.controller.state.selectedHistoryRun, null);
+  assert.equal(context.activeRun, null);
+  assert.deepEqual(calls, ['refresh', 'navigate:home']);
+});
+
 test('[configured gameplay] rejects incomplete product configuration', () => {
   assert.throws(
     () => createConfiguredGameplayScreen(options({ gridColumns: 0 })),

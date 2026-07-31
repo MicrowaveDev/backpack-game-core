@@ -489,10 +489,11 @@ export function createConfiguredGameplayScreen(options = {}) {
       const battle = this.run?.battles?.find((entry) => entry.id === battleId) || this.battle;
       if (battle) this.beginReplay(battle);
     },
-    closeSummary() {
+    async closeSummary() {
       this.controller.state.selectedHistoryRun = null;
       this.activeRun = null;
-      this.refreshBootstrap();
+      await this.refreshBootstrap();
+      this.navigate('home');
     }
   },
   template: `
