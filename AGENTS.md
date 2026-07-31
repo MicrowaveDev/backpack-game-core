@@ -91,6 +91,11 @@ this repo is checked out under the hub:
 - Product script entry points must import package subpaths, never core source
   paths. Browser tooling such as Puppeteer and Playwright remains a consumer
   dependency; core runner helpers only orchestrate injected commands.
+- Content-addressed asset caching and materialization belong in
+  `tooling/content-addressed-assets`. Keep it provider-neutral: consumers own
+  Geesome/API credentials, gateway URLs, CIDs, catalogs, publication policy,
+  and final repository paths. A CID identifies remote content; an expected
+  SHA-256 verifies cache and materialized bytes.
 - Universal repository-targeted commands belong in the existing
   `backpack-game-core` CLI, must require `--repo-root`, and must resolve relative
   paths from that root. Consumers expose them through local npm aliases.

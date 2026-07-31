@@ -76,6 +76,10 @@
       "types": "./src/tooling/image-publish.d.ts",
       "import": "./src/tooling/image-publish.js"
     },
+    "./tooling/content-addressed-assets": {
+      "types": "./src/tooling/content-addressed-assets.d.ts",
+      "import": "./src/tooling/content-addressed-assets.js"
+    },
     "./tooling/frame-files": {
       "types": "./src/tooling/frame-files.d.ts",
       "import": "./src/tooling/frame-files.js"
