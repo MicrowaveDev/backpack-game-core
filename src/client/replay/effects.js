@@ -59,6 +59,30 @@ function targetLabelsFor(event, side, lang = 'en') {
   return compactLabels(labels);
 }
 
+export function replayFighterVisualState({ event, side, replayState = {} } = {}) {
+  if (!side) return 'idle';
+
+  if (event?.type === 'battle_end') {
+    if (!event.winnerSide) return 'idle';
+    return event.winnerSide === side ? 'victory' : 'defeat';
+  }
+  if (event?.type === 'skip' && event.actorSide === side) {
+    return 'stunned';
+  }
+  if (event?.type === 'action' && event.targetSide === side) {
+    if (event.stunned) return 'stunned';
+    if (numberOrZero(event.blockedDamage) > 0) return 'blocked';
+    if (numberOrZero(event.damage) > 0) return 'hit';
+  }
+  if (event?.type === 'action' && event.actorSide === side) {
+    return 'attack';
+  }
+  if (replayState?.[side]?.stunned) {
+    return 'stunned';
+  }
+  return 'idle';
+}
+
 export function replayFighterEffects({ event, side, replayState = {}, replayIndex = 0, lang = 'en' } = {}) {
   const classes = [];
   if (event?.type === 'action' && event.actorSide === side) {

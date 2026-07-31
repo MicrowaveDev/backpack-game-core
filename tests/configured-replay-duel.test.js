@@ -49,3 +49,46 @@ test('[vue/configured] replay duel requires an artifact presentation component',
     /artifactFigureComponent is required/
   );
 });
+
+test('[vue/configured] replay duel resolves event-driven fighter images and effects', () => {
+  const contexts = [];
+  const Duel = createConfiguredReplayDuel({
+    artifactFigureComponent: ArtifactFigure,
+    resolveFighterImage: (context) => {
+      contexts.push(context);
+      return `/sprites/${context.fighter.characterId}-${context.visualState}.png`;
+    }
+  });
+  const vm = {
+    activeEvent: {
+      type: 'action',
+      actorSide: 'left',
+      targetSide: 'right',
+      damage: 4,
+      stunned: true
+    },
+    activeReplayState: { right: { stunned: true } },
+    replayIndex: 7,
+    lang: 'en'
+  };
+
+  assert.equal(Duel.methods.fighterImageFor.call(vm, {
+    characterId: 'hero',
+    imagePath: '/static.png'
+  }, 'right'), '/sprites/hero-stunned.png');
+  assert.equal(contexts[0].replayIndex, 7);
+  assert.deepEqual(Duel.methods.effectsFor.call(vm, 'right').classes, [
+    'fighter--hit',
+    'fighter--stunned'
+  ]);
+  assert.match(Duel.template, /:visual-effects="visualEffects"/);
+});
+
+test('[vue/configured] replay duel keeps static portraits when no resolver is configured', () => {
+  const Duel = createConfiguredReplayDuel({ artifactFigureComponent: ArtifactFigure });
+  assert.equal(Duel.methods.fighterImageFor.call({
+    activeEvent: null,
+    activeReplayState: null,
+    replayIndex: 0
+  }, { imagePath: '/static.png' }, 'left'), '/static.png');
+});

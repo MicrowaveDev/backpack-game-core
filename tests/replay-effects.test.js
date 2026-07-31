@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {
   BATTLE_EFFECTS,
   STATUS_EFFECTS,
-  replayFighterEffects
+  replayFighterEffects,
+  replayFighterVisualState
 } from '../src/client/index.js';
 
 test('[client/replay-effects] exposes battle and fighter effect helpers through the client facade', () => {
@@ -34,4 +35,36 @@ test('[client/replay-effects] exposes battle and fighter effect helpers through 
     ],
     statusBadges: [{ label: 'STUN', className: 'stun' }]
   });
+});
+
+test('[client/replay-effects] classifies fighter visual states by structured event priority', () => {
+  assert.equal(replayFighterVisualState({
+    event: { type: 'action', actorSide: 'left', targetSide: 'right' },
+    side: 'left'
+  }), 'attack');
+  assert.equal(replayFighterVisualState({
+    event: { type: 'action', targetSide: 'right', damage: 3, blockedDamage: 2 },
+    side: 'right'
+  }), 'blocked');
+  assert.equal(replayFighterVisualState({
+    event: { type: 'action', targetSide: 'right', damage: 3, blockedDamage: 2, stunned: true },
+    side: 'right'
+  }), 'stunned');
+  assert.equal(replayFighterVisualState({
+    event: { type: 'skip', actorSide: 'left' },
+    side: 'left'
+  }), 'stunned');
+  assert.equal(replayFighterVisualState({
+    event: { type: 'battle_end', winnerSide: 'right' },
+    side: 'right'
+  }), 'victory');
+  assert.equal(replayFighterVisualState({
+    event: { type: 'battle_end', winnerSide: 'right' },
+    side: 'left'
+  }), 'defeat');
+  assert.equal(replayFighterVisualState({
+    event: { type: 'step_start' },
+    side: 'left',
+    replayState: { left: { stunned: true } }
+  }), 'stunned');
 });

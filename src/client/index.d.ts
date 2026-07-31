@@ -135,6 +135,21 @@ export function replayFighterEffects(options?: {
   lang?: string;
 }): ReplayFighterEffects;
 
+export type ReplayFighterVisualState =
+  | 'idle'
+  | 'attack'
+  | 'hit'
+  | 'blocked'
+  | 'stunned'
+  | 'victory'
+  | 'defeat';
+
+export function replayFighterVisualState(options?: {
+  event?: Record<string, any>;
+  side?: string;
+  replayState?: Record<string, any>;
+}): ReplayFighterVisualState;
+
 export function getReplayCombatantName(
   currentBattle: Record<string, any> | null | undefined,
   side: string,

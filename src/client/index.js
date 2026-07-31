@@ -227,7 +227,8 @@ export function createBackpackGameClient(options = {}) {
 export {
   BATTLE_EFFECTS,
   STATUS_EFFECTS,
-  replayFighterEffects
+  replayFighterEffects,
+  replayFighterVisualState
 } from './replay/effects.js';
 export {
   formatReplayEvent,
