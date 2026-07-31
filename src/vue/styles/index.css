@@ -5421,7 +5421,7 @@ select {
 .fighter-portrait {
   width: 100%;
   aspect-ratio: var(--fighter-portrait-aspect, 1 / 1);
-  object-fit: cover;
+  object-fit: var(--fighter-object-fit, cover);
   object-position: var(--fighter-object-position, 50% 30%);
   border-radius: 16px;
   background: transparent;
