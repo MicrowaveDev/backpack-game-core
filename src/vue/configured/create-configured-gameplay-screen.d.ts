@@ -18,6 +18,10 @@ export interface ConfiguredGameplayScreenOptions {
   getLocale?: (controller: unknown) => string;
   getText?: (controller: unknown) => Record<string, unknown>;
   getClientServices?: (controller: unknown) => unknown;
+  replaySpeedOptions?: Array<{ speed: number; count?: number; label?: string }>;
+  defaultReplaySpeed?: number;
+  replayEventDelayMs?: number;
+  replayMinDelayMs?: number;
 }
 
 export declare function createConfiguredGameplayScreen(

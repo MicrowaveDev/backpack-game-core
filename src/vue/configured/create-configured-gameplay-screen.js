@@ -39,6 +39,17 @@ export function createConfiguredGameplayScreen(options = {}) {
   const getLocale = options.getLocale || ((controller) => controller.state.locale);
   const getText = options.getText || ((controller) => controller.text);
   const getClientServices = options.getClientServices || ((controller) => controller.clientServices);
+  const replaySpeedOptions = Array.isArray(options.replaySpeedOptions) && options.replaySpeedOptions.length
+    ? options.replaySpeedOptions
+    : [{ speed: 2, count: 1 }, { speed: 4, count: 2 }, { speed: 8, count: 3 }];
+  const allowedReplaySpeeds = replaySpeedOptions.map((item) => Number(item.speed)).filter(Number.isFinite);
+  const defaultReplaySpeed = allowedReplaySpeeds.includes(Number(options.defaultReplaySpeed))
+    ? Number(options.defaultReplaySpeed)
+    : allowedReplaySpeeds[0];
+  const replayEventDelayMs = Number(options.replayEventDelayMs) > 0
+    ? Number(options.replayEventDelayMs)
+    : null;
+  const replayMinDelayMs = Math.max(25, Number(options.replayMinDelayMs) || 25);
 
   if (!Number.isInteger(gridColumns) || gridColumns < 1) {
     throw new TypeError('createConfiguredGameplayScreen requires a positive integer options.gridColumns');
@@ -75,6 +86,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     },
     data() {
       const locale = getLocale(this.controller);
+      const preferredReplaySpeed = Number(this.controller.profileSettings?.replaySpeed);
       return {
         activeRun: this.controller.state.selectedHistoryRun
           || this.controller.state.bootstrap?.activeRun
@@ -91,7 +103,9 @@ export function createConfiguredGameplayScreen(options = {}) {
           gameRun: this.controller.state.bootstrap?.activeRun || null,
           gameRunResult: null,
           replayIndex: 0,
-          replaySpeed: Number(this.controller.profileSettings?.replaySpeed) || 2
+          replaySpeed: allowedReplaySpeeds.includes(preferredReplaySpeed)
+            ? preferredReplaySpeed
+            : defaultReplaySpeed
         }
       };
     },
@@ -324,11 +338,15 @@ export function createConfiguredGameplayScreen(options = {}) {
       this.clearReplayTimer();
       const events = this.replayState.currentBattle?.events || [];
       if (!this.showReplay || this.replayState.replayIndex >= events.length - 1) return;
+      const selectedSpeed = Math.max(0.25, Number(this.replayState.replaySpeed) || defaultReplaySpeed);
+      const speedBoost = Math.max(1, Number(this.replayTimeline.longBattleSpeedBoost) || 1);
       const targetDuration = events.length > 40 ? 2400 : 3200;
-      const delay = Math.max(
-        25,
-        Math.round(targetDuration / Math.max(1, events.length) / Math.max(1, this.replayState.replaySpeed))
-      );
+      const delay = replayEventDelayMs
+        ? Math.max(replayMinDelayMs, Math.round(replayEventDelayMs / selectedSpeed / speedBoost))
+        : Math.max(
+            replayMinDelayMs,
+            Math.round(targetDuration / Math.max(1, events.length) / selectedSpeed)
+          );
       this.replayTimer = globalThis.setTimeout(() => {
         this.replayState.replayIndex += 1;
         this.scheduleReplayAdvance();
@@ -347,7 +365,9 @@ export function createConfiguredGameplayScreen(options = {}) {
       this.scheduleReplayAdvance();
     },
     setReplaySpeed(speed) {
-      this.replayState.replaySpeed = Number(speed) || 1;
+      const nextSpeed = Number(speed);
+      if (!allowedReplaySpeeds.includes(nextSpeed)) return;
+      this.replayState.replaySpeed = nextSpeed;
       this.scheduleReplayAdvance();
     },
     finishReplay() {
@@ -519,6 +539,7 @@ export function createConfiguredGameplayScreen(options = {}) {
         :active-replay-state="replayTimeline.activeReplayState"
         :visible-replay-events="replayTimeline.visibleReplayEvents"
         :long-battle-speed-boost="replayTimeline.longBattleSpeedBoost"
+        :replay-speed-options="replaySpeedOptions"
         :build-replay-fighter="buildReplayFighter"
         :get-character="(id) => characters.find((entry) => entry.id === id)"
         :loadout-stats-text="loadoutStatsText"
@@ -661,7 +682,8 @@ export function createConfiguredGameplayScreen(options = {}) {
       return {
         ArtifactFigure: artifactFigureComponent,
         gridColumns,
-        gridRows
+        gridRows,
+        replaySpeedOptions
       };
     }
   };

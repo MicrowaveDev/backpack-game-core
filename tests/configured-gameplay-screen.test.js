@@ -37,8 +37,52 @@ test('[configured gameplay] exposes configured grid and presentation values thro
   assert.deepEqual(component.setup(), {
     ArtifactFigure: { name: 'TestArtifactFigure' },
     gridColumns: 6,
-    gridRows: 5
+    gridRows: 5,
+    replaySpeedOptions: [
+      { speed: 2, count: 1 },
+      { speed: 4, count: 2 },
+      { speed: 8, count: 3 }
+    ]
   });
+});
+
+test('[configured gameplay] supports product-configured readable replay timing', () => {
+  const speedOptions = [
+    { speed: 1, count: 1 },
+    { speed: 2, count: 2 },
+    { speed: 4, count: 3 }
+  ];
+  const component = createConfiguredGameplayScreen(options({
+    replaySpeedOptions: speedOptions,
+    defaultReplaySpeed: 1,
+    replayEventDelayMs: 900,
+    replayMinDelayMs: 100
+  }));
+  let capturedDelay = null;
+  const originalSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (_callback, delay) => {
+    capturedDelay = delay;
+    return 1;
+  };
+
+  try {
+    component.methods.scheduleReplayAdvance.call({
+      clearReplayTimer() {},
+      showReplay: true,
+      replayTimeline: { longBattleSpeedBoost: 1 },
+      replayState: {
+        currentBattle: { events: [{}, {}, {}] },
+        replayIndex: 0,
+        replaySpeed: 1
+      },
+      scheduleReplayAdvance() {}
+    });
+  } finally {
+    globalThis.setTimeout = originalSetTimeout;
+  }
+
+  assert.equal(capturedDelay, 900);
+  assert.deepEqual(component.setup().replaySpeedOptions, speedOptions);
 });
 
 test('[configured gameplay] delegates product data, locale, text, and services through options', () => {
