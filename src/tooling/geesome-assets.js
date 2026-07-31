@@ -48,6 +48,20 @@ export function geesomeServerUrls(value) {
   };
 }
 
+export async function discoverGeesomeServer(value, fetchImpl = globalThis.fetch) {
+  if (typeof fetchImpl !== 'function') throw new TypeError('A Fetch-compatible implementation is required');
+  const { gatewayUrl } = geesomeServerUrls(value);
+  const response = await fetchImpl(`${gatewayUrl}/.well-known/geesome`);
+  if (!response.ok) throw new Error(`Geesome discovery failed: ${await responseError(response)}`);
+  const discovery = await response.json();
+  const apiBaseUrl = validatedAdvertisedUrl(discovery.apiBaseUrl, gatewayUrl, 'apiBaseUrl');
+  const advertisedGatewayUrl = validatedAdvertisedUrl(discovery.gatewayBaseUrl, gatewayUrl, 'gatewayBaseUrl');
+  if (discovery.capabilities?.assetUpload !== true) {
+    throw new Error('Geesome discovery does not advertise assetUpload capability');
+  }
+  return {...discovery, apiBaseUrl, gatewayBaseUrl: advertisedGatewayUrl};
+}
+
 export function createGeesomeAssetProvider({
   server,
   apiKey,
@@ -56,6 +70,8 @@ export function createGeesomeAssetProvider({
 } = {}) {
   if (typeof fetchImpl !== 'function') throw new TypeError('A Fetch-compatible implementation is required');
   const { apiUrl, gatewayUrl } = geesomeServerUrls(server);
+  let discoveryPromise;
+	const discover = () => discoveryPromise ||= discoverGeesomeServer(gatewayUrl, fetchImpl);
   return {
     apiUrl,
     gatewayUrl,
@@ -67,13 +83,18 @@ export function createGeesomeAssetProvider({
     async publishAsset({ id, filePath, targetPath, mimeType = 'application/octet-stream' }) {
       const token = requiredText(apiKey, 'GEESOME_API_KEY');
       const data = fs.readFileSync(filePath);
+		const sha256 = contentAddressedAssetSha256(data);
+		const logicalPath = remoteAssetPath(remoteRoot, targetPath).replace(/^\/+/, '');
       const form = new FormData();
       form.append('file', new Blob([data], { type: mimeType }), path.basename(filePath));
-      form.append('path', remoteAssetPath(remoteRoot, targetPath));
-      form.append('driver', JSON.stringify({ raw: true }));
-      const response = await fetchImpl(`${apiUrl}/v1/user/save-file`, {
+		form.append('expectedSha256', sha256);
+		form.append('logicalPath', logicalPath);
+		form.append('previewPolicy', 'none');
+		const discovery = await discover();
+		const idempotencyKey = `asset:${crypto.createHash('sha256').update(`${id}:${logicalPath}:${sha256}`).digest('hex')}`;
+      const response = await fetchImpl(`${discovery.apiBaseUrl}/assets`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+		headers: {Authorization: `Bearer ${token}`, 'Idempotency-Key': idempotencyKey},
         body: form
       });
       if (!response.ok) throw new Error(`Geesome upload failed for ${id}: ${await responseError(response)}`);
@@ -88,6 +109,15 @@ export function createGeesomeAssetProvider({
       return { storageId };
     }
   };
+}
+
+function validatedAdvertisedUrl(value, expectedOrigin, fieldName) {
+  const url = new URL(requiredText(value, fieldName));
+  const origin = new URL(expectedOrigin);
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.origin !== origin.origin) {
+    throw new Error(`Geesome discovery ${fieldName} must be a same-origin HTTP or HTTPS URL`);
+  }
+  return url.href.replace(/\/+$/, '');
 }
 
 export function readGeesomeAssetManifest({ manifestPath, required = false } = {}) {
