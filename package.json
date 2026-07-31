@@ -72,6 +72,10 @@
       "types": "./src/tooling/image.d.ts",
       "import": "./src/tooling/image.js"
     },
+    "./tooling/image-publish": {
+      "types": "./src/tooling/image-publish.d.ts",
+      "import": "./src/tooling/image-publish.js"
+    },
     "./tooling/frame-files": {
       "types": "./src/tooling/frame-files.d.ts",
       "import": "./src/tooling/frame-files.js"
@@ -300,10 +304,14 @@
   ],
   "peerDependencies": {
     "sequelize": "^6.37.0",
+    "sharp": "^0.34.3",
     "vue": "^3.3.0 || ^3.4.0 || ^3.5.0"
   },
   "peerDependenciesMeta": {
     "sequelize": {
+      "optional": true
+    },
+    "sharp": {
       "optional": true
     },
     "vue": {
