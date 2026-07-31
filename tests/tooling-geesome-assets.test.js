@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,11 +21,21 @@ test('publishes, verifies, records, and hydrates configured Geesome assets', asy
   const requests = [];
   const fetchImpl = async (url, options = {}) => {
     requests.push({ url, options });
+		if (url.endsWith('/.well-known/geesome')) {
+			return new Response(JSON.stringify({
+				apiBaseUrl: 'https://geesome.example/custom/v1',
+				gatewayBaseUrl: 'https://geesome.example',
+				capabilities: {assetUpload: true}
+			}), {status: 200, headers: {'content-type': 'application/json'}});
+		}
     if (options.method === 'POST') {
       assert.equal(options.headers.Authorization, 'Bearer secret');
-      assert.equal(options.body.get('path'), '/games/example/characters/public/characters/fighter/idle.webp');
+			assert.match(options.headers['Idempotency-Key'], /^asset:[a-f0-9]{64}$/);
+			assert.equal(options.body.get('logicalPath'), 'games/example/characters/public/characters/fighter/idle.webp');
+			assert.equal(options.body.get('expectedSha256'), crypto.createHash('sha256').update(bytes).digest('hex'));
+			assert.equal(options.body.get('previewPolicy'), 'none');
       return new Response(JSON.stringify({ storageId: 'bafkreiverifiedasset' }), {
-        status: 200,
+			status: 201,
         headers: { 'content-type': 'application/json' }
       });
     }
@@ -53,8 +64,9 @@ test('publishes, verifies, records, and hydrates configured Geesome assets', asy
     });
     assert.equal(manifest.gatewayUrl, 'https://geesome.example');
     assert.equal(readGeesomeAssetManifest({ manifestPath, required: true }).assets.length, 1);
-    assert.equal(requests[0].url, 'https://geesome.example/api/v1/user/save-file');
-    assert.equal(requests[1].url, 'https://geesome.example/ipfs/bafkreiverifiedasset');
+		assert.equal(requests[0].url, 'https://geesome.example/.well-known/geesome');
+		assert.equal(requests[1].url, 'https://geesome.example/custom/v1/assets');
+		assert.equal(requests[2].url, 'https://geesome.example/ipfs/bafkreiverifiedasset');
 
     const hydrated = await hydrateGeesomeAssetManifest({
       repoRoot: root,

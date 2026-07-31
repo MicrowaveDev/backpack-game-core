@@ -24,6 +24,11 @@ export interface GeesomeAssetManifest {
 
 export function geesomeServerUrls(server: string): { apiUrl: string; gatewayUrl: string };
 
+export function discoverGeesomeServer(server: string, fetchImpl?: typeof fetch): Promise<Record<string, unknown> & {
+  apiBaseUrl: string;
+  gatewayBaseUrl: string;
+}>;
+
 export function createGeesomeAssetProvider(options: {
   server: string;
   apiKey?: string;
