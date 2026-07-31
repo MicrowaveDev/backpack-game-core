@@ -80,6 +80,10 @@
       "types": "./src/tooling/content-addressed-assets.d.ts",
       "import": "./src/tooling/content-addressed-assets.js"
     },
+    "./tooling/geesome-assets": {
+      "types": "./src/tooling/geesome-assets.d.ts",
+      "import": "./src/tooling/geesome-assets.js"
+    },
     "./tooling/frame-files": {
       "types": "./src/tooling/frame-files.d.ts",
       "import": "./src/tooling/frame-files.js"

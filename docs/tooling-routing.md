@@ -61,6 +61,7 @@ core command only when its defaults and safety behavior are genuinely shared.
 | PNG encode/decode, hashing, metadata bundles | `tooling/image` | Library | Input/output paths and product metadata |
 | Incremental runtime image publishing and byte budgets | `tooling/image-publish` | Library | Source/output catalog, dimensions, quality, format, and budgets |
 | Verified content-addressed cache and target hydration | `tooling/content-addressed-assets` | Library | Storage provider, immutable IDs, expected hashes, cache/output paths, and offline policy |
+| Geesome upload, read-back verification, manifests, and configured hydration | `tooling/geesome-assets` | Library | Credentials, remote namespace, asset catalog, manifest/cache paths, and publication policy |
 | Indexed frame discovery and animation preparation | `tooling/frame-files` | Library | Naming convention, expected frame count, processing policy |
 | Raster crop, resize, composition, diagnostics, fitting | `tooling/raster` | Library | Layout, dimensions, colors, and approval policy |
 | Alpha, palette, component, frame, and matte analysis | `tooling/image-analysis` | Library | Thresholds and product verdicts |
