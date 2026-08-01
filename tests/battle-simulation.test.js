@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { simulateBattle } from '../src/index.js';
+import { selectBattleOpponent } from '../src/modules/battle/index.js';
 
 function combatant(id, stats = {}) {
   const maxHealth = stats.maxHealth ?? 20;
@@ -24,6 +25,32 @@ function combatant(id, stats = {}) {
 function fixedRng(value) {
   return () => value;
 }
+
+test('[battle] selects an eligible opponent and avoids an immediate repeat', () => {
+  const characters = [{ id: 'player' }, { id: 'one' }, { id: 'two' }, { id: 'three' }];
+
+  assert.equal(selectBattleOpponent(characters, {
+    playerCharacterId: 'player',
+    previousOpponentId: 'one',
+    rng: fixedRng(0)
+  })?.id, 'two');
+  assert.equal(selectBattleOpponent(characters, {
+    playerCharacterId: 'player',
+    previousOpponentId: 'one',
+    rng: fixedRng(0.999)
+  })?.id, 'three');
+});
+
+test('[battle] falls back to the only eligible opponent', () => {
+  assert.equal(selectBattleOpponent([{ id: 'player' }, { id: 'only' }], {
+    playerCharacterId: 'player',
+    previousOpponentId: 'only',
+    rng: fixedRng(0.5)
+  })?.id, 'only');
+  assert.equal(selectBattleOpponent([{ id: 'player' }], {
+    playerCharacterId: 'player'
+  }), null);
+});
 
 test('[battle-simulation] resolves a deterministic death battle with event states', () => {
   const result = simulateBattle({
