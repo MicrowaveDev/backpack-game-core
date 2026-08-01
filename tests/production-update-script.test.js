@@ -15,6 +15,7 @@ test('production update shell runner is syntax-valid and product-neutral', () =>
   assert.match(source, /--project-root/);
   assert.match(source, /--compose-file/);
   assert.match(source, /--service/);
+  assert.match(source, /\[\[ "\$first_attempt_exit" -ne 0 \]\] \|\| return 0/);
   assert.match(source, /failed after aggressive cleanup; not repeating the same build/);
 });
 
