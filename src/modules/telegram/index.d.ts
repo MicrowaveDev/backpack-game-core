@@ -34,6 +34,9 @@ export function buildTelegramShareUrl(options?: {
   url?: unknown;
   text?: unknown;
 }): string;
+export function openTelegramLink(url: unknown, options?: {
+  win?: TelegramWindowLike | null;
+}): 'telegram' | 'window' | 'none';
 export function shareTelegramText(options?: {
   text?: string;
   url?: string;

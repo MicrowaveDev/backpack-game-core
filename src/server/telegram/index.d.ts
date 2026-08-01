@@ -21,3 +21,7 @@ export function createTelegramBotApiClient(options?: Record<string, any>): {
 };
 export function createTelegramUpdateRouter(options?: Record<string, any>): (update: any, context?: any) => Promise<any>;
 export function createTelegramBotRuntime(options?: Record<string, any>): Record<string, (...args: any[]) => any>;
+export function telegramWebhookNeedsUpdate(info?: Record<string, any>, options?: {
+  webhookUrl?: string;
+  allowedUpdates?: string[];
+}): boolean;

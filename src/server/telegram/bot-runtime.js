@@ -22,6 +22,16 @@ function appendQuery(url, params) {
   return target.toString();
 }
 
+export function telegramWebhookNeedsUpdate(info = {}, {
+  webhookUrl = '',
+  allowedUpdates = []
+} = {}) {
+  if (String(info.url || '') !== String(webhookUrl || '')) return true;
+  if (String(info.last_error_message || '').trim()) return true;
+  const currentAllowed = new Set(Array.isArray(info.allowed_updates) ? info.allowed_updates : []);
+  return allowedUpdates.some((update) => !currentAllowed.has(update));
+}
+
 export function createTelegramBotRuntime(options = {}) {
   const {
     createTelegramAuthCode = requiredDependency('createTelegramAuthCode'),
@@ -120,9 +130,17 @@ export function createTelegramBotRuntime(options = {}) {
     if (!env.TELEGRAM_BOT_TOKEN && !callOptions.token) return { skipped: true, reason: 'missing_token' };
     if (!webhookUrl) return { skipped: true, reason: 'missing_public_url' };
     const info = await getTelegramWebhookInfo(callOptions);
-    if (info?.url === webhookUrl) return { changed: false, url: webhookUrl };
+    const allowedUpdates = ['message', 'callback_query', 'pre_checkout_query'];
+    if (!telegramWebhookNeedsUpdate(info, { webhookUrl, allowedUpdates })) {
+      return { changed: false, url: webhookUrl };
+    }
     await setTelegramWebhook({ webhookUrl, secretToken: callOptions.secretToken }, callOptions);
-    return { changed: true, previousUrl: info?.url || '', url: webhookUrl };
+    return {
+      changed: true,
+      previousUrl: info?.url || '',
+      previousError: info?.last_error_message || null,
+      url: webhookUrl
+    };
   }
 
   async function answerTelegramGameCallback(callbackQuery, callOptions = {}) {

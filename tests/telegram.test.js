@@ -14,6 +14,7 @@ import {
   createTelegramBotApiClient,
   createTelegramUpdateRouter,
   parseTelegramInitData,
+  telegramWebhookNeedsUpdate,
   verifyTelegramInitData
 } from '../src/server/telegram/index.js';
 
@@ -144,4 +145,28 @@ test('[telegram/router] normalizes updates and dispatches configured handlers', 
   });
   assert.deepEqual(routed, [['start', 'meat']]);
   assert.deepEqual(await route({ update_id: 1 }), { kind: 'ignored', answered: false });
+});
+
+test('[telegram/webhook] reconciles URL, delivery errors, and allowed updates', () => {
+  const options = {
+    webhookUrl: 'https://game.test/api/bot/webhook',
+    allowedUpdates: ['message', 'callback_query']
+  };
+  assert.equal(telegramWebhookNeedsUpdate({
+    url: options.webhookUrl,
+    allowed_updates: options.allowedUpdates
+  }, options), false);
+  assert.equal(telegramWebhookNeedsUpdate({
+    url: options.webhookUrl,
+    allowed_updates: options.allowedUpdates,
+    last_error_message: 'certificate verify failed'
+  }, options), true);
+  assert.equal(telegramWebhookNeedsUpdate({
+    url: 'https://old.test/api/bot/webhook',
+    allowed_updates: options.allowedUpdates
+  }, options), true);
+  assert.equal(telegramWebhookNeedsUpdate({
+    url: options.webhookUrl,
+    allowed_updates: ['message']
+  }, options), true);
 });

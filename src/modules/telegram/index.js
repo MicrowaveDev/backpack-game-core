@@ -10,6 +10,7 @@ export {
   getTelegramWebApp,
   isTelegramMiniAppEnvironment,
   normalizeTelegramBotUsername,
+  openTelegramLink,
   shareTelegramText
 } from './browser-links.js';
 

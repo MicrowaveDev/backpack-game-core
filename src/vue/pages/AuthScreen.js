@@ -8,6 +8,10 @@ export const AuthScreen = {
     authCode: { type: Object, default: null },
     devAuthEnabled: { type: Boolean, default: false },
     portraitDataAttribute: { type: String, default: '' },
+    openExternalLink: {
+      type: Function,
+      default: (url) => globalThis.open?.(url, '_blank', 'noopener,noreferrer')
+    },
     copyText: {
       type: Function,
       default: (text) => globalThis.navigator?.clipboard?.writeText?.(text)
@@ -55,6 +59,11 @@ export const AuthScreen = {
       } catch {
         this.botCommandCopied = false;
       }
+    },
+    openBotLink(event) {
+      if (!this.authCode?.botUrl) return;
+      event?.preventDefault?.();
+      this.openExternalLink(this.authCode.botUrl);
     }
   },
   template: `
@@ -97,11 +106,11 @@ export const AuthScreen = {
           <button class="auth-code-close" type="button" :aria-label="labels.codeCancel" @click="$emit('cancel-auth-code')">×</button>
           <p class="eyebrow">{{ labels.codeTitle }}</p>
           <p class="auth-code-hint">{{ labels.codeHint }}</p>
-          <a class="primary auth-code-open" :href="authCode.botUrl" target="_blank" rel="noopener noreferrer">{{ labels.codeOpen }}</a>
+          <a class="primary auth-code-open" :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ labels.codeOpen }}</a>
           <div class="auth-code-command">
             <span class="auth-code-command-label">
               {{ labels.codeCommandLabel }}
-              <a :href="authCode.botUrl" target="_blank" rel="noopener noreferrer">{{ botLinkLabel }}</a>
+              <a :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ botLinkLabel }}</a>
             </span>
             <code>{{ botStartCommand }}</code>
             <button class="ghost" type="button" @click="copyBotStartCommand">{{ botCommandCopied ? labels.codeCopied : labels.codeCopy }}</button>
