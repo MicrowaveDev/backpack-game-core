@@ -407,13 +407,14 @@ export function createConfiguredGameplayScreen(options = {}) {
     },
     async mutate(action, operation) {
       this.loading = true;
+      this.notice = '';
       this.controller.state.error = '';
       try {
         const result = await operation();
         const nextRun = result?.run || (result?.id && result?.shopItems ? result : null);
         if (nextRun) this.activeRun = nextRun;
         if (result?.battle) this.battle = result.battle;
-        if (result?.walletTransaction) {
+        if (result?.walletTransaction && !result?.battle) {
           this.notice = `${this.text.earned}: ${result.walletTransaction.delta}`;
         }
         await this.refreshBootstrap();

@@ -84,6 +84,8 @@ export interface RunRoundResolutionPlan {
     spore: number;
     mycelium: number;
   };
+  roundAwards: RunRoundResolutionPlan['awards'];
+  completionAwards: RunRoundResolutionPlan['awards'];
   roundIncome: number;
   player: {
     completedRounds: number;
@@ -184,6 +186,14 @@ export function createRunRoundResolutionPlan(options?: {
     profile_currency?: unknown;
     characterProgress?: unknown;
     character_progress?: unknown;
+    spore?: unknown;
+    mycelium?: unknown;
+  }>;
+  completionRewardTable?: Array<{
+    minWins?: unknown;
+    maxWins?: unknown;
+    profileCurrency?: unknown;
+    characterProgress?: unknown;
     spore?: unknown;
     mycelium?: unknown;
   }>;

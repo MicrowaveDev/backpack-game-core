@@ -179,6 +179,27 @@ test('[configured gameplay] returns home after closing a run summary', async () 
   assert.deepEqual(calls, ['refresh', 'navigate:home']);
 });
 
+test('[configured gameplay] keeps battle earnings in the run summary instead of a loose notice', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const context = {
+    loading: false,
+    notice: 'stale notice',
+    battle: null,
+    activeRun: null,
+    controller: { state: { error: '' } },
+    text: { earned: 'Earned' },
+    async refreshBootstrap() {}
+  };
+
+  await component.methods.mutate.call(context, 'Battle', async () => ({
+    battle: { id: 'battle_1' },
+    walletTransaction: { delta: 2 }
+  }));
+
+  assert.equal(context.notice, '');
+  assert.equal(context.battle.id, 'battle_1');
+});
+
 test('[configured gameplay] rejects incomplete product configuration', () => {
   assert.throws(
     () => createConfiguredGameplayScreen(options({ gridColumns: 0 })),
