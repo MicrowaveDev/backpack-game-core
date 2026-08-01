@@ -423,7 +423,7 @@ export const ShopItemRow = {
       <slot name="tags" :row="row" :stats="renderedStats">
         <component :is="tagsTag" :class="tagsClass || null">
           <component
-            v-if="row.characterItem"
+            v-if="row.characterItem && characterItemLabel"
             :is="tagTag"
             :class="[tagClass, characterTagClass]"
           >{{ characterItemLabel }}</component>

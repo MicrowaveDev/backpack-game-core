@@ -491,6 +491,9 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
     refreshPricePrefix: '*'
   }), 'Reroll (*3)');
   assert.equal(ShopZone.computed.pricePrefix.call(context), '* ');
+  assert.equal(ShopZone.computed.characterItemLabel.call(context), 'Hero item');
+  assert.equal(ShopZone.computed.characterItemLabel.call({ labels: { characterItem: '' } }), '');
+  assert.match(ShopZone.template, /row\.characterItem && characterItemLabel/);
   assert.deepEqual(ShopZone.computed.sellZoneProps.call(context), {
     active: true,
     draggingItemId: 'row_1',

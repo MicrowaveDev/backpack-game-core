@@ -242,7 +242,7 @@ export const ShopZone = {
           <slot name="item-tags" :row="row" :stats="renderedStats(row)">
             <div :class="itemTagsClass">
               <span
-                v-if="row.characterItem"
+                v-if="row.characterItem && characterItemLabel"
                 :class="[statChipClass, characterTagClass]"
               >{{ characterItemLabel }}</span>
               <span
