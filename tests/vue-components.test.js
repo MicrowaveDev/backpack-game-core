@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   AchievementBadge,
   ArtifactCatalogBrowser,
@@ -40,6 +41,8 @@ test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', 
   assert.equal(ArtifactGridBoard.props.artifactFigureComponent.default, null);
   assert.equal(ArtifactGridBoard.props.artifactImageFor.default({ imagePath: '/item.png' }), '/item.png');
   assert.match(ArtifactGridBoard.template, /artifactFigureComponent/);
+  const styles = fs.readFileSync(new URL('../src/vue/styles/index.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.artifact-grid-piece-image\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*contain/s);
   assert.doesNotMatch(ArtifactGridBoard.template, /mushroom|spore|mycelium/i);
 });
 
