@@ -22,6 +22,7 @@ export {
   ReplayDuel,
   ReplayScreen,
   RunHud,
+  RunCompleteScreen,
   RunSummaryScreen,
   SellZone,
   SeasonRankEmblem,

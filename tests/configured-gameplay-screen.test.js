@@ -23,11 +23,13 @@ test('[configured gameplay] creates the shared prep, replay, and summary composi
   assert.equal(component.components.PrepScreen.name, 'PrepScreen');
   assert.equal(component.components.ReplayDetailScreen.name, 'ReplayDetailScreen');
   assert.equal(component.components.RunSummaryScreen.name, 'RunSummaryScreen');
+  assert.equal(component.components.RunCompleteScreen.name, 'RunCompleteScreen');
   assert.equal(component.components.ArtifactFigure.name, 'TestArtifactFigure');
   assert.equal(component.components.ReplayDuel.name, 'TestReplayDuel');
   assert.match(component.template, /<PrepScreen/);
   assert.match(component.template, /<ReplayDetailScreen/);
   assert.match(component.template, /<RunSummaryScreen/);
+  assert.match(component.template, /<RunCompleteScreen/);
   assert.doesNotMatch(component.template, /Meat/);
 });
 
@@ -112,6 +114,29 @@ test('[configured gameplay] delegates product data, locale, text, and services t
     component.methods.getArtifact.call({ controller }, 'fallback'),
     { id: 'fallback' }
   );
+});
+
+test('[configured gameplay] delegates rich completion summary shaping to the product adapter', () => {
+  const calls = [];
+  const component = createConfiguredGameplayScreen(options({
+    shapeRunCompleteSummary(context) {
+      calls.push(context);
+      return { title: 'Arena cleared' };
+    }
+  }));
+  const context = {
+    runSummary: { title: 'Fallback' },
+    run: { id: 'run_1', characterId: 'fighter_1' },
+    characters: [{ id: 'fighter_1' }],
+    bootstrap: { season: { totalPoints: 10 } },
+    text: { playAgain: 'Play again' },
+    locale: 'en'
+  };
+
+  assert.deepEqual(component.computed.runCompleteSummary.call(context), { title: 'Arena cleared' });
+  assert.equal(calls[0].run.id, 'run_1');
+  assert.equal(calls[0].character.id, 'fighter_1');
+  assert.equal(calls[0].fallbackSummary.title, 'Fallback');
 });
 
 test('[configured gameplay] localizes backend-shaped shop stat keys for display', () => {

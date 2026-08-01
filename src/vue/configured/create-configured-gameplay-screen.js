@@ -5,6 +5,7 @@ import {
   InventoryZone,
   PrepActions,
   PrepScreen,
+  RunCompleteScreen,
   RunHud,
   RunSummaryScreen,
   ShopZone
@@ -39,6 +40,9 @@ export function createConfiguredGameplayScreen(options = {}) {
   const getLocale = options.getLocale || ((controller) => controller.state.locale);
   const getText = options.getText || ((controller) => controller.text);
   const getClientServices = options.getClientServices || ((controller) => controller.clientServices);
+  const shapeRunCompleteSummary = typeof options.shapeRunCompleteSummary === 'function'
+    ? options.shapeRunCompleteSummary
+    : null;
   const replaySpeedOptions = Array.isArray(options.replaySpeedOptions) && options.replaySpeedOptions.length
     ? options.replaySpeedOptions
     : [{ speed: 2, count: 1 }, { speed: 4, count: 2 }, { speed: 8, count: 3 }];
@@ -76,6 +80,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       PrepScreen,
       ReplayDetailScreen,
       ReplayDuel: replayDuelComponent,
+      RunCompleteScreen,
       RunHud,
       RunSummaryScreen,
       ShopZone
@@ -217,6 +222,18 @@ export function createConfiguredGameplayScreen(options = {}) {
         })),
         homeLabel: this.text.close
       };
+    },
+    runCompleteSummary() {
+      if (!this.runSummary || !shapeRunCompleteSummary) return null;
+      const character = this.characters.find((entry) => entry.id === this.run.characterId) || null;
+      return shapeRunCompleteSummary({
+        run: this.run,
+        character,
+        bootstrap: this.bootstrap,
+        text: this.text,
+        locale: this.locale,
+        fallbackSummary: this.runSummary
+      });
     },
     replayTimeline() {
       return replayTimelineViewState({
@@ -524,8 +541,15 @@ export function createConfiguredGameplayScreen(options = {}) {
     <section class="stack">
       <div v-if="notice" class="notice" data-testid="status-notice">{{ notice }}</div>
 
+      <RunCompleteScreen
+        v-if="runCompleteSummary && !showReplay"
+        :summary="runCompleteSummary"
+        @primary="startRun"
+        @secondary="closeSummary"
+      />
+
       <RunSummaryScreen
-        v-if="runSummary && !showReplay"
+        v-else-if="runSummary && !showReplay"
         :summary="runSummary"
         @home="closeSummary"
         @open-round="openRound"

@@ -23,6 +23,7 @@ import {
   RecipeList,
   ReplayDuel,
   ReplayScreen,
+  RunCompleteScreen,
   RunHud,
   RunSummaryScreen,
   SellZone,
@@ -40,6 +41,14 @@ test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', 
   assert.equal(ArtifactGridBoard.props.artifactImageFor.default({ imagePath: '/item.png' }), '/item.png');
   assert.match(ArtifactGridBoard.template, /artifactFigureComponent/);
   assert.doesNotMatch(ArtifactGridBoard.template, /mushroom|spore|mycelium/i);
+});
+
+test('[vue] RunCompleteScreen exposes the rich product-neutral completion contract', () => {
+  assert.equal(RunCompleteScreen.name, 'RunCompleteScreen');
+  assert.match(RunCompleteScreen.template, /run-season-card/);
+  assert.match(RunCompleteScreen.template, /run-achievement-list/);
+  assert.match(RunCompleteScreen.template, /\$emit\('primary'\)/);
+  assert.doesNotMatch(RunCompleteScreen.template, /mushroom|spore|mycelium/i);
 });
 
 test('[vue] AssetRollResultPanel exposes neutral panel rendering contract', () => {
