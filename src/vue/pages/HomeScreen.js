@@ -251,6 +251,24 @@ export const HomeScreen = {
     }
   },
   computed: {
+    battleLimit() {
+      return this.state.bootstrap?.battleLimit || {};
+    },
+    battleLimitIsUnlimited() {
+      const limit = Number(this.battleLimit.limit);
+      return this.battleLimit.unlimited === true
+        || this.battleLimit.limit == null
+        || !Number.isFinite(limit)
+        || limit >= Number.MAX_SAFE_INTEGER;
+    },
+    battleLimitReached() {
+      return !this.battleLimitIsUnlimited
+        && Number(this.battleLimit.used || 0) >= Number(this.battleLimit.limit);
+    },
+    battleLimitText() {
+      if (this.battleLimitIsUnlimited) return this.t.unlimited;
+      return `${Number(this.battleLimit.used || 0)} / ${Number(this.battleLimit.limit || 0)}`;
+    },
     mobileActionMode() {
       return this.state.mobileHomeActionsMode || 'auto';
     },
@@ -635,8 +653,8 @@ export const HomeScreen = {
           <div class="home-roster-action-buttons">
             <button
               class="primary"
-              :disabled="state.startingRun || !selectedCharacter.isActive || (!selectedCharacter.activeRun && state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit)"
-              :title="!selectedCharacter.activeRun && state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit ? t.dailyLimitReached : ''"
+              :disabled="state.startingRun || !selectedCharacter.isActive || (!selectedCharacter.activeRun && battleLimitReached)"
+              :title="!selectedCharacter.activeRun && battleLimitReached ? t.dailyLimitReached : ''"
               @click="playSelectedCharacter"
             >{{ state.startingRun ? t.startingRun : selectedCharacter.activeRun ? t.resumeRun : t.startRun }}</button>
             <button
@@ -756,11 +774,11 @@ export const HomeScreen = {
         <article class="panel home-section">
           <div class="home-section-header">
             <h3>{{ t.gameRuns }}</h3>
-            <button v-if="!state.gameRun && activeCharacter" class="primary home-start-btn" data-testid="home-start-run" :disabled="state.startingRun || state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit" :title="state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit ? t.dailyLimitReached : ''" @click="$emit('start-run', 'solo')">{{ state.startingRun ? t.startingRun : t.startRun }}</button>
+            <button v-if="!state.gameRun && activeCharacter" class="primary home-start-btn" data-testid="home-start-run" :disabled="state.startingRun || battleLimitReached" :title="battleLimitReached ? t.dailyLimitReached : ''" @click="$emit('start-run', 'solo')">{{ state.startingRun ? t.startingRun : t.startRun }}</button>
             <button v-if="state.bootstrap.gameRunHistory?.length" class="link" @click="$emit('go', 'history')">{{ t.viewAll }}</button>
           </div>
 
-          <p v-if="!state.gameRun && state.bootstrap.battleLimit.used >= state.bootstrap.battleLimit.limit" class="home-limit-hint">{{ t.dailyLimitReached }}</p>
+          <p v-if="!state.gameRun && battleLimitReached" class="home-limit-hint">{{ t.dailyLimitReached }}</p>
 
           <!-- Active run as first item -->
           <div v-if="state.gameRun && !state.startingRun && activeCharacter" class="home-run-item home-run-item--active" @click="$emit('resume-run')">
@@ -829,7 +847,7 @@ export const HomeScreen = {
                 </div>
               </div>
             </span>
-            <span>{{ t.battleLimit }} <strong>{{ state.bootstrap.battleLimit.used }} / {{ state.bootstrap.battleLimit.limit }}</strong></span>
+            <span>{{ t.battleLimit }} <strong>{{ battleLimitText }}</strong></span>
           </div>
         </article>
 

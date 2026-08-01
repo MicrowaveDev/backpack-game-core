@@ -78,6 +78,19 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(HomeScreen.template, /home-character-list/);
   assert.match(HomeScreen.template, /compatibilityClass\('picker'\)/);
   assert.match(HomeScreen.template, /home-social-sidebar/);
+  assert.equal(HomeScreen.computed.battleLimitIsUnlimited.call({
+    battleLimit: { used: 0, limit: Number.MAX_SAFE_INTEGER }
+  }), true);
+  assert.equal(HomeScreen.computed.battleLimitText.call({
+    battleLimitIsUnlimited: true,
+    battleLimit: { used: 0, limit: null },
+    t: { unlimited: 'Unlimited' }
+  }), 'Unlimited');
+  assert.equal(HomeScreen.computed.battleLimitText.call({
+    battleLimitIsUnlimited: false,
+    battleLimit: { used: 2, limit: 5 },
+    t: { unlimited: 'Unlimited' }
+  }), '2 / 5');
   assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 
   assert.equal(ReplayDetailScreen.name, 'ReplayDetailScreen');
