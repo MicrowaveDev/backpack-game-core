@@ -48,6 +48,8 @@ test('[vue] RunCompleteScreen exposes the rich product-neutral completion contra
   assert.match(RunCompleteScreen.template, /run-season-card/);
   assert.match(RunCompleteScreen.template, /run-achievement-list/);
   assert.match(RunCompleteScreen.template, /\$emit\('primary'\)/);
+  assert.equal(RunCompleteScreen.methods.achievementDelay(0), '760ms');
+  assert.equal(RunCompleteScreen.methods.achievementDelay(2), '1120ms');
   assert.doesNotMatch(RunCompleteScreen.template, /mushroom|spore|mycelium/i);
 });
 
