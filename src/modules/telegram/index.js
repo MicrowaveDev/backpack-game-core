@@ -91,6 +91,10 @@ export function extractTelegramAuthCode(text, {
   const command = parseTelegramCommand(raw);
   let candidate = raw;
   if (command?.command === 'start' || command?.command === 'auth') candidate = command.args;
+  else {
+    const pastedStart = raw.match(/^start\s+([\s\S]+)$/i);
+    if (pastedStart) candidate = pastedStart[1].trim();
+  }
   const normalizedPrefix = String(prefix || 'auth-');
   if (candidate.toLowerCase().startsWith(normalizedPrefix.toLowerCase())) {
     candidate = candidate.slice(normalizedPrefix.length);

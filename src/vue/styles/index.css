@@ -285,15 +285,35 @@ select {
   font-size: 0.86em;
 }
 
-.auth-code-command code {
-  display: block;
+.auth-code-command-copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
   padding: 10px 12px;
+  border: 1px solid var(--border);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.auth-code-command-copy code {
   font-size: 0.95rem;
   overflow-wrap: anywhere;
   user-select: all;
+}
+
+.auth-code-command-copy svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
 .auth-code-command-label a {

@@ -57,6 +57,7 @@ test('[telegram/protocol] normalizes links, targets, keyboards, commands, and ga
   });
   assert.equal(extractTelegramAuthCode('/start auth-CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
   assert.equal(extractTelegramAuthCode('/auth CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
+  assert.equal(extractTelegramAuthCode('start auth-CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
   assert.equal(extractTelegramAuthCode('auth-CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
   assert.equal(extractTelegramAuthCode('CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
   assert.equal(extractTelegramAuthCode('hello there', { pattern: /^[A-Z0-9]{8}$/ }), '');

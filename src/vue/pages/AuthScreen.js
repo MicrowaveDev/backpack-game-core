@@ -34,7 +34,7 @@ export const AuthScreen = {
       return count > 0 ? this.labels.feature2.replace('{count}', count) : this.labels.feature2Fallback;
     },
     botStartCommand() {
-      return this.authCode?.publicCode ? `/start auth-${this.authCode.publicCode}` : '';
+      return this.authCode?.publicCode ? `start auth-${this.authCode.publicCode}` : '';
     },
     botLinkLabel() {
       const botUrl = String(this.authCode?.botUrl || '').trim();
@@ -120,8 +120,17 @@ export const AuthScreen = {
               {{ labels.codeCommandLabel }}
               <a :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ botLinkLabel }}</a>
             </span>
-            <code>{{ botStartCommand }}</code>
-            <button class="ghost" type="button" @click="copyBotStartCommand">{{ botCommandCopied ? labels.codeCopied : labels.codeCopy }}</button>
+            <button
+              class="auth-code-command-copy"
+              type="button"
+              :aria-label="botCommandCopied ? labels.codeCopied : labels.codeCopy"
+              :title="botCommandCopied ? labels.codeCopied : labels.codeCopy"
+              @click="copyBotStartCommand"
+            >
+              <code>{{ botStartCommand }}</code>
+              <svg v-if="!botCommandCopied" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" ry="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+            </button>
           </div>
           <p class="muted">{{ authCode.mode === 'oidc' ? labels.oidcWaiting : labels.codeWaiting }}</p>
           <button class="secondary" type="button" @click="$emit('cancel-auth-code')">{{ labels.codeCancel }}</button>
