@@ -32,7 +32,9 @@ export const AuthScreen = {
       return this.authCode?.publicCode ? `/start auth-${this.authCode.publicCode}` : '';
     },
     botLinkLabel() {
-      const username = String(this.authCode?.botUsername || '').trim().replace(/^@/, '');
+      const botUrl = String(this.authCode?.botUrl || '').trim();
+      const urlUsername = botUrl.match(/^https?:\/\/(?:www\.)?t\.me\/([^/?#]+)/i)?.[1] || '';
+      const username = String(this.authCode?.botUsername || urlUsername).trim().replace(/^@/, '');
       return username ? `@${username}` : this.labels.codeBotLink;
     }
   },

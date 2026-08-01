@@ -26,6 +26,10 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
     labels: { codeBotLink: 'Telegram bot' }
   }), '@meat_master_bot');
   assert.equal(AuthScreen.computed.botLinkLabel.call({
+    authCode: { botUrl: 'https://t.me/EraOfMeatBot?start=auth-CODE' },
+    labels: { codeBotLink: 'Telegram bot' }
+  }), '@EraOfMeatBot');
+  assert.equal(AuthScreen.computed.botLinkLabel.call({
     authCode: {},
     labels: { codeBotLink: 'Telegram bot' }
   }), 'Telegram bot');
