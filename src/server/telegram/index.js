@@ -2,3 +2,10 @@ export { createTelegramBotRuntime, telegramWebhookNeedsUpdate } from './bot-runt
 export { createTelegramBotApiClient } from './transport.js';
 export { parseTelegramInitData, verifyTelegramInitData } from './init-data.js';
 export { createTelegramUpdateRouter } from './update-router.js';
+export {
+  buildTelegramOidcAuthorizationUrl,
+  completeTelegramOidcAuthorization,
+  createTelegramOidcTransaction,
+  exchangeTelegramOidcCode,
+  verifyTelegramOidcIdToken
+} from './oidc.js';

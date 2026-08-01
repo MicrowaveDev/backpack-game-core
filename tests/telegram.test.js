@@ -1,17 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
+import { createHmac, generateKeyPairSync, sign } from 'node:crypto';
 import {
   buildTelegramDmStartLink,
   buildTelegramGameScorePayload,
   buildTelegramMiniAppLink,
   createTelegramInlineKeyboard,
+  extractTelegramAuthCode,
   normalizeTelegramChatTarget,
   normalizeTelegramUpdate,
   parseTelegramCommand
 } from '../src/modules/telegram/index.js';
 import {
   createTelegramBotApiClient,
+  buildTelegramOidcAuthorizationUrl,
+  completeTelegramOidcAuthorization,
+  createTelegramOidcTransaction,
   createTelegramUpdateRouter,
   parseTelegramInitData,
   telegramWebhookNeedsUpdate,
@@ -51,6 +55,11 @@ test('[telegram/protocol] normalizes links, targets, keyboards, commands, and ga
     botUsername: 'game_bot',
     args: 'auth-CODE'
   });
+  assert.equal(extractTelegramAuthCode('/start auth-CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
+  assert.equal(extractTelegramAuthCode('/auth CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
+  assert.equal(extractTelegramAuthCode('auth-CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
+  assert.equal(extractTelegramAuthCode('CODE1234', { pattern: /^[A-Z0-9]{8}$/ }), 'CODE1234');
+  assert.equal(extractTelegramAuthCode('hello there', { pattern: /^[A-Z0-9]{8}$/ }), '');
   assert.deepEqual(buildTelegramGameScorePayload({
     telegramUserId: 42,
     score: 7.8,
@@ -62,6 +71,60 @@ test('[telegram/protocol] normalizes links, targets, keyboards, commands, and ga
     disable_edit_message: false,
     inline_message_id: 'inline'
   });
+});
+
+test('[telegram/oidc] builds PKCE authorization and verifies exchanged ID tokens', async () => {
+  const transaction = createTelegramOidcTransaction();
+  assert.match(transaction.codeVerifier, /^[A-Za-z0-9_-]+$/);
+  assert.notEqual(transaction.codeChallenge, transaction.codeVerifier);
+  const authorizationUrl = new URL(buildTelegramOidcAuthorizationUrl({
+    clientId: '12345',
+    redirectUri: 'https://game.test/api/auth/telegram/oidc/callback',
+    ...transaction
+  }));
+  assert.equal(authorizationUrl.origin, 'https://oauth.telegram.org');
+  assert.equal(authorizationUrl.searchParams.get('code_challenge_method'), 'S256');
+  assert.equal(authorizationUrl.searchParams.get('nonce'), transaction.nonce);
+
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'test-key', typ: 'JWT' })).toString('base64url');
+  const claims = Buffer.from(JSON.stringify({
+    iss: 'https://oauth.telegram.org',
+    aud: '12345',
+    sub: 'telegram-user',
+    id: 42,
+    name: 'Test Player',
+    nonce: transaction.nonce,
+    iat: 1_700_000_000,
+    exp: 1_700_000_600
+  })).toString('base64url');
+  const input = `${header}.${claims}`;
+  const idToken = `${input}.${sign('RSA-SHA256', Buffer.from(input), privateKey).toString('base64url')}`;
+  const requests = [];
+  const result = await completeTelegramOidcAuthorization({
+    code: 'authorization-code',
+    clientId: '12345',
+    clientSecret: 'client-secret',
+    redirectUri: 'https://game.test/api/auth/telegram/oidc/callback',
+    codeVerifier: transaction.codeVerifier,
+    nonce: transaction.nonce,
+    nowSeconds: 1_700_000_100,
+    fetchImpl: async (url, options = {}) => {
+      requests.push({ url, options });
+      if (String(url).endsWith('/token')) {
+        return { ok: true, status: 200, json: async () => ({ id_token: idToken, access_token: 'access' }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: 'test-key', alg: 'RS256' }] })
+      };
+    }
+  });
+  assert.equal(result.claims.id, 42);
+  assert.equal(requests.length, 2);
+  assert.match(requests[0].options.headers.authorization, /^Basic /);
+  assert.match(requests[0].options.body, /code_verifier=/);
 });
 
 test('[telegram/init-data] verifies signatures and rejects stale or future auth dates', () => {

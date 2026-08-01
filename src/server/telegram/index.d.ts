@@ -25,3 +25,17 @@ export function telegramWebhookNeedsUpdate(info?: Record<string, any>, options?:
   webhookUrl?: string;
   allowedUpdates?: string[];
 }): boolean;
+export interface TelegramOidcTransaction {
+  state: string;
+  nonce: string;
+  codeVerifier: string;
+  codeChallenge: string;
+}
+export function createTelegramOidcTransaction(options?: Record<string, any>): TelegramOidcTransaction;
+export function buildTelegramOidcAuthorizationUrl(options?: Record<string, any>): string;
+export function exchangeTelegramOidcCode(options?: Record<string, any>): Promise<Record<string, any>>;
+export function verifyTelegramOidcIdToken(idToken: string, options?: Record<string, any>): Promise<Record<string, any>>;
+export function completeTelegramOidcAuthorization(options?: Record<string, any>): Promise<{
+  tokens: Record<string, any>;
+  claims: Record<string, any>;
+}>;

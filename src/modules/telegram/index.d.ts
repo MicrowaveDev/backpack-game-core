@@ -62,6 +62,10 @@ export function createTelegramInlineKeyboard(reply?: {
 }): { inline_keyboard: Array<Array<{ text: string; url: string }>> } | undefined;
 export function buildTelegramGameScorePayload(options?: Record<string, unknown>): Record<string, unknown>;
 export function parseTelegramCommand(text: unknown): TelegramCommand | null;
+export function extractTelegramAuthCode(text: unknown, options?: {
+  prefix?: string;
+  pattern?: RegExp;
+}): string;
 export function normalizeTelegramUpdate(update?: Record<string, any>): {
   kind: 'pre_checkout_query' | 'callback_query' | 'successful_payment' | 'command' | 'message' | 'ignored';
   value: any;

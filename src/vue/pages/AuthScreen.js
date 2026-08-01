@@ -6,6 +6,7 @@ export const AuthScreen = {
     labels: { type: Object, default: () => ({}) },
     catalogCounts: { type: Object, default: () => ({ characters: 0, artifacts: 0 }) },
     authCode: { type: Object, default: null },
+    oidcEnabled: { type: Boolean, default: false },
     devAuthEnabled: { type: Boolean, default: false },
     portraitDataAttribute: { type: String, default: '' },
     openExternalLink: {
@@ -17,7 +18,7 @@ export const AuthScreen = {
       default: (text) => globalThis.navigator?.clipboard?.writeText?.(text)
     }
   },
-  emits: ['login-primary', 'login-browser', 'login-dev', 'cancel-auth-code', 'update:locale'],
+  emits: ['login-primary', 'login-browser', 'login-bot-code', 'login-dev', 'cancel-auth-code', 'update:locale'],
   data() {
     return {
       botCommandCopied: false
@@ -91,6 +92,7 @@ export const AuthScreen = {
         </ul>
         <div class="auth-actions">
           <button class="primary auth-cta" @click="$emit('login-primary')">{{ labels.primaryLogin }}</button>
+          <button v-if="oidcEnabled" class="secondary" @click="$emit('login-bot-code')">{{ labels.botCodeFallback }}</button>
           <button v-if="devAuthEnabled" class="secondary" @click="$emit('login-browser')">{{ labels.browser }}</button>
           <button v-if="devAuthEnabled" class="ghost" @click="$emit('login-dev')">{{ labels.dev }}</button>
         </div>
@@ -104,10 +106,10 @@ export const AuthScreen = {
         <div class="auth-code-backdrop" @click="$emit('cancel-auth-code')"></div>
         <div class="auth-code-sheet panel">
           <button class="auth-code-close" type="button" :aria-label="labels.codeCancel" @click="$emit('cancel-auth-code')">×</button>
-          <p class="eyebrow">{{ labels.codeTitle }}</p>
-          <p class="auth-code-hint">{{ labels.codeHint }}</p>
-          <a class="primary auth-code-open" :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ labels.codeOpen }}</a>
-          <div class="auth-code-command">
+          <p class="eyebrow">{{ authCode.mode === 'oidc' ? labels.oidcTitle : labels.codeTitle }}</p>
+          <p class="auth-code-hint">{{ authCode.mode === 'oidc' ? labels.oidcHint : labels.codeHint }}</p>
+          <a v-if="authCode.mode !== 'oidc'" class="primary auth-code-open" :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ labels.codeOpen }}</a>
+          <div v-if="authCode.mode !== 'oidc'" class="auth-code-command">
             <span class="auth-code-command-label">
               {{ labels.codeCommandLabel }}
               <a :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ botLinkLabel }}</a>
@@ -115,7 +117,7 @@ export const AuthScreen = {
             <code>{{ botStartCommand }}</code>
             <button class="ghost" type="button" @click="copyBotStartCommand">{{ botCommandCopied ? labels.codeCopied : labels.codeCopy }}</button>
           </div>
-          <p class="muted">{{ labels.codeWaiting }}</p>
+          <p class="muted">{{ authCode.mode === 'oidc' ? labels.oidcWaiting : labels.codeWaiting }}</p>
           <button class="secondary" type="button" @click="$emit('cancel-auth-code')">{{ labels.codeCancel }}</button>
         </div>
       </div>

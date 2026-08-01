@@ -83,6 +83,22 @@ export function parseTelegramCommand(text) {
   };
 }
 
+export function extractTelegramAuthCode(text, {
+  prefix = 'auth-',
+  pattern = /^[A-Za-z0-9_-]{4,64}$/
+} = {}) {
+  const raw = String(text || '').trim();
+  const command = parseTelegramCommand(raw);
+  let candidate = raw;
+  if (command?.command === 'start' || command?.command === 'auth') candidate = command.args;
+  const normalizedPrefix = String(prefix || 'auth-');
+  if (candidate.toLowerCase().startsWith(normalizedPrefix.toLowerCase())) {
+    candidate = candidate.slice(normalizedPrefix.length);
+  }
+  candidate = candidate.trim();
+  return pattern.test(candidate) ? candidate : '';
+}
+
 export function normalizeTelegramUpdate(update = {}) {
   if (update.pre_checkout_query?.id) {
     return { kind: 'pre_checkout_query', value: update.pre_checkout_query, update };
