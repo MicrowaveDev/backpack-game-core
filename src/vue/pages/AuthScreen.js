@@ -30,6 +30,10 @@ export const AuthScreen = {
     },
     botStartCommand() {
       return this.authCode?.publicCode ? `/start auth-${this.authCode.publicCode}` : '';
+    },
+    botLinkLabel() {
+      const username = String(this.authCode?.botUsername || '').trim().replace(/^@/, '');
+      return username ? `@${username}` : this.labels.codeBotLink;
     }
   },
   methods: {
@@ -93,7 +97,10 @@ export const AuthScreen = {
           <p class="auth-code-hint">{{ labels.codeHint }}</p>
           <a class="primary auth-code-open" :href="authCode.botUrl" target="_blank" rel="noopener noreferrer">{{ labels.codeOpen }}</a>
           <div class="auth-code-command">
-            <span>{{ labels.codeCommandLabel }}</span>
+            <span class="auth-code-command-label">
+              {{ labels.codeCommandLabel }}
+              <a :href="authCode.botUrl" target="_blank" rel="noopener noreferrer">{{ botLinkLabel }}</a>
+            </span>
             <code>{{ botStartCommand }}</code>
             <button class="ghost" type="button" @click="copyBotStartCommand">{{ botCommandCopied ? labels.codeCopied : labels.codeCopy }}</button>
           </div>

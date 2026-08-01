@@ -296,6 +296,12 @@ select {
   user-select: all;
 }
 
+.auth-code-command-label a {
+  color: var(--accent);
+  font-weight: 700;
+  text-underline-offset: 2px;
+}
+
 .auth-lang-row {
   display: flex;
   justify-content: center;

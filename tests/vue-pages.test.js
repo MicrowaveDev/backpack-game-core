@@ -19,6 +19,16 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.equal(AuthScreen.name, 'AuthScreen');
   assert.match(AuthScreen.template, /data-character-id/);
   assert.match(AuthScreen.template, /portraitAttributes/);
+  assert.match(AuthScreen.template, /auth-code-command-label/);
+  assert.match(AuthScreen.template, /botLinkLabel/);
+  assert.equal(AuthScreen.computed.botLinkLabel.call({
+    authCode: { botUsername: '@meat_master_bot' },
+    labels: { codeBotLink: 'Telegram bot' }
+  }), '@meat_master_bot');
+  assert.equal(AuthScreen.computed.botLinkLabel.call({
+    authCode: {},
+    labels: { codeBotLink: 'Telegram bot' }
+  }), 'Telegram bot');
   assert.doesNotMatch(AuthScreen.template, /mushroom|spore|meat/i);
   assert.equal(OnboardingScreen.name, 'OnboardingScreen');
   assert.match(OnboardingScreen.template, /characters/);
