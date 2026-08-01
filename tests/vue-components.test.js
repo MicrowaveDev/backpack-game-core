@@ -507,7 +507,14 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
   assert.deepEqual(ShopZone.methods.classFor.call({
     itemClass: 'shop-item',
     rowClass: (shopRow) => ({ expensive: !shopRow.canAfford })
-  }, row), ['shop-item', { expensive: false }]);
+  }, row), ['shop-item', { 'shop-item--expensive': false }, { expensive: false }]);
+  assert.deepEqual(ShopZone.methods.classFor.call({
+    itemClass: 'shop-item',
+    rowClass: ''
+  }, { ...row, canAfford: false, unavailable: true }), [
+    'shop-item',
+    { 'shop-item--expensive': true }
+  ]);
   assert.deepEqual(ShopZone.methods.attrsFor.call({
     itemAttrs: { role: 'button' }
   }, row), { role: 'button' });
@@ -524,6 +531,7 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
     $emit: (event, payload) => emitted.push([event, payload])
   };
   ShopZone.methods.emitBuy.call(emitContext, row);
+  ShopZone.methods.emitBuy.call(emitContext, { ...row, canAfford: false, unavailable: true });
   ShopZone.methods.emitRefresh.call(emitContext);
   ShopZone.methods.emitSellDrop.call(emitContext, { type: 'drop' });
   assert.deepEqual(emitted, [
@@ -866,9 +874,14 @@ test('[vue] ShopItemRow exposes neutral shop row rendering contract', () => {
   };
   assert.equal(ShopItemRow.computed.visible.call({ row }), true);
   assert.deepEqual(ShopItemRow.computed.itemClasses.call({
+    row,
     itemClass: 'shop-item',
     rowClass: { 'shop-item--role-damage': true }
-  }), ['shop-item', { 'shop-item--role-damage': true }]);
+  }), [
+    'shop-item',
+    { 'shop-item--expensive': false },
+    { 'shop-item--role-damage': true }
+  ]);
   assert.deepEqual(ShopItemRow.computed.renderedStats.call({ row }), row.statRows);
   assert.equal(ShopItemRow.computed.previewWidth.call({ row }), 1);
   assert.equal(ShopItemRow.computed.previewHeight.call({ row }), 2);

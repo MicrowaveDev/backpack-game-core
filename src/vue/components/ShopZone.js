@@ -4,6 +4,10 @@ function nonEmptyArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
+function rowUnavailable(row) {
+  return Boolean(row?.unavailable || row?.canAfford === false);
+}
+
 export const ShopZone = {
   name: 'ShopZone',
   components: { SellZone },
@@ -160,6 +164,7 @@ export const ShopZone = {
     classFor(row) {
       return [
         this.itemClass,
+        { 'shop-item--expensive': rowUnavailable(row) },
         typeof this.rowClass === 'function' ? this.rowClass(row) : this.rowClass
       ].filter(Boolean);
     },
@@ -188,6 +193,7 @@ export const ShopZone = {
       ].filter(Boolean);
     },
     emitBuy(row) {
+      if (rowUnavailable(row)) return;
       this.$emit('buy', row);
     },
     emitRefresh() {
@@ -225,7 +231,12 @@ export const ShopZone = {
           :data-artifact-width="previewWidth(row)"
           :data-artifact-height="previewHeight(row)"
           v-bind="attrsFor(row)"
+          role="button"
+          :aria-disabled="row.unavailable || row.canAfford === false ? 'true' : null"
+          :tabindex="row.unavailable || row.canAfford === false ? -1 : 0"
           @click="emitBuy(row)"
+          @keydown.enter.prevent="emitBuy(row)"
+          @keydown.space.prevent="emitBuy(row)"
         >
           <slot name="item-header" :row="row">
             <div :class="itemHeaderClass">

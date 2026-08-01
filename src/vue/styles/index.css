@@ -3579,8 +3579,13 @@ select {
 }
 
 .shop-item--expensive {
-  opacity: 0.5;
+  opacity: 0.46;
+  filter: grayscale(0.58) saturate(0.45);
   cursor: not-allowed;
+}
+
+.shop-item--expensive .shop-item-price {
+  color: rgba(80, 68, 56, 0.68);
 }
 .shop-item--tier2 {
   border-color: var(--accent-soft);

@@ -363,7 +363,11 @@ export const ShopItemRow = {
       return Boolean(this.row);
     },
     itemClasses() {
-      return [this.itemClass, this.rowClass].filter(Boolean);
+      return [
+        this.itemClass,
+        { 'shop-item--expensive': Boolean(this.row?.unavailable || this.row?.canAfford === false) },
+        this.rowClass
+      ].filter(Boolean);
     },
     renderedStats() {
       return nonEmptyArray(this.row?.statRows);
@@ -377,7 +381,7 @@ export const ShopItemRow = {
   },
   methods: {
     emitBuy() {
-      if (!this.row) return;
+      if (!this.row || this.row.unavailable || this.row.canAfford === false) return;
       this.$emit('buy', this.row);
       this.$emit('select', this.row);
     },
@@ -402,7 +406,12 @@ export const ShopItemRow = {
       :data-artifact-width="previewWidth"
       :data-artifact-height="previewHeight"
       v-bind="itemAttrs"
+      role="button"
+      :aria-disabled="row.unavailable || row.canAfford === false ? 'true' : null"
+      :tabindex="row.unavailable || row.canAfford === false ? -1 : 0"
       @click="emitBuy"
+      @keydown.enter.prevent="emitBuy"
+      @keydown.space.prevent="emitBuy"
     >
       <slot name="header" :row="row">
         <component :is="headerTag" :class="headerClass || null">
