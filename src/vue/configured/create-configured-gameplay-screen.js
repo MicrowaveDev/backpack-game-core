@@ -54,6 +54,9 @@ export function createConfiguredGameplayScreen(options = {}) {
     ? Number(options.replayEventDelayMs)
     : null;
   const replayMinDelayMs = Math.max(25, Number(options.replayMinDelayMs) || 25);
+  const runCompletePrimaryAction = options.runCompletePrimaryAction === 'home'
+    ? 'home'
+    : 'start-run';
 
   if (!Number.isInteger(gridColumns) || gridColumns < 1) {
     throw new TypeError('createConfiguredGameplayScreen requires a positive integer options.gridColumns');
@@ -434,6 +437,11 @@ export function createConfiguredGameplayScreen(options = {}) {
         return run;
       });
     },
+    handleRunCompletePrimary() {
+      return runCompletePrimaryAction === 'home'
+        ? this.closeSummary()
+        : this.startRun();
+    },
     async selectCharacter(characterId) {
       await this.controller.selectCharacter(characterId);
       this.activeRun = this.controller.state.bootstrap?.activeRun || null;
@@ -545,7 +553,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       <RunCompleteScreen
         v-if="runCompleteSummary && !showReplay"
         :summary="runCompleteSummary"
-        @primary="startRun"
+        @primary="handleRunCompletePrimary"
         @secondary="closeSummary"
       />
 

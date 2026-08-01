@@ -179,6 +179,38 @@ test('[configured gameplay] returns home after closing a run summary', async () 
   assert.deepEqual(calls, ['refresh', 'navigate:home']);
 });
 
+test('[configured gameplay] supports returning home before another run is created', async () => {
+  const component = createConfiguredGameplayScreen(options({ runCompletePrimaryAction: 'home' }));
+  const calls = [];
+
+  await component.methods.handleRunCompletePrimary.call({
+    closeSummary() {
+      calls.push('home');
+    },
+    startRun() {
+      calls.push('start');
+    }
+  });
+
+  assert.deepEqual(calls, ['home']);
+});
+
+test('[configured gameplay] starts another run by default after completion', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const calls = [];
+
+  await component.methods.handleRunCompletePrimary.call({
+    closeSummary() {
+      calls.push('home');
+    },
+    startRun() {
+      calls.push('start');
+    }
+  });
+
+  assert.deepEqual(calls, ['start']);
+});
+
 test('[configured gameplay] keeps battle earnings in the run summary instead of a loose notice', async () => {
   const component = createConfiguredGameplayScreen(options());
   const context = {

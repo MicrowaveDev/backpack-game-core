@@ -93,6 +93,14 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   }), '2 / 5');
   assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
 
+  const labels = { t: { startRun: 'Start run', resumeRun: 'Resume run' } };
+  assert.equal(HomeScreen.methods.activeRunActionLabel.call(labels, {
+    activeRun: { player: { completedRounds: 0 }, battles: [] }
+  }), 'Start run');
+  assert.equal(HomeScreen.methods.activeRunActionLabel.call(labels, {
+    activeRun: { player: { completedRounds: 1 }, battles: [{}] }
+  }), 'Resume run');
+
   assert.equal(ReplayDetailScreen.name, 'ReplayDetailScreen');
   assert.match(ReplayDetailScreen.template, /core-replay-screen/);
   assert.match(ReplayDetailScreen.template, /replayDuelComponent/);

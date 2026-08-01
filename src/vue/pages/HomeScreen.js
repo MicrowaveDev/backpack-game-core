@@ -170,6 +170,13 @@ export const HomeScreen = {
       }
       this.$emit('start-run', 'solo');
     },
+    activeRunActionLabel(character) {
+      const run = character?.activeRun;
+      if (!run) return this.t.startRun;
+      const completedRounds = Number(run.player?.completedRounds || run.completedRounds || 0);
+      const battles = Array.isArray(run.battles) ? run.battles.length : 0;
+      return completedRounds > 0 || battles > 0 ? this.t.resumeRun : this.t.startRun;
+    },
     toggleSelectedSkinPanel() {
       if (!this.selectedCharacter) return;
       this.expandedCharacterId = this.expandedCharacterId === this.selectedCharacter.id ? null : this.selectedCharacter.id;
@@ -648,7 +655,7 @@ export const HomeScreen = {
         <div v-if="selectedCharacter" class="home-roster-action-panel">
           <div>
             <span>{{ selectedCharacter.name[state.lang] }}</span>
-            <strong>{{ state.startingRun ? t.startingRun : selectedCharacter.activeRun ? t.resumeRun : selectedCharacter.isActive ? t.active : t.pick }}</strong>
+            <strong>{{ state.startingRun ? t.startingRun : selectedCharacter.activeRun ? activeRunActionLabel(selectedCharacter) : selectedCharacter.isActive ? t.active : t.pick }}</strong>
           </div>
           <div class="home-roster-action-buttons">
             <button
@@ -656,7 +663,7 @@ export const HomeScreen = {
               :disabled="state.startingRun || !selectedCharacter.isActive || (!selectedCharacter.activeRun && battleLimitReached)"
               :title="!selectedCharacter.activeRun && battleLimitReached ? t.dailyLimitReached : ''"
               @click="playSelectedCharacter"
-            >{{ state.startingRun ? t.startingRun : selectedCharacter.activeRun ? t.resumeRun : t.startRun }}</button>
+            >{{ state.startingRun ? t.startingRun : activeRunActionLabel(selectedCharacter) }}</button>
             <button
               v-if="selectedCharacter.portraits.length > 1"
               class="secondary home-roster-change-skin"
