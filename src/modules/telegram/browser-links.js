@@ -10,6 +10,14 @@ export function getTelegramWebApp(win = defaultWindow()) {
   return win?.Telegram?.WebApp || null;
 }
 
+export function getTelegramStartParam(webApp = getTelegramWebApp()) {
+  const parsed = String(webApp?.initDataUnsafe?.start_param || '').trim();
+  if (parsed) return parsed;
+  const initData = String(webApp?.initData || '').trim();
+  if (!initData) return '';
+  return String(new URLSearchParams(initData).get('start_param') || '').trim();
+}
+
 export function isTelegramMiniAppEnvironment(win = defaultWindow()) {
   return !!getTelegramWebApp(win);
 }

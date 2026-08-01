@@ -22,6 +22,7 @@ export interface TelegramWindowLike {
 export function normalizeTelegramBotUsername(value: unknown): string;
 export function normalizeTelegramChatTarget(target: unknown): string;
 export function getTelegramWebApp(win?: TelegramWindowLike | null): Record<string, any> | null;
+export function getTelegramStartParam(webApp?: Record<string, any> | null): string;
 export function isTelegramMiniAppEnvironment(win?: TelegramWindowLike | null): boolean;
 export function buildFriendRefParam(friendCode: unknown): string;
 export function buildTelegramMiniAppLink(options?: {

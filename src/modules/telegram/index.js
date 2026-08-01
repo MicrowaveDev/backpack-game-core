@@ -6,6 +6,7 @@ export {
   buildTelegramMiniAppLink,
   buildTelegramShareUrl,
   buildWebsiteFriendInviteLink,
+  getTelegramStartParam,
   getTelegramWebApp,
   isTelegramMiniAppEnvironment,
   normalizeTelegramBotUsername,

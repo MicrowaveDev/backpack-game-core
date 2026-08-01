@@ -5,6 +5,7 @@ import {
   buildTelegramMiniAppLink,
   buildTelegramShareUrl,
   buildWebsiteFriendInviteLink,
+  getTelegramStartParam,
   getTelegramWebApp,
   isTelegramMiniAppEnvironment,
   shareTelegramText
@@ -40,6 +41,18 @@ test('[telegram/browser] selects Telegram invites only inside a Mini App', () =>
     win: {},
     location: { origin: 'https://game.test' }
   }), 'https://game.test/friends?ref=abc');
+});
+
+test('[telegram/browser] reads parsed start parameters with an init-data fallback', () => {
+  assert.equal(getTelegramStartParam({
+    initDataUnsafe: { start_param: 'auth-PARSED' },
+    initData: 'start_param=auth-RAW'
+  }), 'auth-PARSED');
+  assert.equal(getTelegramStartParam({
+    initDataUnsafe: {},
+    initData: 'query_id=test&start_param=auth-RAW'
+  }), 'auth-RAW');
+  assert.equal(getTelegramStartParam(null), '');
 });
 
 test('[telegram/browser] shares through Telegram, native share, clipboard, then no-op', async () => {
