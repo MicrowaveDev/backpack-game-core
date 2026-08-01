@@ -65,6 +65,11 @@ export const AuthScreen = {
       if (!this.authCode?.botUrl) return;
       event?.preventDefault?.();
       this.openExternalLink(this.authCode.botUrl);
+    },
+    openOidcLink(event) {
+      if (!this.authCode?.authorizationUrl) return;
+      event?.preventDefault?.();
+      this.openExternalLink(this.authCode.authorizationUrl);
     }
   },
   template: `
@@ -108,6 +113,7 @@ export const AuthScreen = {
           <button class="auth-code-close" type="button" :aria-label="labels.codeCancel" @click="$emit('cancel-auth-code')">×</button>
           <p class="eyebrow">{{ authCode.mode === 'oidc' ? labels.oidcTitle : labels.codeTitle }}</p>
           <p class="auth-code-hint">{{ authCode.mode === 'oidc' ? labels.oidcHint : labels.codeHint }}</p>
+          <a v-if="authCode.mode === 'oidc'" class="primary auth-code-open" :href="authCode.authorizationUrl" target="_blank" rel="noopener noreferrer" @click="openOidcLink">{{ labels.oidcOpen }}</a>
           <a v-if="authCode.mode !== 'oidc'" class="primary auth-code-open" :href="authCode.botUrl" target="_blank" rel="noopener noreferrer" @click="openBotLink">{{ labels.codeOpen }}</a>
           <div v-if="authCode.mode !== 'oidc'" class="auth-code-command">
             <span class="auth-code-command-label">

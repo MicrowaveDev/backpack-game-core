@@ -32,7 +32,7 @@ barrels belong directly in it.
 | Gacha selection, validation, simulation, and admin planning | `src/modules/gacha/` | `@microwavedev/backpack-game-core/modules/gacha` |
 | Wallet accounting and settlement planning | `src/modules/wallet/` | `@microwavedev/backpack-game-core/modules/wallet` |
 | Profile-owned assets and equipment state | `src/modules/assets/` | `@microwavedev/backpack-game-core/modules/assets` |
-| Browser-safe Telegram links, keyboards, commands, update normalization, and score payloads | `src/modules/telegram/` | `@microwavedev/backpack-game-core/modules/telegram` |
+| Browser-safe Telegram links, auth-code parsing, keyboards, commands, update normalization, and score payloads | `src/modules/telegram/` | `@microwavedev/backpack-game-core/modules/telegram` |
 | Auth, config, season, support, community, and social-preview contracts | Matching `src/modules/<domain>/` | Matching `.../modules/<domain>` export |
 | Shared deterministic RNG | `src/shared/` | Package root or compatibility `.../rng` export |
 | Browser-safe request adapters and view-model DTOs | `src/client/` | `.../client` or `.../client-view-model` |
@@ -40,7 +40,7 @@ barrels belong directly in it.
 | Neutral Vue application shell and screen registry | `src/vue/app/` | `.../vue/app` |
 | Neutral Vue pages, components, and composables | Matching folder under `src/vue/` | `.../vue/pages`, `.../vue/components`, or `.../vue/composables` |
 | Server module factories and middleware | `src/server/` | `.../server` or `.../server/middleware` |
-| Node-only Telegram init-data verification, Bot API transport, update routing, and reusable bot runtime | `src/server/telegram/` | `.../server/telegram` |
+| Node-only Telegram init-data/OIDC verification, PKCE, Bot API transport, update routing, and reusable bot runtime | `src/server/telegram/` | `.../server/telegram` |
 | Node-only scripts and image/release utilities | `src/tooling/` | Matching `.../tooling/<name>` export; route execution through [`tooling-routing.md`](tooling-routing.md) |
 
 Artifacts are combat/loadout items. Assets are profile-owned cosmetics or
