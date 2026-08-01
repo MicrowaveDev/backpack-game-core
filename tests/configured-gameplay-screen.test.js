@@ -114,6 +114,23 @@ test('[configured gameplay] delegates product data, locale, text, and services t
   );
 });
 
+test('[configured gameplay] localizes backend-shaped shop stat keys for display', () => {
+  const component = createConfiguredGameplayScreen(options());
+  const rows = component.computed.shopRows.call({
+    run: {
+      shopItems: [{
+        artifact: { id: 'snare' },
+        statRows: [{ key: 'stunChance', label: 'stunChance', value: '+8' }]
+      }]
+    },
+    statLabels: { stunChance: 'Stun chance' },
+    artifactName: () => 'Snare',
+    artifactDescription: () => 'A trap'
+  });
+
+  assert.equal(rows[0].statRows[0].label, 'Stun chance');
+});
+
 test('[configured gameplay] returns home after closing a run summary', async () => {
   const component = createConfiguredGameplayScreen(options());
   const calls = [];

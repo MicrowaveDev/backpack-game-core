@@ -167,7 +167,11 @@ export function createConfiguredGameplayScreen(options = {}) {
       return (this.run?.shopItems || []).map((row) => ({
         ...row,
         name: this.artifactName(row.artifact),
-        description: this.artifactDescription(row.artifact)
+        description: this.artifactDescription(row.artifact),
+        statRows: (row.statRows || []).map((stat) => ({
+          ...stat,
+          label: this.statLabels[stat.key] || stat.label || stat.key
+        }))
       }));
     },
     runSummary() {
