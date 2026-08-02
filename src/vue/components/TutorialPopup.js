@@ -126,6 +126,7 @@ export const TutorialPopup = {
         <section
           ref="popup"
           class="tutorial-popup panel"
+          :class="{ 'tutorial-popup--with-image': step.imageSrc }"
           role="dialog"
           aria-live="polite"
           :data-placement="placement"

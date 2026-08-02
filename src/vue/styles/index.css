@@ -10110,6 +10110,13 @@ select {
   animation: tutorial-popup-enter 160ms ease-out;
 }
 
+.tutorial-popup--with-image {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: 12px;
+}
+
 .tutorial-popup::before {
   position: absolute;
   width: 16px;
@@ -10164,11 +10171,25 @@ select {
 
 .tutorial-popup-image {
   display: block;
-  float: left;
   width: 64px;
   height: 64px;
-  margin: 0 12px 8px 0;
+  margin: 0;
   object-fit: contain;
+}
+
+.tutorial-popup--with-image .tutorial-popup-image {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.tutorial-popup--with-image .tutorial-popup-title,
+.tutorial-popup--with-image .tutorial-popup-body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.tutorial-popup--with-image .tutorial-popup-actions {
+  grid-column: 1 / -1;
 }
 
 .tutorial-popup-title {
@@ -10184,7 +10205,6 @@ select {
 }
 
 .tutorial-popup-actions {
-  clear: both;
   display: flex;
   align-items: center;
   gap: 8px;

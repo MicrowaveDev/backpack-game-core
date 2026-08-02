@@ -156,6 +156,7 @@ test('shared Vue surfaces expose tutorial popup and replay setting contracts', (
   assert.doesNotMatch(TutorialPopup.template, /aria-modal="true"/);
   assert.match(TutorialPopup.template, /data-placement/);
   assert.match(TutorialPopup.template, /!step\.actionRequired/);
+  assert.match(TutorialPopup.template, /tutorial-popup--with-image/);
   assert.ok(SettingsScreen.emits.includes('update:tutorial-replay-pending'));
   assert.match(SettingsScreen.template, /tutorialReplayPending/);
 });
