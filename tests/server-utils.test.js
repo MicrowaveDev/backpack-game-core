@@ -60,6 +60,10 @@ test('[server-utils] validates Google redirect CSRF and builds a same-origin ses
   assert.match(html, /location\.replace\("\/onboarding"\)/);
   assert.match(html, /nonce="nonce-value"/);
   assert.throws(() => createBrowserSessionRedirectHtml({ redirectPath: 'https://evil.example' }), /same-origin/);
+  assert.doesNotMatch(createBrowserSessionRedirectHtml({
+    appName: '<script>alert(1)</script>',
+    redirectPath: '/path?value=\"unsafe'
+  }), /<script>alert/);
 });
 
 test('[server-utils] computes generic progression and run currency aliases', () => {

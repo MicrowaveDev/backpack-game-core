@@ -28,6 +28,15 @@ function scriptValue(value) {
   return JSON.stringify(String(value || '')).replaceAll('<', '\\u003c');
 }
 
+function htmlValue(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 export function createBrowserSessionRedirectHtml({
   appName,
   sessionToken,
@@ -39,5 +48,6 @@ export function createBrowserSessionRedirectHtml({
   if (!destination.startsWith('/') || destination.startsWith('//')) {
     throw new TypeError('Browser session redirect path must be same-origin');
   }
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${String(appName || 'Sign-in')} login complete</title></head><body><main><p>Authentication confirmed. Returning to ${String(appName || 'the app')}...</p><p><a href="${destination}">Continue</a></p></main><script nonce="${String(nonce)}">localStorage.setItem(${scriptValue(storageKey)},${scriptValue(sessionToken)});location.replace(${scriptValue(destination)});</script></body></html>`;
+  const safeAppName = htmlValue(appName || 'the app');
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safeAppName} login complete</title></head><body><main><p>Authentication confirmed. Returning to ${safeAppName}...</p><p><a href="${htmlValue(destination)}">Continue</a></p></main><script nonce="${htmlValue(nonce)}">localStorage.setItem(${scriptValue(storageKey)},${scriptValue(sessionToken)});location.replace(${scriptValue(destination)});</script></body></html>`;
 }
