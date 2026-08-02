@@ -2,11 +2,29 @@
 
 ## Status
 
-- Planning only; no runtime behavior is implemented by this document.
+- Implemented on 2026-08-02. This document is now a historical ship record;
+  the `Backlog` section is the authoritative list of tutorial work that remains.
 - Canonical owner: `backpack-game-core`.
 - Consumers: Mushroom Master and Meat Master.
 - Initial languages: English and Russian.
 - Initial production target: hosted Telegram/web.
+
+## Implementation Record
+
+- Core owns the tutorial reducer, localized step DTOs, browser controller,
+  popup component, settings replay control, styles, and public package exports.
+- Core gameplay adapters emit semantic preparation and round-result events;
+  product adapters supply catalogs, authoritative run values, and persistence.
+- Mushroom stores tutorial preferences in profile settings through its
+  Sequelize-backed player service and `tutorial_json` compatibility column.
+- Meat stores the same normalized profile setting in hosted and local modes.
+- Both products mount the same core popup, expose the same one-time Settings
+  replay control, and reset the in-memory controller after a Settings save.
+- Core tests cover ordering, deduplication, dismissal, skip-all, persistence
+  failures, EN/RU copy, pluralization, and one-time replay consumption.
+- Consumer tests cover defaults, partial settings updates, persisted skip,
+  current-session replay scheduling, replay consumption, and the playable
+  preparation/replay/run-complete journey.
 
 ## Goal
 
