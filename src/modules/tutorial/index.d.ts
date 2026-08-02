@@ -39,11 +39,19 @@ export function createPrepTutorialEvents(options?: {
   shopItems?: unknown[];
   inventoryItems?: unknown[];
   placedItems?: unknown[];
+  currentRound?: number;
+  coinsRemaining?: number;
   getArtifact?: (entry: any) => any;
   isBag?: (artifact: any) => boolean;
   imageForArtifact?: (artifact: any) => string;
 }): Array<Record<string, unknown>>;
 export function createArtifactBoughtTutorialEvent(options?: {
+  artifact?: any;
+  purchaseCount?: number;
+  coinsRemaining?: number;
+  imageForArtifact?: (artifact: any) => string;
+}): Record<string, unknown>;
+export function createBagBoughtTutorialEvent(options?: {
   artifact?: any;
   imageForArtifact?: (artifact: any) => string;
 }): Record<string, unknown>;

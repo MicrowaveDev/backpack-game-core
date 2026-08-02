@@ -10224,7 +10224,20 @@ select {
 
 .tutorial-popup-skip {
   flex: 0 1 auto;
-  border-color: transparent;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.78;
+}
+
+.tutorial-popup-skip:hover,
+.tutorial-popup-skip:focus-visible {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  opacity: 1;
+}
+
+.tutorial-popup-actions--action-required {
+  justify-content: flex-end;
 }
 
 .tutorial-popup--reduced-motion .tutorial-popup {

@@ -213,7 +213,7 @@ export const BackpackZone = {
           :key="itemKey(item, index)"
           :class="[itemClass, itemClasses(item)]"
           :title="itemTitle(item)"
-          data-tutorial-anchor="backpack-item"
+          :data-tutorial-anchor="item.family === bagFamily ? 'backpack-bag' : 'backpack-item'"
           v-bind="itemDataset(item)"
           @click="selectItem(item)"
         >

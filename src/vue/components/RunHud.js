@@ -63,8 +63,8 @@ export const RunHud = {
     <div :class="rootClass || null" data-tutorial-anchor="run-progress">
       <div :class="hudClass || null">
         <span :class="itemClass || null">{{ winsLabel }}: {{ winsValue }}</span>
-        <span :class="itemClass || null">{{ livesLabel }}: {{ livesValue }}</span>
-        <span :class="currencyClass || null">{{ currencyText }}</span>
+        <span :class="itemClass || null" data-tutorial-anchor="run-lives">{{ livesLabel }}: {{ livesValue }}</span>
+        <span :class="currencyClass || null" data-tutorial-anchor="run-coins">{{ currencyText }}</span>
       </div>
     </div>
   `

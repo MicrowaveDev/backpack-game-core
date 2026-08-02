@@ -153,7 +153,10 @@ export const TutorialPopup = {
           />
           <h2 :id="'tutorial-title-' + step.id" class="tutorial-popup-title">{{ step.title }}</h2>
           <p :id="'tutorial-body-' + step.id" class="tutorial-popup-body">{{ step.body }}</p>
-          <div class="tutorial-popup-actions">
+          <div
+            class="tutorial-popup-actions"
+            :class="{ 'tutorial-popup-actions--action-required': step.actionRequired }"
+          >
             <button
               v-if="!step.actionRequired"
               class="primary tutorial-popup-primary"

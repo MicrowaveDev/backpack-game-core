@@ -5,6 +5,7 @@ import {
   TUTORIAL_VERSION,
   createArtifactBoughtTutorialEvent,
   createArtifactPlacedTutorialEvents,
+  createBagBoughtTutorialEvent,
   createPrepTutorialEvents,
   createRoundTutorialEvent,
   createTutorialSession,
@@ -31,6 +32,14 @@ test('the first-run tutorial advances from buying to placing to automatic battle
   session = reduceTutorialEvent(session, { type: 'artifact_placed', artifactId: 'sword' });
   assert.equal(session.activeStepId, 'automatic_artifacts');
   assert.deepEqual(session.preferences.seenStepIds, ['build_backpack', 'place_artifact']);
+
+  session = dismissTutorialStep(session);
+  session = reduceTutorialEvent(session, {
+    type: 'additional_artifact_bought',
+    artifactId: 'shield',
+    coinsRemaining: 1
+  });
+  assert.equal(session.activeStepId, 'coin_balance');
 });
 
 test('skip permanently suppresses remaining steps', () => {
@@ -60,35 +69,56 @@ test('one-time replay clears disabled state and is consumed when the controller 
   assert.deepEqual(saved[1].seenStepIds, ['build_backpack']);
 });
 
-test('round copy uses authoritative values and correct English and Russian plural forms', () => {
+test('coin and lost-life copy use authoritative values and localized plural forms', () => {
+  const coins = tutorialStepView({
+    stepId: 'coin_balance',
+    locale: 'en',
+    payload: { coinsRemaining: 2 }
+  });
+  assert.match(coins.body, /2 coins left/);
+  assert.equal(coins.anchorSelector, '[data-tutorial-anchor="run-coins"]');
+
   const english = tutorialStepView({
-    stepId: 'round_progress',
+    stepId: 'lost_life',
     locale: 'en',
     payload: { outcome: 'loss', livesRemaining: 1, roundsRemaining: 2 }
   });
-  assert.equal(english.title, 'Round lost');
+  assert.equal(english.title, 'You lost a life');
   assert.match(english.body, /1 life left/);
   assert.match(english.body, /2 rounds remain/);
-  assert.equal(english.anchorSelector, '[data-tutorial-anchor="run-progress"]');
+  assert.equal(english.anchorSelector, '[data-tutorial-anchor="run-lives"]');
   assert.equal(english.anchorPlacement, 'bottom');
 
   const russian = tutorialStepView({
-    stepId: 'round_progress',
+    stepId: 'lost_life',
     locale: 'ru',
-    payload: { outcome: 'win', livesRemaining: 3, roundsRemaining: 2 }
+    payload: { outcome: 'loss', livesRemaining: 3, roundsRemaining: 2 }
   });
-  assert.equal(russian.title, 'Раунд выигран');
+  assert.equal(russian.title, 'Потеряна жизнь');
   assert.match(russian.body, /2 раунда/);
 });
 
-test('terminal round events do not open a misleading progress popup', () => {
-  const session = reduceTutorialEvent(createTutorialSession(), {
+test('only a non-terminal loss opens the lives tutorial', () => {
+  const terminal = reduceTutorialEvent(createTutorialSession(), {
     type: 'round_completed',
     runEnded: true,
+    outcome: 'loss',
     livesRemaining: 0,
     roundsRemaining: 3
   });
-  assert.equal(session.activeStepId, null);
+  assert.equal(terminal.activeStepId, null);
+  const win = reduceTutorialEvent(createTutorialSession(), {
+    type: 'round_completed',
+    outcome: 'win',
+    runEnded: false
+  });
+  assert.equal(win.activeStepId, null);
+  const loss = reduceTutorialEvent(createTutorialSession(), {
+    type: 'round_completed',
+    outcome: 'loss',
+    runEnded: false
+  });
+  assert.equal(loss.activeStepId, 'lost_life');
 });
 
 test('shared event shapers follow successful item actions and authoritative round progress', () => {
@@ -98,7 +128,7 @@ test('shared event shapers follow successful item actions and authoritative roun
       { artifact: { id: 'pouch', family: 'bag', image: '/pouch.png' } }
     ]
   });
-  assert.deepEqual(events.map((event) => event.type), ['prep_ready']);
+  assert.deepEqual(events.map((event) => event.type), ['prep_ready', 'bag_offer_visible']);
 
   const waitingEvents = createPrepTutorialEvents({
     inventoryItems: [{ artifactId: 'sword' }],
@@ -134,7 +164,7 @@ test('shared event shapers follow successful item actions and authoritative roun
   const bagOnlyEvents = createPrepTutorialEvents({
     inventoryItems: [{ artifact: { id: 'pouch', family: 'bag' } }]
   });
-  assert.deepEqual(bagOnlyEvents.map((event) => event.type), ['prep_ready']);
+  assert.deepEqual(bagOnlyEvents.map((event) => event.type), ['prep_ready', 'bag_bought']);
 
   assert.deepEqual(createArtifactBoughtTutorialEvent({
     artifact: { id: 'sword', image: '/sword.png' }
@@ -145,6 +175,22 @@ test('shared event shapers follow successful item actions and authoritative roun
     imageAlt: ''
   });
 
+  assert.deepEqual(createArtifactBoughtTutorialEvent({
+    artifact: { id: 'shield' },
+    purchaseCount: 2,
+    coinsRemaining: 1
+  }), {
+    type: 'additional_artifact_bought',
+    artifactId: 'shield',
+    imageSrc: '',
+    imageAlt: '',
+    coinsRemaining: 1
+  });
+
+  assert.equal(createBagBoughtTutorialEvent({
+    artifact: { id: 'pouch', family: 'bag' }
+  }).type, 'bag_bought');
+
   const placedEvents = createArtifactPlacedTutorialEvents({
     artifact: { id: 'sword', image: '/sword.png' },
     shopItems: [{ artifact: { id: 'pouch', family: 'bag', image: '/pouch.png' } }]
@@ -154,6 +200,23 @@ test('shared event shapers follow successful item actions and authoritative roun
     'bag_offer_visible'
   ]);
   assert.equal(placedEvents[1].imageSrc, '/pouch.png');
+
+  const restoredLaterRound = createPrepTutorialEvents({
+    inventoryItems: [
+      { artifact: { id: 'sword', family: 'combat' } },
+      { artifact: { id: 'shield', family: 'combat' } },
+      { artifact: { id: 'pouch', family: 'bag' } }
+    ],
+    currentRound: 2,
+    coinsRemaining: 1
+  });
+  assert.deepEqual(restoredLaterRound.map((event) => event.type), [
+    'prep_ready',
+    'artifact_bought',
+    'additional_artifact_bought',
+    'later_round_prep',
+    'bag_bought'
+  ]);
 
   assert.deepEqual(createRoundTutorialEvent({
     outcome: 'win',
@@ -169,6 +232,28 @@ test('shared event shapers follow successful item actions and authoritative roun
     runEnded: false,
     endReason: ''
   });
+});
+
+test('bag placement completes its required tutorial step', () => {
+  let session = createTutorialSession({
+    preferences: {
+      seenStepIds: [
+        'build_backpack',
+        'place_artifact',
+        'automatic_artifacts',
+        'coin_balance',
+        'refresh_shop'
+      ]
+    }
+  });
+  session = reduceTutorialEvent(session, { type: 'bag_offer_visible' });
+  assert.equal(session.activeStepId, 'bags_add_space');
+  session = dismissTutorialStep(session);
+  session = reduceTutorialEvent(session, { type: 'bag_bought', artifactId: 'pouch' });
+  assert.equal(session.activeStepId, 'place_bag');
+  session = reduceTutorialEvent(session, { type: 'bag_placed', artifactId: 'pouch' });
+  assert.equal(session.activeStepId, null);
+  assert.ok(session.preferences.seenStepIds.includes('place_bag'));
 });
 
 test('preferences normalization drops unknown steps and invalid values', () => {

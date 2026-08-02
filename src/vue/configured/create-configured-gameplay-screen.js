@@ -15,6 +15,7 @@ import { replayTimelineViewState } from '@microwavedev/backpack-game-core/client
 import {
   createArtifactBoughtTutorialEvent,
   createArtifactPlacedTutorialEvents,
+  createBagBoughtTutorialEvent,
   createPrepTutorialEvents,
   createRoundTutorialEvent
 } from '@microwavedev/backpack-game-core/modules/tutorial';
@@ -315,6 +316,8 @@ export function createConfiguredGameplayScreen(options = {}) {
         inventoryItems: this.containerItems,
         placedItems: (this.run?.loadoutItems || [])
           .filter((row) => !unplaced(row) && row.freshPurchase),
+        currentRound: this.run?.currentRound || 1,
+        coinsRemaining: this.run?.player?.coins || 0,
         getArtifact: (entry) => entry?.artifact || this.getArtifact(entry?.artifactId || entry?.id),
         imageForArtifact: (artifact) => this.artifactImage(artifact)
       });
@@ -496,11 +499,24 @@ export function createConfiguredGameplayScreen(options = {}) {
       )).then((result) => {
         const tutorial = getTutorialController(this.controller);
         const artifact = row.artifact || this.getArtifact(row.artifactId);
-        if (result && tutorial && artifact?.family !== 'bag') {
-          tutorial.emit(createArtifactBoughtTutorialEvent({
-            artifact,
-            imageForArtifact: (entry) => this.artifactImage(entry)
-          }));
+        if (result && tutorial && artifact) {
+          const nextRun = result?.run || this.run;
+          if (artifact.family === 'bag') {
+            tutorial.emit(createBagBoughtTutorialEvent({
+              artifact,
+              imageForArtifact: (entry) => this.artifactImage(entry)
+            }));
+          } else {
+            const purchaseCount = (nextRun?.loadoutItems || []).filter((entry) => (
+              entry.freshPurchase && this.getArtifact(entry.artifactId)?.family !== 'bag'
+            )).length;
+            tutorial.emit(createArtifactBoughtTutorialEvent({
+              artifact,
+              purchaseCount,
+              coinsRemaining: nextRun?.player?.coins || 0,
+              imageForArtifact: (entry) => this.artifactImage(entry)
+            }));
+          }
         }
         return result;
       });

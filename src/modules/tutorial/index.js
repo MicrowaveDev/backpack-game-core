@@ -1,24 +1,35 @@
-export const TUTORIAL_VERSION = 2;
+export const TUTORIAL_VERSION = 3;
 
 export const TUTORIAL_STEP_IDS = Object.freeze([
   'build_backpack',
   'place_artifact',
   'automatic_artifacts',
+  'coin_balance',
+  'refresh_shop',
   'bags_add_space',
-  'round_progress'
+  'place_bag',
+  'lost_life'
 ]);
 
 const EVENT_STEP = Object.freeze({
   prep_ready: 'build_backpack',
   artifact_bought: 'place_artifact',
   artifact_placed: 'automatic_artifacts',
+  additional_artifact_bought: 'coin_balance',
+  later_round_prep: 'refresh_shop',
   bag_offer_visible: 'bags_add_space',
-  round_completed: 'round_progress'
+  bag_bought: 'place_bag',
+  round_completed: 'lost_life'
 });
 
 const EVENT_PREREQUISITE_STEP = Object.freeze({
   artifact_bought: 'build_backpack',
-  artifact_placed: 'place_artifact'
+  artifact_placed: 'place_artifact',
+  bag_bought: 'bags_add_space'
+});
+
+const EVENT_COMPLETES_STEP = Object.freeze({
+  bag_placed: 'place_bag'
 });
 
 export const DEFAULT_TUTORIAL_COPY = Object.freeze({
@@ -36,18 +47,27 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     automatic_artifacts: Object.freeze({
       title: 'Items fight automatically',
-      body: 'Ready. During battle, placed items use their damage, armor, speed, and other effects automatically.'
+      body: 'Ready. During battle, placed items use their damage, armor, speed, and other effects automatically. If you have enough coins, try buying and placing another item.'
+    }),
+    coin_balance: Object.freeze({
+      title: 'Coins pay for this round',
+      body: 'You have {coins} coins left. Spend them on items or a shop refresh. Unspent round coins do not need to be placed on the grid.'
+    }),
+    refresh_shop: Object.freeze({
+      title: 'Refresh the shop',
+      body: 'This is a new round. If you do not like these items, use Refresh to replace the shop offer for a few coins.'
     }),
     bags_add_space: Object.freeze({
       title: 'Bags add space',
-      body: 'A bag opens more cells for your items. Buy it, then place it where it fits without covering another bag.'
+      body: 'A bag opens more grid cells. Buy this bag when your current field does not have enough room for the items you want to place.'
     }),
-    round_progress: Object.freeze({
-      winTitle: 'Round won',
-      lossTitle: 'Round lost',
-      drawTitle: 'Round finished',
-      body: 'You have {lives} {lifeWord} left. {rounds} {roundWord} remain in this run.',
-      lastBody: 'You have {lives} {lifeWord} left. That was the last round of this run.'
+    place_bag: Object.freeze({
+      title: 'Expand your field',
+      body: 'Your bag is waiting in the Backpack. Select it to add its cells to the field available for battle items.'
+    }),
+    lost_life: Object.freeze({
+      title: 'You lost a life',
+      body: 'You have {lives} {lifeWord} left. Prepare your items for the next round. {rounds} {roundWord} remain in this run.'
     })
   }),
   ru: Object.freeze({
@@ -64,18 +84,27 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     automatic_artifacts: Object.freeze({
       title: 'Предметы сражаются сами',
-      body: 'Готово. В бою размещённые предметы автоматически применяют урон, броню, скорость и другие эффекты.'
+      body: 'Готово. В бою размещённые предметы сами применяют урон, броню, скорость и другие эффекты. Если хватает монет, попробуй купить и разместить ещё один предмет.'
+    }),
+    coin_balance: Object.freeze({
+      title: 'Монеты на этот раунд',
+      body: 'Осталось монет: {coins}. Трать их на предметы или обновление магазина. Монеты не нужно размещать на сетке.'
+    }),
+    refresh_shop: Object.freeze({
+      title: 'Обнови магазин',
+      body: 'Начался новый раунд. Если предметы не нравятся, нажми «Обновить», чтобы заменить предложение магазина за несколько монет.'
     }),
     bags_add_space: Object.freeze({
       title: 'Сумки добавляют место',
-      body: 'Сумка открывает новые клетки для предметов. Купи её и размести так, чтобы она не перекрывала другую сумку.'
+      body: 'Сумка открывает новые клетки сетки. Купи её, если на текущем поле не хватает места для нужных предметов.'
     }),
-    round_progress: Object.freeze({
-      winTitle: 'Раунд выигран',
-      lossTitle: 'Раунд проигран',
-      drawTitle: 'Раунд завершён',
-      body: 'Осталось жизней: {lives}. До конца забега: {rounds} {roundWord}.',
-      lastBody: 'Осталось жизней: {lives}. Это был последний раунд забега.'
+    place_bag: Object.freeze({
+      title: 'Расширь поле',
+      body: 'Сумка ждёт в «Рюкзаке». Выбери её, чтобы добавить клетки для боевых предметов.'
+    }),
+    lost_life: Object.freeze({
+      title: 'Потеряна жизнь',
+      body: 'Осталось жизней: {lives}. Подготовь предметы к следующему раунду. До конца забега: {rounds} {roundWord}.'
     })
   })
 });
@@ -167,9 +196,25 @@ function withNextStep(session, queue = session.queuedSteps) {
 
 export function reduceTutorialEvent(session, event = {}) {
   if (!session?.active || session.skipped || session.completed) return session;
+  const completedStepId = EVENT_COMPLETES_STEP[event.type];
+  if (completedStepId) {
+    if (!stepAlreadyTracked(session, completedStepId)) return session;
+    const wasActive = session.activeStepId === completedStepId;
+    const next = {
+      ...session,
+      activeStepId: wasActive ? null : session.activeStepId,
+      activePayload: wasActive ? null : session.activePayload,
+      queuedSteps: session.queuedSteps.filter((entry) => entry.stepId !== completedStepId),
+      preferences: {
+        ...session.preferences,
+        seenStepIds: uniqueStepIds([...session.preferences.seenStepIds, completedStepId])
+      }
+    };
+    return withNextStep(next);
+  }
   const stepId = EVENT_STEP[event.type];
   if (!stepId) return session;
-  if (stepId === 'round_progress' && event.runEnded) return session;
+  if (stepId === 'lost_life' && (event.runEnded || event.outcome !== 'loss')) return session;
   const prerequisiteStepId = EVENT_PREREQUISITE_STEP[event.type];
   let next = session;
   if (prerequisiteStepId) {
@@ -281,8 +326,11 @@ function mergedLocaleCopy(locale, copy = {}) {
     build_backpack: { ...defaults.build_backpack, ...overrides.build_backpack },
     place_artifact: { ...defaults.place_artifact, ...overrides.place_artifact },
     automatic_artifacts: { ...defaults.automatic_artifacts, ...overrides.automatic_artifacts },
+    coin_balance: { ...defaults.coin_balance, ...overrides.coin_balance },
+    refresh_shop: { ...defaults.refresh_shop, ...overrides.refresh_shop },
     bags_add_space: { ...defaults.bags_add_space, ...overrides.bags_add_space },
-    round_progress: { ...defaults.round_progress, ...overrides.round_progress }
+    place_bag: { ...defaults.place_bag, ...overrides.place_bag },
+    lost_life: { ...defaults.lost_life, ...overrides.lost_life }
   };
 }
 
@@ -301,13 +349,29 @@ const TUTORIAL_STEP_ANCHORS = Object.freeze({
     selector: '[data-tutorial-anchor="battle-grid"]',
     placement: 'top'
   },
+  coin_balance: {
+    selector: '[data-tutorial-anchor="run-coins"]',
+    fallbackSelector: '[data-tutorial-anchor="run-progress"]',
+    placement: 'bottom'
+  },
+  refresh_shop: {
+    selector: '[data-tutorial-anchor="shop-refresh"]',
+    fallbackSelector: '[data-tutorial-anchor="shop"]',
+    placement: 'bottom'
+  },
   bags_add_space: {
     selector: '[data-tutorial-anchor="shop-bag"]',
     fallbackSelector: '[data-tutorial-anchor="shop"]',
     placement: 'bottom'
   },
-  round_progress: {
-    selector: '[data-tutorial-anchor="run-progress"]',
+  place_bag: {
+    selector: '[data-tutorial-anchor="backpack-bag"]',
+    fallbackSelector: '[data-tutorial-anchor="backpack"]',
+    placement: 'bottom'
+  },
+  lost_life: {
+    selector: '[data-tutorial-anchor="run-lives"]',
+    fallbackSelector: '[data-tutorial-anchor="run-progress"]',
     placement: 'bottom'
   }
 });
@@ -318,12 +382,10 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
   const step = labels[stepId];
   let title = step.title || '';
   let body = step.body || '';
-  if (stepId === 'round_progress') {
-    title = payload.outcome === 'win'
-      ? step.winTitle
-      : payload.outcome === 'loss'
-        ? step.lossTitle
-        : step.drawTitle;
+  if (stepId === 'coin_balance') {
+    body = interpolate(step.body, { coins: nonNegativeInteger(payload.coinsRemaining) });
+  }
+  if (stepId === 'lost_life') {
     const lives = nonNegativeInteger(payload.livesRemaining);
     const rounds = nonNegativeInteger(
       payload.roundsRemaining,
@@ -335,7 +397,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
       lifeWord: locale === 'ru' ? '' : englishWord(lives, 'life', 'lives'),
       roundWord: locale === 'ru' ? russianRoundWord(rounds) : englishWord(rounds, 'round', 'rounds')
     };
-    body = interpolate(rounds === 0 ? step.lastBody : step.body, values);
+    body = interpolate(step.body, values);
   }
   const anchor = TUTORIAL_STEP_ANCHORS[stepId];
   return {
@@ -347,7 +409,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
     closeLabel: labels.close,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || title,
-    actionRequired: stepId === 'build_backpack' || stepId === 'place_artifact',
+    actionRequired: ['build_backpack', 'place_artifact', 'place_bag'].includes(stepId),
     anchorSelector: anchor.selector,
     anchorFallbackSelector: anchor.fallbackSelector || '',
     anchorPlacement: anchor.placement
@@ -364,41 +426,67 @@ function artifactEvent(type, artifact, imageForArtifact) {
 }
 
 export function createPrepTutorialEvents({
+  shopItems = [],
   inventoryItems = [],
   placedItems = [],
+  currentRound = 1,
+  coinsRemaining = 0,
   getArtifact = (entry) => entry?.artifact || entry,
   isBag = (entry) => entry?.family === 'bag',
   imageForArtifact = (entry) => entry?.image || entry?.imagePath || ''
 } = {}) {
   const events = [{ type: 'prep_ready' }];
-  const waitingArtifact = (Array.isArray(inventoryItems) ? inventoryItems : [])
-    .map(getArtifact)
-    .filter(Boolean)
-    .find((artifact) => !isBag(artifact));
+  const waiting = (Array.isArray(inventoryItems) ? inventoryItems : []).map(getArtifact).filter(Boolean);
+  const placed = (Array.isArray(placedItems) ? placedItems : []).map(getArtifact).filter(Boolean);
+  const waitingArtifact = waiting.find((artifact) => !isBag(artifact));
+  const placedArtifact = placed.find((artifact) => !isBag(artifact));
 
-  if (waitingArtifact) {
-    events.push(artifactEvent('artifact_bought', waitingArtifact, imageForArtifact));
-    return events;
-  }
-
-  const placedArtifact = (Array.isArray(placedItems) ? placedItems : [])
-    .map(getArtifact)
-    .filter(Boolean)
-    .find((artifact) => !isBag(artifact));
+  if (waitingArtifact) events.push(artifactEvent('artifact_bought', waitingArtifact, imageForArtifact));
   if (placedArtifact) {
     events.push(
       artifactEvent('artifact_bought', placedArtifact, imageForArtifact),
       artifactEvent('artifact_placed', placedArtifact, imageForArtifact)
     );
   }
+
+  const purchasedArtifacts = [...waiting, ...placed].filter((artifact) => !isBag(artifact));
+  if (purchasedArtifacts.length >= 2) {
+    events.push({
+      ...artifactEvent('additional_artifact_bought', purchasedArtifacts[1], imageForArtifact),
+      coinsRemaining: nonNegativeInteger(coinsRemaining)
+    });
+  }
+  if (nonNegativeInteger(currentRound, 1) > 1) events.push({ type: 'later_round_prep' });
+
+  const offeredBag = (Array.isArray(shopItems) ? shopItems : [])
+    .map(getArtifact)
+    .filter(Boolean)
+    .find(isBag);
+  if (offeredBag) events.push(artifactEvent('bag_offer_visible', offeredBag, imageForArtifact));
+
+  const waitingBag = waiting.find(isBag);
+  const placedBag = placed.find(isBag);
+  const purchasedBag = waitingBag || placedBag;
+  if (purchasedBag) events.push(artifactEvent('bag_bought', purchasedBag, imageForArtifact));
+  if (placedBag) events.push(artifactEvent('bag_placed', placedBag, imageForArtifact));
   return events;
 }
 
 export function createArtifactBoughtTutorialEvent({
   artifact = null,
+  purchaseCount = 1,
+  coinsRemaining = 0,
   imageForArtifact = (entry) => entry?.image || entry?.imagePath || ''
 } = {}) {
-  return artifactEvent('artifact_bought', artifact, imageForArtifact);
+  const event = artifactEvent(
+    nonNegativeInteger(purchaseCount, 1) >= 2 ? 'additional_artifact_bought' : 'artifact_bought',
+    artifact,
+    imageForArtifact
+  );
+  if (event.type === 'additional_artifact_bought') {
+    event.coinsRemaining = nonNegativeInteger(coinsRemaining);
+  }
+  return event;
 }
 
 export function createArtifactPlacedTutorialEvents({
@@ -408,6 +496,7 @@ export function createArtifactPlacedTutorialEvents({
   isBag = (entry) => entry?.family === 'bag',
   imageForArtifact = (entry) => entry?.image || entry?.imagePath || ''
 } = {}) {
+  if (isBag(artifact)) return [artifactEvent('bag_placed', artifact, imageForArtifact)];
   const events = [artifactEvent('artifact_placed', artifact, imageForArtifact)];
   const offeredBag = (Array.isArray(shopItems) ? shopItems : [])
     .map(getArtifact)
@@ -421,6 +510,13 @@ export function createArtifactPlacedTutorialEvents({
     });
   }
   return events;
+}
+
+export function createBagBoughtTutorialEvent({
+  artifact = null,
+  imageForArtifact = (entry) => entry?.image || entry?.imagePath || ''
+} = {}) {
+  return artifactEvent('bag_bought', artifact, imageForArtifact);
 }
 
 export function createRoundTutorialEvent({

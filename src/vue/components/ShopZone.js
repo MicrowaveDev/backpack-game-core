@@ -216,6 +216,7 @@ export const ShopZone = {
         <button
           type="button"
           :class="refreshButtonClass"
+          data-tutorial-anchor="shop-refresh"
           :disabled="refreshDisabled"
           @click="emitRefresh"
         >{{ refreshText }}</button>
@@ -228,7 +229,7 @@ export const ShopZone = {
           :data-artifact-draggable="row.canAfford ? 'true' : 'false'"
           :data-artifact-id="row.artifactId || null"
           :data-artifact-family="row.artifact?.family || null"
-          :data-tutorial-anchor="row.artifact?.family === 'bag' ? 'shop-bag' : (row.canAfford === false ? 'shop-artifact' : 'shop-affordable-artifact')"
+          :data-tutorial-anchor="row.artifact?.family === 'bag' || row.isBag ? 'shop-bag' : (row.canAfford === false ? 'shop-artifact' : 'shop-affordable-artifact')"
           :data-artifact-width="previewWidth(row)"
           :data-artifact-height="previewHeight(row)"
           v-bind="attrsFor(row)"
