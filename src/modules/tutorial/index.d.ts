@@ -38,6 +38,7 @@ export function tutorialStepView(options?: {
 export function createPrepTutorialEvents(options?: {
   shopItems?: unknown[];
   inventoryItems?: unknown[];
+  placedItems?: unknown[];
   getArtifact?: (entry: any) => any;
   isBag?: (artifact: any) => boolean;
   imageForArtifact?: (artifact: any) => string;

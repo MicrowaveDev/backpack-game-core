@@ -100,6 +100,42 @@ test('shared event shapers follow successful item actions and authoritative roun
   });
   assert.deepEqual(events.map((event) => event.type), ['prep_ready']);
 
+  const waitingEvents = createPrepTutorialEvents({
+    inventoryItems: [{ artifactId: 'sword' }],
+    getArtifact: (entry) => ({ id: entry.artifactId, family: 'combat', image: '/sword.png' })
+  });
+  assert.deepEqual(waitingEvents.map((event) => event.type), [
+    'prep_ready',
+    'artifact_bought'
+  ]);
+  let restored = createTutorialSession({
+    preferences: { seenStepIds: ['build_backpack'] }
+  });
+  for (const event of waitingEvents) restored = reduceTutorialEvent(restored, event);
+  assert.equal(restored.activeStepId, 'place_artifact');
+  assert.equal(restored.activePayload.imageSrc, '/sword.png');
+
+  const placedOnReloadEvents = createPrepTutorialEvents({
+    placedItems: [{ artifactId: 'sword' }],
+    getArtifact: (entry) => ({ id: entry.artifactId, family: 'combat' })
+  });
+  assert.deepEqual(placedOnReloadEvents.map((event) => event.type), [
+    'prep_ready',
+    'artifact_bought',
+    'artifact_placed'
+  ]);
+  restored = createTutorialSession({
+    preferences: { seenStepIds: ['build_backpack'] }
+  });
+  for (const event of placedOnReloadEvents) restored = reduceTutorialEvent(restored, event);
+  assert.equal(restored.activeStepId, 'automatic_artifacts');
+  assert.ok(restored.preferences.seenStepIds.includes('place_artifact'));
+
+  const bagOnlyEvents = createPrepTutorialEvents({
+    inventoryItems: [{ artifact: { id: 'pouch', family: 'bag' } }]
+  });
+  assert.deepEqual(bagOnlyEvents.map((event) => event.type), ['prep_ready']);
+
   assert.deepEqual(createArtifactBoughtTutorialEvent({
     artifact: { id: 'sword', image: '/sword.png' }
   }), {

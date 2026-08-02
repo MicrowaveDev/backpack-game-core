@@ -354,10 +354,6 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
   };
 }
 
-export function createPrepTutorialEvents() {
-  return [{ type: 'prep_ready' }];
-}
-
 function artifactEvent(type, artifact, imageForArtifact) {
   return {
     type,
@@ -365,6 +361,37 @@ function artifactEvent(type, artifact, imageForArtifact) {
     imageSrc: artifact ? imageForArtifact(artifact) : '',
     imageAlt: artifact?.displayName || artifact?.name || ''
   };
+}
+
+export function createPrepTutorialEvents({
+  inventoryItems = [],
+  placedItems = [],
+  getArtifact = (entry) => entry?.artifact || entry,
+  isBag = (entry) => entry?.family === 'bag',
+  imageForArtifact = (entry) => entry?.image || entry?.imagePath || ''
+} = {}) {
+  const events = [{ type: 'prep_ready' }];
+  const waitingArtifact = (Array.isArray(inventoryItems) ? inventoryItems : [])
+    .map(getArtifact)
+    .filter(Boolean)
+    .find((artifact) => !isBag(artifact));
+
+  if (waitingArtifact) {
+    events.push(artifactEvent('artifact_bought', waitingArtifact, imageForArtifact));
+    return events;
+  }
+
+  const placedArtifact = (Array.isArray(placedItems) ? placedItems : [])
+    .map(getArtifact)
+    .filter(Boolean)
+    .find((artifact) => !isBag(artifact));
+  if (placedArtifact) {
+    events.push(
+      artifactEvent('artifact_bought', placedArtifact, imageForArtifact),
+      artifactEvent('artifact_placed', placedArtifact, imageForArtifact)
+    );
+  }
+  return events;
 }
 
 export function createArtifactBoughtTutorialEvent({

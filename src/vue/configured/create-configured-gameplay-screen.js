@@ -312,7 +312,8 @@ export function createConfiguredGameplayScreen(options = {}) {
       if (!tutorial || !this.runIsActive || this.showReplay) return;
       const events = createPrepTutorialEvents({
         shopItems: this.run?.shopItems || [],
-        inventoryItems: this.run?.loadoutItems || [],
+        inventoryItems: this.containerItems,
+        placedItems: this.placedItems,
         getArtifact: (entry) => entry?.artifact || this.getArtifact(entry?.artifactId || entry?.id),
         imageForArtifact: (artifact) => this.artifactImage(artifact)
       });
