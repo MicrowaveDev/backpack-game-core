@@ -12,6 +12,10 @@ import {
 } from '@microwavedev/backpack-game-core/vue/components';
 import { ReplayDetailScreen } from '@microwavedev/backpack-game-core/vue/pages';
 import { replayTimelineViewState } from '@microwavedev/backpack-game-core/client-view-model';
+import {
+  createPrepTutorialEvents,
+  createRoundTutorialEvent
+} from '@microwavedev/backpack-game-core/modules/tutorial';
 
 function unplaced(row) {
   return Number(row?.x) < 0 || Number(row?.y) < 0;
@@ -40,6 +44,8 @@ export function createConfiguredGameplayScreen(options = {}) {
   const getLocale = options.getLocale || ((controller) => controller.state.locale);
   const getText = options.getText || ((controller) => controller.text);
   const getClientServices = options.getClientServices || ((controller) => controller.clientServices);
+  const getTutorialController = options.getTutorialController || ((controller) => controller.tutorial || null);
+  const tutorialMaxRounds = Math.max(0, Number(options.tutorialMaxRounds) || 0);
   const shapeRunCompleteSummary = typeof options.shapeRunCompleteSummary === 'function'
     ? options.shapeRunCompleteSummary
     : null;
@@ -284,10 +290,32 @@ export function createConfiguredGameplayScreen(options = {}) {
       return replayDuelComponent;
     }
   },
+  mounted() {
+    this.emitPrepTutorial();
+  },
+  watch: {
+    shopRows: {
+      handler() {
+        this.emitPrepTutorial();
+      },
+      deep: true
+    }
+  },
   beforeUnmount() {
     this.clearReplayTimer();
   },
   methods: {
+    emitPrepTutorial() {
+      const tutorial = getTutorialController(this.controller);
+      if (!tutorial || !this.runIsActive || this.showReplay) return;
+      const events = createPrepTutorialEvents({
+        shopItems: this.run?.shopItems || [],
+        inventoryItems: this.run?.loadoutItems || [],
+        getArtifact: (entry) => entry?.artifact || this.getArtifact(entry?.artifactId || entry?.id),
+        imageForArtifact: (artifact) => this.artifactImage(artifact)
+      });
+      for (const event of events) tutorial.emit(event);
+    },
     getArtifact(id) {
       return getArtifactById(id, this.controller)
         || this.controller.artifacts.find((entry) => entry.id === id);
@@ -397,6 +425,17 @@ export function createConfiguredGameplayScreen(options = {}) {
     finishReplay() {
       this.clearReplayTimer();
       this.showReplay = false;
+      const tutorial = getTutorialController(this.controller);
+      if (tutorial && this.battle) {
+        tutorial.emit(createRoundTutorialEvent({
+          outcome: this.battle.outcome || this.battle.roundResult?.outcome,
+          player: this.run?.player || {},
+          maxRounds: tutorialMaxRounds || this.run?.maxRounds || 0,
+          runEnded: this.run?.status !== 'active',
+          endReason: this.run?.endReason || ''
+        }));
+      }
+      this.emitPrepTutorial();
     },
     previewOrientation(item) {
       return {

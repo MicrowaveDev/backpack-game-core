@@ -18,6 +18,8 @@ export interface ConfiguredGameplayScreenOptions {
   getLocale?: (controller: unknown) => string;
   getText?: (controller: unknown) => Record<string, unknown>;
   getClientServices?: (controller: unknown) => unknown;
+  getTutorialController?: (controller: unknown) => unknown;
+  tutorialMaxRounds?: number;
   shapeRunCompleteSummary?: (context: {
     run: unknown;
     character: unknown;

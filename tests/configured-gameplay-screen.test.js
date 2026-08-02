@@ -116,6 +116,33 @@ test('[configured gameplay] delegates product data, locale, text, and services t
   );
 });
 
+test('[configured gameplay] emits contextual prep tutorial events through the configured controller', () => {
+  const tutorialEvents = [];
+  const component = createConfiguredGameplayScreen(options({
+    getArtifactById: (id) => ({ id, family: id === 'bag' ? 'bag' : 'combat' }),
+    getTutorialController: () => ({ emit: (event) => tutorialEvents.push(event) })
+  }));
+  component.methods.emitPrepTutorial.call({
+    controller: {},
+    runIsActive: true,
+    showReplay: false,
+    run: {
+      shopItems: [
+        { artifact: { id: 'blade', family: 'combat' } },
+        { artifact: { id: 'bag', family: 'bag' } }
+      ],
+      loadoutItems: []
+    },
+    getArtifact: (id) => ({ id, family: id === 'bag' ? 'bag' : 'combat' }),
+    artifactImage: () => ''
+  });
+  assert.deepEqual(tutorialEvents.map((event) => event.type), [
+    'prep_ready',
+    'artifact_available',
+    'bag_offer_visible'
+  ]);
+});
+
 test('[configured gameplay] delegates rich completion summary shaping to the product adapter', () => {
   const calls = [];
   const component = createConfiguredGameplayScreen(options({
