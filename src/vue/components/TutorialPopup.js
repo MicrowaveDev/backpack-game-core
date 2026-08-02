@@ -102,6 +102,10 @@ export const TutorialPopup = {
         left: `${Math.round(left)}px`,
         '--tutorial-arrow-offset': `${Math.round(arrowOffset)}px`
       };
+      if (this.positionRetry < 2) {
+        this.positionRetry += 1;
+        window.setTimeout(this.queuePosition, 80);
+      }
     },
     positionFallback(popup) {
       const margin = 12;
@@ -145,6 +149,7 @@ export const TutorialPopup = {
             class="tutorial-popup-image"
             :src="step.imageSrc"
             :alt="step.imageAlt || ''"
+            @load="queuePosition"
           />
           <h2 :id="'tutorial-title-' + step.id" class="tutorial-popup-title">{{ step.title }}</h2>
           <p :id="'tutorial-body-' + step.id" class="tutorial-popup-body">{{ step.body }}</p>
