@@ -199,6 +199,7 @@ export const BackpackZone = {
   template: `
     <div
       :class="rootClass"
+      data-tutorial-anchor="backpack"
       @dragover="$emit('container-dragover', $event)"
       @drop="$emit('container-drop', $event)"
     >
@@ -212,6 +213,7 @@ export const BackpackZone = {
           :key="itemKey(item, index)"
           :class="[itemClass, itemClasses(item)]"
           :title="itemTitle(item)"
+          data-tutorial-anchor="backpack-item"
           v-bind="itemDataset(item)"
           @click="selectItem(item)"
         >

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 import {
   TUTORIAL_VERSION,
+  createArtifactBoughtTutorialEvent,
+  createArtifactPlacedTutorialEvents,
   createPrepTutorialEvents,
   createRoundTutorialEvent,
   createTutorialSession,
@@ -17,16 +19,18 @@ import { createTutorialController } from '../src/client/tutorial/index.js';
 import { TutorialPopup } from '../src/vue/components/TutorialPopup.js';
 import { SettingsScreen } from '../src/vue/pages/SettingsScreen.js';
 
-test('new profiles start the tutorial and queue contextual steps without stacking', () => {
+test('the first-run tutorial advances from buying to placing to automatic battle use', () => {
   let session = createTutorialSession();
   session = reduceTutorialEvent(session, { type: 'prep_ready' });
-  session = reduceTutorialEvent(session, { type: 'artifact_available' });
   assert.equal(session.activeStepId, 'build_backpack');
-  assert.deepEqual(session.queuedSteps.map((entry) => entry.stepId), ['automatic_artifacts']);
 
-  session = dismissTutorialStep(session);
-  assert.equal(session.activeStepId, 'automatic_artifacts');
+  session = reduceTutorialEvent(session, { type: 'artifact_bought', artifactId: 'sword' });
+  assert.equal(session.activeStepId, 'place_artifact');
   assert.deepEqual(session.preferences.seenStepIds, ['build_backpack']);
+
+  session = reduceTutorialEvent(session, { type: 'artifact_placed', artifactId: 'sword' });
+  assert.equal(session.activeStepId, 'automatic_artifacts');
+  assert.deepEqual(session.preferences.seenStepIds, ['build_backpack', 'place_artifact']);
 });
 
 test('skip permanently suppresses remaining steps', () => {
@@ -51,8 +55,9 @@ test('one-time replay clears disabled state and is consumed when the controller 
   await controller.emit({ type: 'prep_ready' });
   assert.equal(saved.length, 1);
   assert.equal(saved[0].replayPending, false);
-  await controller.emit({ type: 'artifact_available' });
-  assert.equal(saved.length, 1);
+  await controller.emit({ type: 'artifact_bought' });
+  assert.equal(saved.length, 2);
+  assert.deepEqual(saved[1].seenStepIds, ['build_backpack']);
 });
 
 test('round copy uses authoritative values and correct English and Russian plural forms', () => {
@@ -86,19 +91,33 @@ test('terminal round events do not open a misleading progress popup', () => {
   assert.equal(session.activeStepId, null);
 });
 
-test('shared event shapers identify combat items, shop bags, and authoritative round progress', () => {
+test('shared event shapers follow successful item actions and authoritative round progress', () => {
   const events = createPrepTutorialEvents({
     shopItems: [
       { artifact: { id: 'sword', family: 'combat', image: '/sword.png' } },
       { artifact: { id: 'pouch', family: 'bag', image: '/pouch.png' } }
     ]
   });
-  assert.deepEqual(events.map((event) => event.type), [
-    'prep_ready',
-    'artifact_available',
+  assert.deepEqual(events.map((event) => event.type), ['prep_ready']);
+
+  assert.deepEqual(createArtifactBoughtTutorialEvent({
+    artifact: { id: 'sword', image: '/sword.png' }
+  }), {
+    type: 'artifact_bought',
+    artifactId: 'sword',
+    imageSrc: '/sword.png',
+    imageAlt: ''
+  });
+
+  const placedEvents = createArtifactPlacedTutorialEvents({
+    artifact: { id: 'sword', image: '/sword.png' },
+    shopItems: [{ artifact: { id: 'pouch', family: 'bag', image: '/pouch.png' } }]
+  });
+  assert.deepEqual(placedEvents.map((event) => event.type), [
+    'artifact_placed',
     'bag_offer_visible'
   ]);
-  assert.equal(events[2].imageSrc, '/pouch.png');
+  assert.equal(placedEvents[1].imageSrc, '/pouch.png');
 
   assert.deepEqual(createRoundTutorialEvent({
     outcome: 'win',
@@ -136,6 +155,7 @@ test('shared Vue surfaces expose tutorial popup and replay setting contracts', (
   assert.match(TutorialPopup.template, /role="dialog"/);
   assert.doesNotMatch(TutorialPopup.template, /aria-modal="true"/);
   assert.match(TutorialPopup.template, /data-placement/);
+  assert.match(TutorialPopup.template, /!step\.actionRequired/);
   assert.ok(SettingsScreen.emits.includes('update:tutorial-replay-pending'));
   assert.match(SettingsScreen.template, /tutorialReplayPending/);
 });

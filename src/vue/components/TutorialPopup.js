@@ -149,6 +149,7 @@ export const TutorialPopup = {
           <p :id="'tutorial-body-' + step.id" class="tutorial-popup-body">{{ step.body }}</p>
           <div class="tutorial-popup-actions">
             <button
+              v-if="!step.actionRequired"
               class="primary tutorial-popup-primary"
               type="button"
               @click="$emit('dismiss')"

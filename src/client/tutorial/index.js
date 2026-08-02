@@ -42,9 +42,13 @@ export function createTutorialController({
     },
     async emit(event) {
       const beforeReplay = state.replay;
+      const beforePreferences = JSON.stringify(state.preferences);
       replace(reduceTutorialEvent(state, event));
+      const preferencesChanged = beforePreferences !== JSON.stringify(state.preferences);
       if (beforeReplay && !state.preferences.replayPending) {
         state.replay = false;
+      }
+      if (preferencesChanged || (beforeReplay && !state.preferences.replayPending)) {
         await persist();
       }
       return state;

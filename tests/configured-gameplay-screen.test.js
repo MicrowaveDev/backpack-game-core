@@ -137,9 +137,7 @@ test('[configured gameplay] emits contextual prep tutorial events through the co
     artifactImage: () => ''
   });
   assert.deepEqual(tutorialEvents.map((event) => event.type), [
-    'prep_ready',
-    'artifact_available',
-    'bag_offer_visible'
+    'prep_ready'
   ]);
 });
 

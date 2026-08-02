@@ -174,7 +174,7 @@ export const InventoryZone = {
     }
   },
   template: `
-    <div :class="rootClass" data-tutorial-anchor="backpack">
+    <div :class="rootClass" data-tutorial-anchor="battle-grid">
       <slot
         name="grid"
         :grid-class="gridClass"

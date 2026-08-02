@@ -13,6 +13,8 @@ import {
 import { ReplayDetailScreen } from '@microwavedev/backpack-game-core/vue/pages';
 import { replayTimelineViewState } from '@microwavedev/backpack-game-core/client-view-model';
 import {
+  createArtifactBoughtTutorialEvent,
+  createArtifactPlacedTutorialEvents,
   createPrepTutorialEvents,
   createRoundTutorialEvent
 } from '@microwavedev/backpack-game-core/modules/tutorial';
@@ -489,7 +491,17 @@ export function createConfiguredGameplayScreen(options = {}) {
       if (!this.runIsActive || !row?.canAfford) return;
       return this.mutate(this.text.buy, () => (
         this.clientServices.services.run.buy(this.run.id, row.artifactId)
-      ));
+      )).then((result) => {
+        const tutorial = getTutorialController(this.controller);
+        const artifact = row.artifact || this.getArtifact(row.artifactId);
+        if (result && tutorial && artifact?.family !== 'bag') {
+          tutorial.emit(createArtifactBoughtTutorialEvent({
+            artifact,
+            imageForArtifact: (entry) => this.artifactImage(entry)
+          }));
+        }
+        return result;
+      });
     },
     sell(payload) {
       const id = rowId(payload);
@@ -540,7 +552,19 @@ export function createConfiguredGameplayScreen(options = {}) {
       const rows = this.run.loadoutItems.map((row) => (
         row.id === id ? { ...row, ...placement } : row
       ));
-      return this.saveRows(rows);
+      return this.saveRows(rows).then((result) => {
+        const tutorial = getTutorialController(this.controller);
+        if (result && tutorial) {
+          const events = createArtifactPlacedTutorialEvents({
+            artifact,
+            shopItems: this.run?.shopItems || [],
+            getArtifact: (entry) => entry?.artifact || this.getArtifact(entry?.artifactId || entry?.id),
+            imageForArtifact: (entry) => this.artifactImage(entry)
+          });
+          for (const event of events) tutorial.emit(event);
+        }
+        return result;
+      });
     },
     unplace(payload) {
       const id = rowId(payload);

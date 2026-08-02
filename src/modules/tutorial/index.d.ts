@@ -42,6 +42,17 @@ export function createPrepTutorialEvents(options?: {
   isBag?: (artifact: any) => boolean;
   imageForArtifact?: (artifact: any) => string;
 }): Array<Record<string, unknown>>;
+export function createArtifactBoughtTutorialEvent(options?: {
+  artifact?: any;
+  imageForArtifact?: (artifact: any) => string;
+}): Record<string, unknown>;
+export function createArtifactPlacedTutorialEvents(options?: {
+  artifact?: any;
+  shopItems?: unknown[];
+  getArtifact?: (entry: any) => any;
+  isBag?: (artifact: any) => boolean;
+  imageForArtifact?: (artifact: any) => string;
+}): Array<Record<string, unknown>>;
 export function createRoundTutorialEvent(options?: {
   outcome?: string;
   player?: Record<string, unknown>;
