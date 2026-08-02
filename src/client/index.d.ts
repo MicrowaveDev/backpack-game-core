@@ -171,3 +171,6 @@ export function formatReplayEvent(
   resolveActionName?: ((characterId: string) => string) | null,
   lang?: string
 ): FormattedReplayEvent;
+
+export { createTutorialController } from './tutorial/index.js';
+export type { TutorialController } from './tutorial/index.js';

@@ -28,6 +28,7 @@ barrels belong directly in it.
 | Fusion matching and recipe evaluation | `src/modules/fusion/` | `@microwavedev/backpack-game-core/modules/fusion` |
 | Shop offers and run-shop state planners | `src/modules/shop/` | `@microwavedev/backpack-game-core/modules/shop` |
 | Run lifecycle and persistence-neutral runtime coordination | `src/modules/run/` | `@microwavedev/backpack-game-core/modules/run` |
+| First-run tutorial state, step eligibility, copy DTOs, and replay scheduling | `src/modules/tutorial/` | `@microwavedev/backpack-game-core/modules/tutorial` |
 | Battle simulation | `src/modules/battle/` | `@microwavedev/backpack-game-core/modules/battle` |
 | Gacha selection, validation, simulation, and admin planning | `src/modules/gacha/` | `@microwavedev/backpack-game-core/modules/gacha` |
 | Wallet accounting and settlement planning | `src/modules/wallet/` | `@microwavedev/backpack-game-core/modules/wallet` |

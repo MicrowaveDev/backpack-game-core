@@ -27,6 +27,7 @@ export { RunSummaryScreen } from './components/RunSummaryScreen.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
 export { ShopZone } from './components/ShopZone.js';
+export { TutorialPopup } from './components/TutorialPopup.js';
 
 export const AssetRollResultPanel = {
   name: 'AssetRollResultPanel',

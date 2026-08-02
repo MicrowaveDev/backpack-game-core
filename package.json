@@ -302,6 +302,14 @@
     "./modules/fusion": {
       "types": "./src/modules/fusion/index.d.ts",
       "import": "./src/modules/fusion/index.js"
+    },
+    "./modules/tutorial": {
+      "types": "./src/modules/tutorial/index.d.ts",
+      "import": "./src/modules/tutorial/index.js"
+    },
+    "./client/tutorial": {
+      "types": "./src/client/tutorial/index.d.ts",
+      "import": "./src/client/tutorial/index.js"
     }
   },
   "files": [

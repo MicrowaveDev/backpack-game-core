@@ -10088,3 +10088,105 @@ select {
 .reduced-motion ::view-transition-new(root) {
   animation-duration: 0.01ms !important;
 }
+
+/* --- First-run tutorial --- */
+.tutorial-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(28, 24, 20, 0.52);
+}
+
+.tutorial-popup {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: min(680px, calc(100dvh - 32px));
+  overflow: auto;
+  padding: 28px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(22, 17, 12, 0.24);
+  animation: tutorial-popup-enter 160ms ease-out;
+}
+
+.tutorial-popup-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.tutorial-popup-image {
+  display: block;
+  width: min(160px, 45%);
+  max-height: 150px;
+  margin: 0 auto 16px;
+  object-fit: contain;
+}
+
+.tutorial-popup-title {
+  margin: 8px 40px 12px;
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: 0;
+}
+
+.tutorial-popup-body {
+  margin: 0 auto;
+  max-width: 42ch;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.tutorial-popup-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.tutorial-popup-primary,
+.tutorial-popup-skip {
+  min-height: 48px;
+}
+
+.tutorial-popup--reduced-motion .tutorial-popup {
+  animation: none;
+}
+
+.setting-hint {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.72;
+  font-weight: 400;
+}
+
+@keyframes tutorial-popup-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 560px) {
+  .tutorial-popup {
+    align-self: end;
+    padding: 24px 18px 18px;
+  }
+
+  .tutorial-popup-title {
+    margin-right: 36px;
+    margin-left: 36px;
+    font-size: 26px;
+  }
+
+  .tutorial-popup-body {
+    font-size: 17px;
+  }
+}

@@ -28,7 +28,8 @@ export {
   SeasonRankEmblem,
   ShopZone,
   ShopItemList,
-  ShopItemRow
+  ShopItemRow,
+  TutorialPopup
 } from './components.js';
 
 export {

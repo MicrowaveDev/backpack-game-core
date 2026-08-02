@@ -43,5 +43,6 @@ export declare const BattleLog: VueComponentOption;
 export declare const SeasonRankEmblem: VueComponentOption;
 export declare const ShopItemRow: VueComponentOption;
 export declare const ShopItemList: VueComponentOption;
+export declare const TutorialPopup: VueComponentOption;
 export declare const GachaPackCard: VueComponentOption;
 export declare const GachaPackCardList: VueComponentOption;
