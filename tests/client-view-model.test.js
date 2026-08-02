@@ -322,6 +322,7 @@ test('[client-view-model] plans neutral prep bag activation, movement, deactivat
     anchorY: 0
   });
   assert.deepEqual(activatePlan.containerItems, []);
+  assert.deepEqual(activatePlan.rotatedBags, []);
 
   const withPouchItem = {
     ...baseState,
@@ -381,6 +382,46 @@ test('[client-view-model] plans neutral prep bag activation, movement, deactivat
     { id: 'pouch_row', artifactId: 'pouch', rotation: 1 }
   ]);
   assert.equal(rotatePlan.rotation, 1);
+});
+
+test('[client-view-model] activates an irregular bag in a higher-fitting rotation', () => {
+  const placementArtifacts = new Map([
+    ...artifacts,
+    ['blocker', { id: 'blocker', family: 'bag', width: 1, height: 1 }],
+    ['hook', {
+      id: 'hook',
+      family: 'bag',
+      width: 3,
+      height: 2,
+      shape: [[1, 1, 1], [1, 0, 0]]
+    }]
+  ]);
+  const plan = planPrepActivateBag({
+    state: {
+      activeBags: [
+        { id: 'starter_row', artifactId: 'starter_bag', anchorX: 0, anchorY: 0 },
+        { id: 'blocker_row', artifactId: 'blocker', anchorX: 3, anchorY: 0 }
+      ],
+      rotatedBags: [],
+      builderItems: [],
+      containerItems: [{ id: 'hook_row', artifactId: 'hook' }]
+    },
+    target: { artifactId: 'hook', id: 'hook_row' },
+    getArtifact: placementArtifacts,
+    columns: 6,
+    minRows: 6
+  });
+
+  assert.equal(plan.ok, true);
+  assert.deepEqual(plan.activatedBag, {
+    id: 'hook_row',
+    artifactId: 'hook',
+    anchorX: 3,
+    anchorY: 0
+  });
+  assert.deepEqual(plan.rotatedBags, [
+    { id: 'hook_row', artifactId: 'hook', rotation: 2 }
+  ]);
 });
 
 function bagRow({ artifactId = 'moss_pouch', row: y, anchorX, cols, enabledXs, color = '#6b8f5e' }) {

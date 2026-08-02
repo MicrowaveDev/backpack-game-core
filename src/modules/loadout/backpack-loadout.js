@@ -86,6 +86,83 @@ function bagPlacementCandidates(item, {
   );
 }
 
+function defaultGetPlacedBagItem(placement) {
+  return placement?.item || placement?.artifact || null;
+}
+
+function defaultGetPlacedBagX(placement) {
+  return Number(placement?.x ?? placement?.anchorX ?? 0);
+}
+
+function defaultGetPlacedBagY(placement) {
+  return Number(placement?.y ?? placement?.anchorY ?? 0);
+}
+
+function defaultGetPlacedBagRotation(placement) {
+  return placement?.rotated ?? placement?.rotation ?? 0;
+}
+
+function defaultIsPlacedBagActive(placement) {
+  return placement?.active !== false && placement?.active !== 0;
+}
+
+function uniqueShapeRotations(item, rotations, getBagShape) {
+  const seen = new Set();
+  const unique = [];
+  for (const rotation of rotations) {
+    const shape = getBagShape(item, rotation);
+    const key = JSON.stringify(shape);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(rotation);
+  }
+  return unique;
+}
+
+export function findBagPlacement({
+  item,
+  placedBags = [],
+  grid,
+  rotations = [0, 1, 2, 3],
+  getBagShape = (bag, rotation) => getEffectiveShape(bag, rotation),
+  getPlacedBagItem = defaultGetPlacedBagItem,
+  getPlacedBagX = defaultGetPlacedBagX,
+  getPlacedBagY = defaultGetPlacedBagY,
+  getPlacedBagRotation = defaultGetPlacedBagRotation,
+  isPlacedBagActive = defaultIsPlacedBagActive
+} = {}) {
+  if (!item) return null;
+  const columns = Number(grid?.columns ?? grid?.width ?? 0);
+  const rows = Number(grid?.rows ?? grid?.height ?? 0);
+  if (columns <= 0 || rows <= 0) return null;
+
+  const occupiedBags = new Set();
+  for (const placement of placedBags) {
+    if (!isPlacedBagActive(placement)) continue;
+    const placedItem = getPlacedBagItem(placement);
+    if (!placedItem) continue;
+    const shape = getBagShape(placedItem, getPlacedBagRotation(placement));
+    for (const key of shapeCells(
+      getPlacedBagX(placement),
+      getPlacedBagY(placement),
+      shape
+    )) {
+      occupiedBags.add(key);
+    }
+  }
+
+  const candidates = bagPlacementCandidates(item, {
+    columns,
+    rows,
+    rotations: uniqueShapeRotations(item, rotations, getBagShape),
+    getBagShape
+  });
+  const found = candidates.find((candidate) => canPlaceBag(candidate, occupiedBags));
+  if (!found) return null;
+  const { shape: _shape, ...placement } = found;
+  return placement;
+}
+
 function artifactPlacementCandidates(item, { columns, rows, getItemWidth, getItemHeight }) {
   const width = getItemWidth(item);
   const height = getItemHeight(item);

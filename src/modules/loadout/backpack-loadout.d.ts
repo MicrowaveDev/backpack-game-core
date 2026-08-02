@@ -62,6 +62,23 @@ export interface BackpackLoadoutResult {
   items: LoadoutPlacement[];
 }
 
+export interface FindBagPlacementOptions<Item = BagShapeLike, Placement = LoadoutPlacement> {
+  item: Item;
+  placedBags?: Placement[] | readonly Placement[];
+  grid: BackpackGridConfig;
+  rotations?: unknown[] | readonly unknown[];
+  getBagShape?: (item: Item, rotation: unknown) => BagShape;
+  getPlacedBagItem?: (placement: Placement) => Item | null | undefined;
+  getPlacedBagX?: (placement: Placement) => number;
+  getPlacedBagY?: (placement: Placement) => number;
+  getPlacedBagRotation?: (placement: Placement) => unknown;
+  isPlacedBagActive?: (placement: Placement) => boolean;
+}
+
+export function findBagPlacement<Item = BagShapeLike, Placement = LoadoutPlacement>(
+  options: FindBagPlacementOptions<Item, Placement>
+): (LoadoutPlacement & { rotated: unknown }) | null;
+
 export function generateBackpackLoadout<Item = BagShapeLike>(
   options: GenerateBackpackLoadoutOptions<Item>
 ): BackpackLoadoutResult;

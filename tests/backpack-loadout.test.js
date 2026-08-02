@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateBackpackLoadout } from '../src/index.js';
+import { findBagPlacement, generateBackpackLoadout } from '../src/index.js';
 
 const starterBag = {
   item: { id: 'starter_bag', family: 'bag', width: 1, height: 1, shape: [[1]] },
@@ -58,6 +58,35 @@ test('[backpack-loadout] uses compact first-fit anchors for bought bags', () => 
     { x: pouch.x, y: pouch.y, rotated: pouch.rotated },
     { x: 0, y: 0, rotated: 2 }
   );
+});
+
+test('[backpack-loadout] rotates an irregular bag to fill the highest free cells', () => {
+  const starter = { id: 'starter', family: 'bag', width: 3, height: 3 };
+  const blocker = { id: 'blocker', family: 'bag', width: 1, height: 1 };
+  const hook = {
+    id: 'hook',
+    family: 'bag',
+    width: 3,
+    height: 2,
+    shape: [[1, 1, 1], [1, 0, 0]]
+  };
+  const placement = findBagPlacement({
+    item: hook,
+    placedBags: [
+      { item: starter, x: 0, y: 0, rotated: 0, active: true },
+      { item: blocker, x: 3, y: 0, rotated: 0, active: true }
+    ],
+    grid: { columns: 6, rows: 6 },
+    rotations: [0, 1, 2, 3]
+  });
+
+  assert.deepEqual(placement, {
+    x: 3,
+    y: 0,
+    width: 3,
+    height: 2,
+    rotated: 2
+  });
 });
 
 test('[backpack-loadout] can place bought items inside bought bag cells', () => {

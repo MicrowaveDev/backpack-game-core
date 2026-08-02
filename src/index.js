@@ -37,6 +37,7 @@ export {
 } from './modules/shop/offers.js';
 
 export {
+  findBagPlacement,
   generateBackpackLoadout
 } from './modules/loadout/backpack-loadout.js';
 
