@@ -23,15 +23,15 @@ import { SettingsScreen } from '../src/vue/pages/SettingsScreen.js';
 test('the first-run tutorial advances from buying to placing to automatic battle use', () => {
   let session = createTutorialSession();
   session = reduceTutorialEvent(session, { type: 'prep_ready' });
-  assert.equal(session.activeStepId, 'build_backpack');
+  assert.equal(session.activeStepId, 'buy_first_item');
 
   session = reduceTutorialEvent(session, { type: 'artifact_bought', artifactId: 'sword' });
   assert.equal(session.activeStepId, 'place_artifact');
-  assert.deepEqual(session.preferences.seenStepIds, ['build_backpack']);
+  assert.deepEqual(session.preferences.seenStepIds, ['buy_first_item']);
 
   session = reduceTutorialEvent(session, { type: 'artifact_placed', artifactId: 'sword' });
   assert.equal(session.activeStepId, 'automatic_artifacts');
-  assert.deepEqual(session.preferences.seenStepIds, ['build_backpack', 'place_artifact']);
+  assert.deepEqual(session.preferences.seenStepIds, ['buy_first_item', 'place_artifact']);
 
   session = dismissTutorialStep(session);
   session = reduceTutorialEvent(session, {
@@ -66,7 +66,7 @@ test('one-time replay clears disabled state and is consumed when the controller 
   assert.equal(saved[0].replayPending, false);
   await controller.emit({ type: 'artifact_bought' });
   assert.equal(saved.length, 2);
-  assert.deepEqual(saved[1].seenStepIds, ['build_backpack']);
+  assert.deepEqual(saved[1].seenStepIds, ['buy_first_item']);
 });
 
 test('coin and lost-life copy use authoritative values and localized plural forms', () => {
@@ -79,9 +79,14 @@ test('coin and lost-life copy use authoritative values and localized plural form
   assert.equal(coins.anchorSelector, '[data-tutorial-anchor="run-coins"]');
 
   const automatic = tutorialStepView({ stepId: 'automatic_artifacts', locale: 'en' });
-  assert.equal(automatic.anchorSelector, '[data-tutorial-anchor="battle-grid"]');
+  assert.equal(automatic.anchorSelector, '[data-tutorial-anchor="backpack"]');
   assert.equal(automatic.anchorSecondarySelector, '[data-tutorial-anchor="shop"]');
   assert.equal(automatic.anchorPlacement, 'between');
+
+  const placement = tutorialStepView({ stepId: 'place_artifact', locale: 'en' });
+  assert.equal(placement.anchorSelector, '[data-tutorial-anchor="storage-item"]');
+  assert.match(placement.body, /waiting in Storage/);
+  assert.match(placement.body, /place it in the Backpack/);
 
   const english = tutorialStepView({
     stepId: 'lost_life',
@@ -136,7 +141,7 @@ test('shared event shapers follow successful item actions and authoritative roun
   assert.deepEqual(events.map((event) => event.type), ['prep_ready', 'bag_offer_visible']);
 
   const waitingEvents = createPrepTutorialEvents({
-    inventoryItems: [{ artifactId: 'sword' }],
+    storageItems: [{ artifactId: 'sword' }],
     getArtifact: (entry) => ({ id: entry.artifactId, family: 'combat', image: '/sword.png' })
   });
   assert.deepEqual(waitingEvents.map((event) => event.type), [
@@ -144,7 +149,7 @@ test('shared event shapers follow successful item actions and authoritative roun
     'artifact_bought'
   ]);
   let restored = createTutorialSession({
-    preferences: { seenStepIds: ['build_backpack'] }
+    preferences: { seenStepIds: ['buy_first_item'] }
   });
   for (const event of waitingEvents) restored = reduceTutorialEvent(restored, event);
   assert.equal(restored.activeStepId, 'place_artifact');
@@ -160,14 +165,14 @@ test('shared event shapers follow successful item actions and authoritative roun
     'artifact_placed'
   ]);
   restored = createTutorialSession({
-    preferences: { seenStepIds: ['build_backpack'] }
+    preferences: { seenStepIds: ['buy_first_item'] }
   });
   for (const event of placedOnReloadEvents) restored = reduceTutorialEvent(restored, event);
   assert.equal(restored.activeStepId, 'automatic_artifacts');
   assert.ok(restored.preferences.seenStepIds.includes('place_artifact'));
 
   const bagOnlyEvents = createPrepTutorialEvents({
-    inventoryItems: [{ artifact: { id: 'pouch', family: 'bag' } }]
+    storageItems: [{ artifact: { id: 'pouch', family: 'bag' } }]
   });
   assert.deepEqual(bagOnlyEvents.map((event) => event.type), ['prep_ready', 'bag_bought']);
 
@@ -207,7 +212,7 @@ test('shared event shapers follow successful item actions and authoritative roun
   assert.equal(placedEvents[1].imageSrc, '/pouch.png');
 
   const restoredLaterRound = createPrepTutorialEvents({
-    inventoryItems: [
+    storageItems: [
       { artifact: { id: 'sword', family: 'combat' } },
       { artifact: { id: 'shield', family: 'combat' } },
       { artifact: { id: 'pouch', family: 'bag' } }
@@ -243,7 +248,7 @@ test('bag placement completes its required tutorial step', () => {
   let session = createTutorialSession({
     preferences: {
       seenStepIds: [
-        'build_backpack',
+        'buy_first_item',
         'place_artifact',
         'automatic_artifacts',
         'coin_balance',
@@ -271,7 +276,7 @@ test('preferences normalization drops unknown steps and invalid values', () => {
     versionSeen: 0,
     disabled: true,
     replayPending: false,
-    seenStepIds: ['build_backpack']
+    seenStepIds: ['buy_first_item']
   });
 });
 

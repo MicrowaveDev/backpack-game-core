@@ -37,6 +37,8 @@ export function tutorialStepView(options?: {
 }): Record<string, unknown> | null;
 export function createPrepTutorialEvents(options?: {
   shopItems?: unknown[];
+  storageItems?: unknown[];
+  /** @deprecated Use storageItems. */
   inventoryItems?: unknown[];
   placedItems?: unknown[];
   currentRound?: number;

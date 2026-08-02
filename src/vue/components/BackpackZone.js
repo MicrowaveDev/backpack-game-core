@@ -2,16 +2,6 @@ function nonEmptyArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
-function setHas(collection, value) {
-  return Boolean(value && collection?.has?.(value));
-}
-
-function localizedName(value, lang = 'en') {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  return value[lang] || value.en || value.default || Object.values(value).find(Boolean) || '';
-}
-
 export const BackpackZone = {
   name: 'BackpackZone',
   props: {
@@ -19,227 +9,228 @@ export const BackpackZone = {
       type: Array,
       default: () => []
     },
+    activeContainers: {
+      type: Array,
+      default: () => []
+    },
+    totals: {
+      type: Object,
+      default: null
+    },
+    totalRows: {
+      type: Number,
+      default: 0
+    },
+    bagRows: {
+      type: Array,
+      default: () => []
+    },
+    placementPreviewAt: {
+      type: Function,
+      default: null
+    },
+    highlightedRowIds: {
+      type: Object,
+      default: null
+    },
+    highlightedTitle: {
+      type: String,
+      default: ''
+    },
     labels: {
       type: Object,
       default: () => ({})
     },
-    lang: {
-      type: String,
-      default: 'en'
-    },
-    nameForItem: {
-      type: Function,
-      default: null
-    },
-    formatItemStats: {
-      type: Function,
-      default: null
-    },
-    previewOrientationForItem: {
-      type: Function,
-      default: null
-    },
-    pendingItemIds: {
-      type: Object,
-      default: null
-    },
-    highlightedItemIds: {
-      type: Object,
-      default: null
-    },
-    bagFamily: {
-      type: String,
-      default: 'bag'
-    },
     rootClass: {
       type: String,
-      default: 'artifact-container-zone'
+      default: 'artifact-inventory-section panel'
     },
     headerClass: {
       type: String,
-      default: 'artifact-container-header'
+      default: 'artifact-inventory-header'
     },
-    countClass: {
+    gridClass: {
       type: String,
-      default: 'artifact-container-count'
+      default: 'inventory-shell artifact-inventory-grid'
     },
-    listClass: {
+    activeContainersClass: {
       type: String,
-      default: 'artifact-container-items'
+      default: 'active-bags-bar'
     },
-    itemClass: {
+    containerChipClass: {
       type: String,
-      default: 'container-item'
+      default: 'active-bag-chip'
     },
-    itemPendingClass: {
+    containerLockedClass: {
       type: String,
-      default: 'container-item--fusion-pending'
+      default: 'active-bag-chip--locked'
     },
-    itemHighlightedClass: {
+    containerDraggableClass: {
       type: String,
-      default: 'container-item--fusion-candidate'
+      default: 'active-bag-chip--draggable'
     },
-    visualClass: {
+    containerActionClass: {
       type: String,
-      default: 'container-item-visual'
+      default: 'active-bag-action'
     },
-    copyClass: {
+    footerClass: {
       type: String,
-      default: 'container-item-copy'
-    },
-    statListClass: {
-      type: String,
-      default: 'artifact-stat-chips'
-    },
-    statChipClass: {
-      type: String,
-      default: 'artifact-stat-chip'
-    },
-    statChipPositiveClass: {
-      type: String,
-      default: 'artifact-stat-chip--pos'
-    },
-    statChipNegativeClass: {
-      type: String,
-      default: 'artifact-stat-chip--neg'
-    },
-    bagSlotClass: {
-      type: String,
-      default: 'artifact-stat-chip artifact-stat-chip--bag'
-    },
-    emptyClass: {
-      type: String,
-      default: 'artifact-container-empty'
+      default: 'artifact-inventory-footer'
     }
   },
-  emits: ['select-item', 'container-dragover', 'container-drop'],
+  emits: [
+    'remove-item',
+    'rotate-item',
+    'cell-drop',
+    'item-drag-start',
+    'item-drag-end',
+    'deactivate-container',
+    'rotate-container',
+    'container-chip-drag-start'
+  ],
   computed: {
+    titleLabel() {
+      return this.labels?.title || 'Backpack';
+    },
     renderedItems() {
       return nonEmptyArray(this.items);
     },
-    titleLabel() {
-      return this.labels?.title || 'Container';
+    visibleContainers() {
+      return nonEmptyArray(this.activeContainers).filter((container) => container.hidden !== true);
     },
-    bagSlotsLabel() {
-      return this.labels?.bagSlots || 'slots';
+    showFooter() {
+      return this.renderedItems.length > 0;
     },
-    emptyLabel() {
-      return this.labels?.empty || '';
+    rotateActionLabel() {
+      return this.labels?.rotateAction || 'Rotate';
+    },
+    removeActionLabel() {
+      return this.labels?.removeAction || 'Remove';
+    },
+    statSummaryAriaLabel() {
+      return this.labels?.statSummaryAriaLabel || 'Item stat summary';
     }
   },
   methods: {
-    itemId(item) {
-      return item?.artifactId || item?.id || '';
+    containerKey(container, index) {
+      return container?.id || container?.artifactId || index;
     },
-    itemRowId(item) {
-      return item?.rowId || item?.id || '';
+    containerName(container) {
+      return container?.name || container?.label || container?.artifactId || container?.id || '';
     },
-    itemKey(item, index) {
-      return item?.instanceKey || item?.rowId || item?.id || index;
+    containerColor(container) {
+      return container?.color || '#888';
     },
-    itemName(item) {
-      if (this.nameForItem) return this.nameForItem(item);
-      return localizedName(item?.name, this.lang) || this.itemId(item);
-    },
-    itemStats(item) {
-      return this.formatItemStats ? nonEmptyArray(this.formatItemStats(item)) : [];
-    },
-    previewOrientation(item) {
-      if (this.previewOrientationForItem) return this.previewOrientationForItem(item);
+    containerClasses(container) {
       return {
-        width: item?.width || 1,
-        height: item?.height || 1
+        [this.containerLockedClass]: Boolean(container?.locked),
+        [this.containerDraggableClass]: container?.draggable !== false
       };
     },
-    previewItem(item) {
-      const orientation = this.previewOrientation(item);
-      return [{
-        artifactId: this.itemId(item),
-        rowId: item?.rowId,
-        x: 0,
-        y: 0,
-        width: orientation.width,
-        height: orientation.height
-      }];
-    },
-    itemDataset(item) {
-      const orientation = this.previewOrientation(item);
+    containerDataset(container) {
       return {
-        'data-artifact-id': this.itemId(item),
-        'data-artifact-row-id': item?.rowId || '',
-        'data-artifact-width': orientation.width,
-        'data-artifact-height': orientation.height
+        'data-bag-row-id': container?.id || '',
+        'data-bag-locked': container?.locked ? 'true' : 'false'
       };
     },
-    isPending(item) {
-      return setHas(this.pendingItemIds, this.itemRowId(item));
-    },
-    isHighlighted(item) {
-      return setHas(this.highlightedItemIds, this.itemRowId(item));
-    },
-    itemTitle(item) {
-      if (this.isPending(item)) return this.labels?.pendingTitle || null;
-      if (this.isHighlighted(item)) return this.labels?.highlightedTitle || null;
-      return null;
-    },
-    itemClasses(item) {
+    containerStyle(container) {
       return {
-        [this.itemPendingClass]: this.isPending(item),
-        [this.itemHighlightedClass]: !this.isPending(item) && this.isHighlighted(item)
+        borderColor: this.containerColor(container)
       };
     },
-    selectItem(item) {
-      this.$emit('select-item', {
-        item,
-        artifactId: this.itemId(item),
-        id: item?.rowId
+    onRemoveItem(payload) {
+      this.$emit('remove-item', payload);
+    },
+    onRotateItem(payload) {
+      this.$emit('rotate-item', payload);
+    },
+    onCellDrop(payload) {
+      this.$emit('cell-drop', payload);
+    },
+    onItemDragStart(payload) {
+      this.$emit('item-drag-start', payload);
+    },
+    onItemDragEnd(payload) {
+      this.$emit('item-drag-end', payload);
+    },
+    onContainerDragStart(container, event) {
+      if (container?.draggable === false) return;
+      this.$emit('container-chip-drag-start', {
+        container,
+        id: container?.id,
+        artifactId: container?.artifactId,
+        event
+      });
+    },
+    onContainerDragEnd() {
+      this.$emit('item-drag-end');
+    },
+    rotateContainer(container) {
+      this.$emit('rotate-container', {
+        container,
+        id: container?.id,
+        artifactId: container?.artifactId
+      });
+    },
+    deactivateContainer(container) {
+      this.$emit('deactivate-container', {
+        container,
+        id: container?.id,
+        artifactId: container?.artifactId
       });
     }
   },
   template: `
-    <div
-      :class="rootClass"
-      data-tutorial-anchor="backpack"
-      @dragover="$emit('container-dragover', $event)"
-      @drop="$emit('container-drop', $event)"
-    >
+    <div :class="rootClass" data-tutorial-anchor="backpack">
       <div :class="headerClass">
         <strong>{{ titleLabel }}</strong>
-        <span v-if="renderedItems.length" :class="countClass">{{ renderedItems.length }}</span>
       </div>
-      <div v-if="renderedItems.length" :class="listClass">
-        <div
-          v-for="(item, index) in renderedItems"
-          :key="itemKey(item, index)"
-          :class="[itemClass, itemClasses(item)]"
-          :title="itemTitle(item)"
-          :data-tutorial-anchor="item.family === bagFamily ? 'backpack-bag' : 'backpack-item'"
-          v-bind="itemDataset(item)"
-          @click="selectItem(item)"
+      <slot
+        name="grid"
+        :grid-class="gridClass"
+        :items="renderedItems"
+        :total-rows="totalRows"
+        :bag-rows="bagRows"
+        :placement-preview-at="placementPreviewAt"
+        :highlighted-row-ids="highlightedRowIds"
+        :highlighted-title="highlightedTitle"
+        :on-remove-item="onRemoveItem"
+        :on-rotate-item="onRotateItem"
+        :on-cell-drop="onCellDrop"
+        :on-item-drag-start="onItemDragStart"
+        :on-item-drag-end="onItemDragEnd"
+      ></slot>
+      <div v-if="visibleContainers.length" :class="activeContainersClass">
+        <span
+          v-for="(container, index) in visibleContainers"
+          :key="containerKey(container, index)"
+          :class="[containerChipClass, containerClasses(container)]"
+          :style="containerStyle(container)"
+          :draggable="container.draggable !== false"
+          :title="container.title || null"
+          v-bind="containerDataset(container)"
+          @dragstart="onContainerDragStart(container, $event)"
+          @dragend="onContainerDragEnd"
         >
-          <slot
-            name="visual"
-            :item="item"
-            :orientation="previewOrientation(item)"
-            :preview-item="previewItem(item)"
-            :visual-class="visualClass"
-          >
-            <span :class="visualClass">{{ itemName(item) }}</span>
+          <slot name="container-chip" :container="container" :name="containerName(container)">
+            {{ containerName(container) }}
           </slot>
-          <div :class="copyClass">
-            <strong>{{ itemName(item) }}</strong>
-            <span v-if="item.family === bagFamily" :class="bagSlotClass">{{ item.slotCount }} {{ bagSlotsLabel }}</span>
-            <span :class="statListClass">
-              <span
-                v-for="stat in itemStats(item)"
-                :key="stat.key"
-                :class="[statChipClass, stat.positive ? statChipPositiveClass : statChipNegativeClass]"
-              >{{ stat.label }} {{ stat.value }}</span>
-            </span>
-          </div>
-        </div>
+          <button
+            v-if="container.rotatable"
+            :class="containerActionClass"
+            type="button"
+            @click="rotateContainer(container)"
+          >{{ rotateActionLabel }}</button>
+          <button
+            :class="containerActionClass"
+            type="button"
+            @click="deactivateContainer(container)"
+          >{{ removeActionLabel }}</button>
+        </span>
       </div>
-      <p v-else :class="emptyClass">{{ emptyLabel }}</p>
+      <div v-if="showFooter" :class="footerClass">
+        <slot name="footer" :totals="totals" :aria-label="statSummaryAriaLabel"></slot>
+      </div>
     </div>
   `
 };

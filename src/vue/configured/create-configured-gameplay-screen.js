@@ -2,7 +2,7 @@ import {
   ArtifactGridBoard,
   ArtifactStatSummary,
   BackpackZone,
-  InventoryZone,
+  StorageZone,
   PrepActions,
   PrepScreen,
   RunCompleteScreen,
@@ -87,7 +87,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       ArtifactGridBoard,
       ArtifactStatSummary,
       BackpackZone,
-      InventoryZone,
+      StorageZone,
       PrepActions,
       PrepScreen,
       ReplayDetailScreen,
@@ -159,7 +159,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     placedItems() {
       return this.grid.items || [];
     },
-    containerItems() {
+    storageItems() {
       return (this.run?.loadoutItems || [])
         .filter(unplaced)
         .map((row) => ({ ...this.getArtifact(row.artifactId), ...row, rowId: row.id }));
@@ -254,11 +254,16 @@ export function createConfiguredGameplayScreen(options = {}) {
         formatEvent: this.formatReplayEvent
       });
     },
+    storageLabels() {
+      return {
+        title: this.text.storage || this.text.backpack,
+        bagSlots: this.text.bagSlots,
+        empty: this.text.storageEmpty || this.text.backpackEmpty
+      };
+    },
     backpackLabels() {
       return {
-        title: this.text.backpack,
-        bagSlots: this.text.bagSlots,
-        empty: this.text.backpackEmpty
+        title: this.text.backpack
       };
     },
     shopLabels() {
@@ -313,7 +318,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       if (!tutorial || !this.runIsActive || this.showReplay) return;
       const events = createPrepTutorialEvents({
         shopItems: this.run?.shopItems || [],
-        inventoryItems: this.containerItems,
+        storageItems: this.storageItems,
         placedItems: (this.run?.loadoutItems || [])
           .filter((row) => !unplaced(row) && row.freshPurchase),
         currentRound: this.run?.currentRound || 1,
@@ -685,9 +690,9 @@ export function createConfiguredGameplayScreen(options = {}) {
         </template>
 
         <template #loadout>
-          <BackpackZone
-            :items="containerItems"
-            :labels="backpackLabels"
+          <StorageZone
+            :items="storageItems"
+            :labels="storageLabels"
             :lang="locale"
             :name-for-item="artifactName"
             :format-item-stats="formatStats"
@@ -706,15 +711,15 @@ export function createConfiguredGameplayScreen(options = {}) {
                 :artifact-image-for="artifactImage"
               />
             </template>
-          </BackpackZone>
+          </StorageZone>
 
-          <InventoryZone
+          <BackpackZone
             :items="placedItems"
             :active-containers="activeContainers"
             :totals="run.loadoutTotals"
             :total-rows="grid.totalRows"
             :bag-rows="grid.bagRows"
-            :labels="{ rotateAction: '↻', removeAction: '×', statSummaryAriaLabel: text.stats }"
+            :labels="{ title: backpackLabels.title, rotateAction: '↻', removeAction: '×', statSummaryAriaLabel: text.stats }"
             @remove-item="unplace"
             @rotate-item="rotate"
             @cell-drop="cellDrop"
@@ -751,7 +756,7 @@ export function createConfiguredGameplayScreen(options = {}) {
             <template #footer="{ totals, ariaLabel }">
               <ArtifactStatSummary :totals="totals" :labels="statLabels" :aria-label="ariaLabel" />
             </template>
-          </InventoryZone>
+          </BackpackZone>
         </template>
 
         <template #shop>

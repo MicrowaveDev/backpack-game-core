@@ -12,6 +12,7 @@ export {
   FusionReveal,
   HomeSocialSidebar,
   InventoryZone,
+  StorageZone,
   PrepScreen,
   GachaOddsTable,
   GachaPackCard,

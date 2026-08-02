@@ -3368,7 +3368,7 @@ select {
   font-size: 0.85em;
 }
 
-/* Container (backpack) zone */
+/* Temporary Storage zone */
 
 .artifact-container-zone {
   display: flex;
@@ -9030,6 +9030,13 @@ select {
   border: 1px solid rgba(138, 97, 53, 0.22);
   background: var(--prep-table-fill);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.prep-screen .artifact-inventory-header {
+  position: relative;
+  z-index: 1;
+  padding: 0 2px;
+  font-size: 1.05em;
 }
 
 .prep-screen .artifact-inventory-section::before {

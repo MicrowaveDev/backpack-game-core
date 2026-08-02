@@ -13,6 +13,7 @@ export declare const ArtifactCatalogBrowser: VueComponentOption;
 export declare const ArtifactGridBoard: VueComponentOption;
 export declare const ArtifactStatSummary: VueComponentOption;
 export declare const BackpackZone: VueComponentOption;
+export declare const StorageZone: VueComponentOption;
 export declare const CatalogPageScreen: VueComponentOption;
 export declare const FighterCard: VueComponentOption;
 export declare const FusionReveal: VueComponentOption;

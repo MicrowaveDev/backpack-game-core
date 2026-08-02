@@ -698,7 +698,7 @@ test('[server-port][mushroom gameplay] assembles player state through injected s
             tutorial_json: JSON.stringify({
               versionSeen: 1,
               replayPending: true,
-              seenStepIds: ['build_backpack']
+              seenStepIds: ['buy_first_item']
             })
           }]
         };
@@ -777,7 +777,7 @@ test('[server-port][mushroom gameplay] assembles player state through injected s
     versionSeen: 1,
     disabled: false,
     replayPending: true,
-    seenStepIds: ['build_backpack']
+    seenStepIds: ['buy_first_item']
   });
   assert.equal(state.activeMushroomId, 'thalla');
   assert.equal(state.progression.thalla.level, 2);

@@ -1,7 +1,7 @@
 export const TUTORIAL_VERSION = 3;
 
 export const TUTORIAL_STEP_IDS = Object.freeze([
-  'build_backpack',
+  'buy_first_item',
   'place_artifact',
   'automatic_artifacts',
   'coin_balance',
@@ -12,7 +12,7 @@ export const TUTORIAL_STEP_IDS = Object.freeze([
 ]);
 
 const EVENT_STEP = Object.freeze({
-  prep_ready: 'build_backpack',
+  prep_ready: 'buy_first_item',
   artifact_bought: 'place_artifact',
   artifact_placed: 'automatic_artifacts',
   additional_artifact_bought: 'coin_balance',
@@ -23,7 +23,7 @@ const EVENT_STEP = Object.freeze({
 });
 
 const EVENT_PREREQUISITE_STEP = Object.freeze({
-  artifact_bought: 'build_backpack',
+  artifact_bought: 'buy_first_item',
   artifact_placed: 'place_artifact',
   bag_bought: 'bags_add_space'
 });
@@ -37,13 +37,13 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     gotIt: 'Got it',
     skip: 'Skip tutorial',
     close: 'Close',
-    build_backpack: Object.freeze({
+    buy_first_item: Object.freeze({
       title: 'Buy your first item',
-      body: 'Tap an affordable item in the shop to buy it. Your purchase will first go to the Backpack above the battle grid.'
+      body: 'Tap an affordable item in the shop to buy it. Your purchase will first go to Storage above the Backpack.'
     }),
     place_artifact: Object.freeze({
       title: 'Place your item',
-      body: 'Your purchase is waiting in the Backpack. Tap it to place it in the character item grid for this round.'
+      body: 'Your purchase is waiting in Storage. Tap it to place it in the Backpack used for this round.'
     }),
     automatic_artifacts: Object.freeze({
       title: 'Items fight automatically',
@@ -63,7 +63,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     place_bag: Object.freeze({
       title: 'Expand your field',
-      body: 'Your bag is waiting in the Backpack. Select it to add its cells to the field available for battle items.'
+      body: 'Your bag is waiting in Storage. Select it to add its cells to the Backpack.'
     }),
     lost_life: Object.freeze({
       title: 'You lost a life',
@@ -74,13 +74,13 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     gotIt: 'Понятно',
     skip: 'Пропустить обучение',
     close: 'Закрыть',
-    build_backpack: Object.freeze({
+    buy_first_item: Object.freeze({
       title: 'Купи первый предмет',
-      body: 'Нажми на доступный предмет в магазине, чтобы купить его. Сначала покупка попадёт в «Рюкзак» над боевой сеткой.'
+      body: 'Нажми на доступный предмет в магазине, чтобы купить его. Сначала покупка попадёт в «Хранилище» над «Рюкзаком».'
     }),
     place_artifact: Object.freeze({
       title: 'Размести предмет',
-      body: 'Покупка ждёт в «Рюкзаке». Нажми на неё, чтобы разместить предмет в сетке персонажа на этот раунд.'
+      body: 'Покупка ждёт в «Хранилище». Нажми на неё, чтобы разместить предмет в «Рюкзаке» на этот раунд.'
     }),
     automatic_artifacts: Object.freeze({
       title: 'Предметы сражаются сами',
@@ -100,7 +100,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     place_bag: Object.freeze({
       title: 'Расширь поле',
-      body: 'Сумка ждёт в «Рюкзаке». Выбери её, чтобы добавить клетки для боевых предметов.'
+      body: 'Сумка ждёт в «Хранилище». Выбери её, чтобы добавить клетки в «Рюкзак».'
     }),
     lost_life: Object.freeze({
       title: 'Потеряна жизнь',
@@ -113,6 +113,7 @@ function uniqueStepIds(value) {
   const supported = new Set(TUTORIAL_STEP_IDS);
   return [...new Set(Array.isArray(value) ? value : [])]
     .map(String)
+    .map((stepId) => stepId === 'build_backpack' ? 'buy_first_item' : stepId)
     .filter((stepId) => supported.has(stepId));
 }
 
@@ -323,7 +324,11 @@ function mergedLocaleCopy(locale, copy = {}) {
   return {
     ...defaults,
     ...overrides,
-    build_backpack: { ...defaults.build_backpack, ...overrides.build_backpack },
+    buy_first_item: {
+      ...defaults.buy_first_item,
+      ...(overrides.build_backpack || {}),
+      ...overrides.buy_first_item
+    },
     place_artifact: { ...defaults.place_artifact, ...overrides.place_artifact },
     automatic_artifacts: { ...defaults.automatic_artifacts, ...overrides.automatic_artifacts },
     coin_balance: { ...defaults.coin_balance, ...overrides.coin_balance },
@@ -335,18 +340,18 @@ function mergedLocaleCopy(locale, copy = {}) {
 }
 
 const TUTORIAL_STEP_ANCHORS = Object.freeze({
-  build_backpack: {
+  buy_first_item: {
     selector: '[data-tutorial-anchor="shop-affordable-artifact"]',
     fallbackSelector: '[data-tutorial-anchor="shop"]',
     placement: 'top'
   },
   place_artifact: {
-    selector: '[data-tutorial-anchor="backpack-item"]',
-    fallbackSelector: '[data-tutorial-anchor="backpack"]',
+    selector: '[data-tutorial-anchor="storage-item"]',
+    fallbackSelector: '[data-tutorial-anchor="storage"]',
     placement: 'bottom'
   },
   automatic_artifacts: {
-    selector: '[data-tutorial-anchor="battle-grid"]',
+    selector: '[data-tutorial-anchor="backpack"]',
     secondarySelector: '[data-tutorial-anchor="shop"]',
     placement: 'between'
   },
@@ -366,8 +371,8 @@ const TUTORIAL_STEP_ANCHORS = Object.freeze({
     placement: 'bottom'
   },
   place_bag: {
-    selector: '[data-tutorial-anchor="backpack-bag"]',
-    fallbackSelector: '[data-tutorial-anchor="backpack"]',
+    selector: '[data-tutorial-anchor="storage-bag"]',
+    fallbackSelector: '[data-tutorial-anchor="storage"]',
     placement: 'bottom'
   },
   lost_life: {
@@ -410,7 +415,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
     closeLabel: labels.close,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || title,
-    actionRequired: ['build_backpack', 'place_artifact', 'place_bag'].includes(stepId),
+    actionRequired: ['buy_first_item', 'place_artifact', 'place_bag'].includes(stepId),
     anchorSelector: anchor.selector,
     anchorSecondarySelector: anchor.secondarySelector || '',
     anchorFallbackSelector: anchor.fallbackSelector || '',
@@ -429,6 +434,7 @@ function artifactEvent(type, artifact, imageForArtifact) {
 
 export function createPrepTutorialEvents({
   shopItems = [],
+  storageItems,
   inventoryItems = [],
   placedItems = [],
   currentRound = 1,
@@ -438,7 +444,8 @@ export function createPrepTutorialEvents({
   imageForArtifact = (entry) => entry?.image || entry?.imagePath || ''
 } = {}) {
   const events = [{ type: 'prep_ready' }];
-  const waiting = (Array.isArray(inventoryItems) ? inventoryItems : []).map(getArtifact).filter(Boolean);
+  const stored = storageItems === undefined ? inventoryItems : storageItems;
+  const waiting = (Array.isArray(stored) ? stored : []).map(getArtifact).filter(Boolean);
   const placed = (Array.isArray(placedItems) ? placedItems : []).map(getArtifact).filter(Boolean);
   const waitingArtifact = waiting.find((artifact) => !isBag(artifact));
   const placedArtifact = placed.find((artifact) => !isBag(artifact));

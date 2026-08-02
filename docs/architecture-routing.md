@@ -47,6 +47,22 @@ barrels belong directly in it.
 Artifacts are combat/loadout items. Assets are profile-owned cosmetics or
 other collectible inventory. Keep that naming distinction when routing code.
 
+## Preparation Terminology
+
+Use these names consistently in shared gameplay code and consumer adapters:
+
+- **Storage** is the temporary upper area that receives purchased, unplaced
+  items and bags. Use `StorageZone`, `storageItems`, and `storage-*` tutorial
+  anchors for this surface.
+- **Backpack** is the lower battle grid containing placed items and active bag
+  cells. Use `BackpackZone`, loadout/backpack domain terms, and the `backpack`
+  tutorial anchor for this surface.
+
+Do not call Storage a backpack or call the Backpack an inventory in new code.
+Persisted legacy fields such as `containerItems`, compatibility exports such as
+`InventoryZone`, and the old tutorial step `build_backpack` may be accepted at
+boundaries, but normalize them to the canonical terms immediately.
+
 ## Import Rules
 
 1. Consumers import package exports only. They must never import `src/*` or a
