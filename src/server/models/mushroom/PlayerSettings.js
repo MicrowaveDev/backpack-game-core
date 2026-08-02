@@ -6,7 +6,8 @@ export default function definePlayerSettings(sequelize) {
     lang: { type: DataTypes.TEXT, allowNull: false, defaultValue: 'ru' },
     reduced_motion: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     battle_speed: { type: DataTypes.TEXT, allowNull: false, defaultValue: '1x' },
-    replay_speed: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 2 }
+    replay_speed: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 2 },
+    tutorial_json: { type: DataTypes.TEXT, allowNull: false, defaultValue: '{}' }
   }, {
     tableName: 'player_settings',
     timestamps: false

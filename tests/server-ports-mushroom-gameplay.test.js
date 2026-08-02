@@ -690,7 +690,17 @@ test('[server-port][mushroom gameplay] assembles player state through injected s
       if (/FROM player_settings/.test(sql)) {
         return {
           rowCount: 1,
-          rows: [{ lang: 'en', reduced_motion: 1, battle_speed: '2x', replay_speed: 4 }]
+          rows: [{
+            lang: 'en',
+            reduced_motion: 1,
+            battle_speed: '2x',
+            replay_speed: 4,
+            tutorial_json: JSON.stringify({
+              versionSeen: 1,
+              replayPending: true,
+              seenStepIds: ['build_backpack']
+            })
+          }]
         };
       }
       if (/FROM player_active_character/.test(sql)) {
@@ -763,6 +773,12 @@ test('[server-port][mushroom gameplay] assembles player state through injected s
   const state = await port.getPlayerState('player_1');
   assert.equal(state.player.spore, 12);
   assert.equal(state.settings.replaySpeed, 4);
+  assert.deepEqual(state.settings.tutorial, {
+    versionSeen: 1,
+    disabled: false,
+    replayPending: true,
+    seenStepIds: ['build_backpack']
+  });
   assert.equal(state.activeMushroomId, 'thalla');
   assert.equal(state.progression.thalla.level, 2);
   assert.equal(state.progression.thalla.tier, 'tier_2');

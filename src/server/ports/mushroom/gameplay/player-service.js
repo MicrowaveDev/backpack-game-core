@@ -1,3 +1,5 @@
+import { normalizeTutorialPreferences } from '../../../../modules/tutorial/index.js';
+
 function requiredDependency(name, value) {
   if (value == null) {
     throw new Error(`Player service port requires ${name}`);
@@ -20,6 +22,15 @@ function rowToPlayerProfile(row) {
     draws: row.draws,
     friendCode: row.friend_code
   };
+}
+
+function parseTutorialPreferences(value) {
+  if (value && typeof value === 'object') return normalizeTutorialPreferences(value);
+  try {
+    return normalizeTutorialPreferences(JSON.parse(value || '{}'));
+  } catch {
+    return normalizeTutorialPreferences();
+  }
 }
 
 async function getPlayerStateWithDeps(ctx, playerId) {
@@ -56,9 +67,16 @@ async function getPlayerStateWithDeps(ctx, playerId) {
         lang: settingsResult.rows[0].lang,
         reducedMotion: Boolean(settingsResult.rows[0].reduced_motion),
         battleSpeed: settingsResult.rows[0].battle_speed,
-        replaySpeed: Number(settingsResult.rows[0].replay_speed) || 2
+        replaySpeed: Number(settingsResult.rows[0].replay_speed) || 2,
+        tutorial: parseTutorialPreferences(settingsResult.rows[0].tutorial_json)
       }
-    : { lang: player.lang, reducedMotion: false, battleSpeed: '1x', replaySpeed: 2 };
+    : {
+        lang: player.lang,
+        reducedMotion: false,
+        battleSpeed: '1x',
+        replaySpeed: 2,
+        tutorial: normalizeTutorialPreferences()
+      };
 
   const activeMushroomId = activeResult.rowCount ? activeResult.rows[0].mushroom_id : null;
   // Legacy `loadout` field (read from player_artifact_loadouts) deleted
@@ -195,15 +213,27 @@ async function getPlayerStateWithDeps(ctx, playerId) {
 }
 
 async function updateSettingsWithDeps(ctx, playerId, payload) {
-  const lang = payload.lang === 'en' ? 'en' : 'ru';
-  const reducedMotion = payload.reducedMotion ? 1 : 0;
-  const battleSpeed = ['1x', '2x'].includes(payload.battleSpeed) ? payload.battleSpeed : '1x';
-  const replaySpeed = [2, 4, 8].includes(Number(payload.replaySpeed)) ? Number(payload.replaySpeed) : 2;
+  const current = await getPlayerStateWithDeps(ctx, playerId);
+  const lang = payload.lang === undefined
+    ? current.settings.lang
+    : payload.lang === 'en' ? 'en' : 'ru';
+  const reducedMotion = payload.reducedMotion === undefined
+    ? Number(current.settings.reducedMotion)
+    : payload.reducedMotion ? 1 : 0;
+  const battleSpeed = ['1x', '2x'].includes(payload.battleSpeed)
+    ? payload.battleSpeed
+    : current.settings.battleSpeed;
+  const replaySpeed = [2, 4, 8].includes(Number(payload.replaySpeed))
+    ? Number(payload.replaySpeed)
+    : current.settings.replaySpeed;
+  const tutorial = payload.tutorial === undefined
+    ? current.settings.tutorial
+    : normalizeTutorialPreferences(payload.tutorial);
   await ctx.query(
     `UPDATE player_settings
-     SET lang = $2, reduced_motion = $3, battle_speed = $4, replay_speed = $5
+     SET lang = $2, reduced_motion = $3, battle_speed = $4, replay_speed = $5, tutorial_json = $6
      WHERE player_id = $1`,
-    [playerId, lang, reducedMotion, battleSpeed, replaySpeed]
+    [playerId, lang, reducedMotion, battleSpeed, replaySpeed, JSON.stringify(tutorial)]
   );
   await ctx.query(`UPDATE players SET lang = $2, updated_at = $3 WHERE id = $1`, [playerId, lang, ctx.nowIso()]);
   return getPlayerStateWithDeps(ctx, playerId);
