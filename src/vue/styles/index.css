@@ -206,6 +206,22 @@ select {
   margin-top: 6px;
 }
 
+.google-identity-button {
+  min-height: 44px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.google-identity-button > div {
+  display: flex;
+  justify-content: center;
+}
+
+.google-identity-button.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .auth-cta {
   font-size: 1.1em;
   padding: 14px 20px;

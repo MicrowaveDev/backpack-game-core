@@ -14,6 +14,7 @@ import {
   CatalogPageScreen,
   FighterCard,
   FusionReveal,
+  GoogleIdentityButton,
   InventoryZone,
   PrepScreen,
   GachaOddsTable,
@@ -33,6 +34,13 @@ import {
   ShopItemList,
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue/components';
+
+test('[vue] GoogleIdentityButton exposes a provider-neutral credential event', () => {
+  assert.equal(GoogleIdentityButton.name, 'GoogleIdentityButton');
+  assert.deepEqual(GoogleIdentityButton.emits, ['credential', 'error']);
+  assert.match(GoogleIdentityButton.template, /google-identity-button/);
+  assert.doesNotMatch(GoogleIdentityButton.template, /meat|mushroom|telegram/i);
+});
 
 test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', () => {
   assert.equal(ArtifactGridBoard.name, 'ArtifactGridBoard');

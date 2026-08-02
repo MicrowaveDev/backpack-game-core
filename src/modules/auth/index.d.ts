@@ -7,6 +7,15 @@ export interface AuthUserProfileOptions {
   extra?: Record<string, unknown>;
 }
 
+export function normalizeGoogleIdentityClaims(claims?: Record<string, unknown>): {
+  provider: 'google';
+  subject: string;
+  displayName: string;
+  email?: string;
+  emailVerified?: boolean;
+  avatarUrl?: string;
+};
+
 export function shapeAuthUserProfile(
   user?: Record<string, unknown>,
   options?: AuthUserProfileOptions
