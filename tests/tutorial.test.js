@@ -78,6 +78,11 @@ test('coin and lost-life copy use authoritative values and localized plural form
   assert.match(coins.body, /2 coins left/);
   assert.equal(coins.anchorSelector, '[data-tutorial-anchor="run-coins"]');
 
+  const automatic = tutorialStepView({ stepId: 'automatic_artifacts', locale: 'en' });
+  assert.equal(automatic.anchorSelector, '[data-tutorial-anchor="battle-grid"]');
+  assert.equal(automatic.anchorSecondarySelector, '[data-tutorial-anchor="shop"]');
+  assert.equal(automatic.anchorPlacement, 'between');
+
   const english = tutorialStepView({
     stepId: 'lost_life',
     locale: 'en',

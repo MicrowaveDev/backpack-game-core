@@ -10127,6 +10127,10 @@ select {
   transform: rotate(45deg);
 }
 
+.tutorial-popup[data-placement^='between-']::before {
+  display: none;
+}
+
 .tutorial-popup[data-placement='top']::before {
   left: calc(var(--tutorial-arrow-offset) - 8px);
   bottom: -9px;

@@ -13,7 +13,8 @@ export const TutorialPopup = {
       positionRetry: 0,
       positionTimer: 0,
       positionObserver: null,
-      observedAnchor: null
+      observedAnchor: null,
+      observedSecondaryAnchor: null
     };
   },
   watch: {
@@ -59,17 +60,25 @@ export const TutorialPopup = {
         || (this.step.anchorFallbackSelector
           ? document.querySelector(this.step.anchorFallbackSelector)
           : null);
+      const secondaryAnchor = this.step.anchorSecondarySelector
+        ? document.querySelector(this.step.anchorSecondarySelector)
+        : null;
       if (!anchor) {
         this.positionFallback(popup);
         this.schedulePositionRetry(8);
         return;
       }
 
-      if (this.positionObserver && this.observedAnchor !== anchor) {
+      if (this.positionObserver && (
+        this.observedAnchor !== anchor
+        || this.observedSecondaryAnchor !== secondaryAnchor
+      )) {
         this.positionObserver.disconnect();
         this.positionObserver.observe(popup);
         this.positionObserver.observe(anchor);
+        if (secondaryAnchor) this.positionObserver.observe(secondaryAnchor);
         this.observedAnchor = anchor;
+        this.observedSecondaryAnchor = secondaryAnchor;
       }
 
       const margin = 12;
@@ -81,22 +90,65 @@ export const TutorialPopup = {
       const popupHeight = popup.offsetHeight;
       const centerX = anchorRect.left + anchorRect.width / 2;
       const centerY = anchorRect.top + anchorRect.height / 2;
+      const preferred = this.step.anchorPlacement || 'bottom';
+
+      if (preferred === 'between' && secondaryAnchor) {
+        const secondaryRect = secondaryAnchor.getBoundingClientRect();
+        const sideBySide = secondaryRect.left >= anchorRect.right;
+        const stacked = secondaryRect.top >= anchorRect.bottom;
+        if (sideBySide || stacked) {
+          let rawTop;
+          let rawLeft;
+          if (sideBySide) {
+            const overlapTop = Math.max(anchorRect.top, secondaryRect.top);
+            const overlapBottom = Math.min(anchorRect.bottom, secondaryRect.bottom);
+            const sharedCenterY = overlapBottom > overlapTop
+              ? (overlapTop + overlapBottom) / 2
+              : (centerY + secondaryRect.top + secondaryRect.height / 2) / 2;
+            rawTop = sharedCenterY - popupHeight / 2;
+            rawLeft = (anchorRect.right + secondaryRect.left) / 2 - popupWidth / 2;
+            this.placement = 'between-horizontal';
+          } else {
+            const overlapLeft = Math.max(anchorRect.left, secondaryRect.left);
+            const overlapRight = Math.min(anchorRect.right, secondaryRect.right);
+            const sharedCenterX = overlapRight > overlapLeft
+              ? (overlapLeft + overlapRight) / 2
+              : (centerX + secondaryRect.left + secondaryRect.width / 2) / 2;
+            rawTop = (anchorRect.bottom + secondaryRect.top) / 2 - popupHeight / 2;
+            rawLeft = sharedCenterX - popupWidth / 2;
+            this.placement = 'between-vertical';
+          }
+          this.positionStyle = {
+            top: `${Math.round(Math.min(
+              Math.max(rawTop, margin),
+              Math.max(margin, viewportHeight - popupHeight - margin)
+            ))}px`,
+            left: `${Math.round(Math.min(
+              Math.max(rawLeft, margin),
+              Math.max(margin, viewportWidth - popupWidth - margin)
+            ))}px`
+          };
+          this.schedulePositionRetry(8);
+          return;
+        }
+      }
+
       const positions = {
         top: { top: anchorRect.top - popupHeight - gap, left: centerX - popupWidth / 2 },
         bottom: { top: anchorRect.bottom + gap, left: centerX - popupWidth / 2 },
         left: { top: centerY - popupHeight / 2, left: anchorRect.left - popupWidth - gap },
         right: { top: centerY - popupHeight / 2, left: anchorRect.right + gap }
       };
-      const preferred = this.step.anchorPlacement || 'bottom';
-      const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[preferred];
-      const order = [...new Set([preferred, opposite, 'bottom', 'top', 'right', 'left'])];
+      const directionalPreferred = preferred === 'between' ? 'bottom' : preferred;
+      const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[directionalPreferred];
+      const order = [...new Set([directionalPreferred, opposite, 'bottom', 'top', 'right', 'left'])];
       const fits = ({ top, left }) => (
         top >= margin
         && left >= margin
         && top + popupHeight <= viewportHeight - margin
         && left + popupWidth <= viewportWidth - margin
       );
-      this.placement = order.find((candidate) => fits(positions[candidate])) || preferred;
+      this.placement = order.find((candidate) => fits(positions[candidate])) || directionalPreferred;
       const selected = positions[this.placement];
       const top = Math.min(
         Math.max(selected.top, margin),

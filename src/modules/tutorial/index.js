@@ -347,7 +347,8 @@ const TUTORIAL_STEP_ANCHORS = Object.freeze({
   },
   automatic_artifacts: {
     selector: '[data-tutorial-anchor="battle-grid"]',
-    placement: 'top'
+    secondarySelector: '[data-tutorial-anchor="shop"]',
+    placement: 'between'
   },
   coin_balance: {
     selector: '[data-tutorial-anchor="run-coins"]',
@@ -411,6 +412,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
     imageAlt: payload.imageAlt || title,
     actionRequired: ['build_backpack', 'place_artifact', 'place_bag'].includes(stepId),
     anchorSelector: anchor.selector,
+    anchorSecondarySelector: anchor.secondarySelector || '',
     anchorFallbackSelector: anchor.fallbackSelector || '',
     anchorPlacement: anchor.placement
   };
