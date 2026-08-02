@@ -10,6 +10,19 @@ export interface BackpackServerModuleDefinition {
   setup?: (ctx: BackpackServerContext) => BackpackServerModuleSetupResult;
 }
 
+export function validateGoogleIdentityRedirectRequest(options?: {
+  cookieHeader?: string;
+  body?: Record<string, unknown>;
+}): string;
+
+export function createBrowserSessionRedirectHtml(options?: {
+  appName?: string;
+  sessionToken?: string;
+  storageKey?: string;
+  redirectPath?: string;
+  nonce?: string;
+}): string;
+
 export interface BackpackServerModule {
   name: string;
   requires: string[];

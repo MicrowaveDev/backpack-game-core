@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  createBrowserSessionRedirectHtml,
+  validateGoogleIdentityRedirectRequest,
   CHARACTER_XP_LEVEL_CURVE,
   computeCharacterLevel,
   computeProgressLevel,
@@ -35,6 +37,29 @@ test('[server-utils] exposes neutral time, JSON, language, and RNG helpers', () 
   const rngB = createRng('same-seed');
   assert.equal(hashToSeed('same-seed'), hashToSeed('same-seed'));
   assert.equal(rngA(), rngB());
+});
+
+test('[server-utils] validates Google redirect CSRF and builds a same-origin session handoff', () => {
+  assert.equal(validateGoogleIdentityRedirectRequest({
+    cookieHeader: 'theme=light; g_csrf_token=csrf-value',
+    body: { g_csrf_token: 'csrf-value', credential: 'signed-id-token' }
+  }), 'signed-id-token');
+  assert.throws(() => validateGoogleIdentityRedirectRequest({
+    cookieHeader: 'g_csrf_token=one',
+    body: { g_csrf_token: 'two', credential: 'signed-id-token' }
+  }), /CSRF/);
+
+  const html = createBrowserSessionRedirectHtml({
+    appName: 'Example Game',
+    sessionToken: 'session-token',
+    storageKey: 'example:session',
+    redirectPath: '/onboarding',
+    nonce: 'nonce-value'
+  });
+  assert.match(html, /localStorage\.setItem\("example:session","session-token"\)/);
+  assert.match(html, /location\.replace\("\/onboarding"\)/);
+  assert.match(html, /nonce="nonce-value"/);
+  assert.throws(() => createBrowserSessionRedirectHtml({ redirectPath: 'https://evil.example' }), /same-origin/);
 });
 
 test('[server-utils] computes generic progression and run currency aliases', () => {

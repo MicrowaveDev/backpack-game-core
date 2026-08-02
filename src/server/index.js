@@ -39,6 +39,10 @@ export {
 } from './modules/observability.js';
 export { createReadyManagerExports } from './modules/ready-manager.js';
 export { createMutationClaimService } from './modules/mutation-claim.js';
+export {
+  createBrowserSessionRedirectHtml,
+  validateGoogleIdentityRedirectRequest
+} from './modules/google-identity-redirect.js';
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
