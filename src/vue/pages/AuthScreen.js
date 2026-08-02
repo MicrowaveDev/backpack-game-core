@@ -96,6 +96,7 @@ export const AuthScreen = {
           <li>{{ labels.feature3 }}</li>
         </ul>
         <div class="auth-actions">
+          <slot name="identity-provider"></slot>
           <button class="primary auth-cta" @click="$emit('login-primary')">{{ labels.primaryLogin }}</button>
           <button v-if="oidcEnabled" class="secondary" @click="$emit('login-bot-code')">{{ labels.botCodeFallback }}</button>
           <button v-if="devAuthEnabled" class="secondary" @click="$emit('login-browser')">{{ labels.browser }}</button>

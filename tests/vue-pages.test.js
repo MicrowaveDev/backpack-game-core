@@ -22,6 +22,7 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(AuthScreen.template, /auth-code-command-label/);
   assert.match(AuthScreen.template, /auth-code-command-copy/);
   assert.match(AuthScreen.template, /botLinkLabel/);
+  assert.match(AuthScreen.template, /slot name="identity-provider"/);
   assert.equal(AuthScreen.computed.botStartCommand.call({
     authCode: { publicCode: 'AC7F6FDC' }
   }), 'start auth-AC7F6FDC');
