@@ -27,13 +27,30 @@ function loadGoogleIdentityServices() {
   return gisScriptPromise;
 }
 
+export function createGoogleIdentityConfig({ clientId, uxMode = 'popup', loginUri = '', onCredential }) {
+  const redirect = uxMode === 'redirect';
+  return {
+    client_id: clientId,
+    ux_mode: redirect ? 'redirect' : 'popup',
+    ...(redirect
+      ? { login_uri: loginUri }
+      : {
+          callback: (response) => onCredential(response?.credential || ''),
+          use_fedcm_for_button: true,
+          button_auto_select: false
+        })
+  };
+}
+
 export const GoogleIdentityButton = {
   name: 'GoogleIdentityButton',
   props: {
     clientId: { type: String, required: true },
     locale: { type: String, default: 'en' },
     disabled: { type: Boolean, default: false },
-    text: { type: String, default: 'signin_with' }
+    text: { type: String, default: 'signin_with' },
+    uxMode: { type: String, default: 'popup' },
+    loginUri: { type: String, default: '' }
   },
   emits: ['credential', 'error'],
   data() {
@@ -43,15 +60,18 @@ export const GoogleIdentityButton = {
     try {
       const identity = await loadGoogleIdentityServices();
       if (!this.$refs.button || !this.clientId) return;
-      identity.initialize({
-        client_id: this.clientId,
-        callback: (response) => {
-          if (response?.credential) this.$emit('credential', response.credential);
+      if (this.uxMode === 'redirect' && !this.loginUri) {
+        throw new Error('Google redirect mode requires a login URI');
+      }
+      identity.initialize(createGoogleIdentityConfig({
+        clientId: this.clientId,
+        uxMode: this.uxMode,
+        loginUri: this.loginUri,
+        onCredential: (credential) => {
+          if (credential) this.$emit('credential', credential);
           else this.$emit('error', new Error('Google did not return a credential'));
-        },
-        use_fedcm_for_button: true,
-        button_auto_select: false
-      });
+        }
+      }));
       identity.renderButton(this.$refs.button, {
         type: 'standard',
         theme: 'outline',

@@ -14,6 +14,7 @@ import {
   CatalogPageScreen,
   FighterCard,
   FusionReveal,
+  createGoogleIdentityConfig,
   GoogleIdentityButton,
   InventoryZone,
   PrepScreen,
@@ -40,6 +41,31 @@ test('[vue] GoogleIdentityButton exposes a provider-neutral credential event', (
   assert.deepEqual(GoogleIdentityButton.emits, ['credential', 'error']);
   assert.match(GoogleIdentityButton.template, /google-identity-button/);
   assert.doesNotMatch(GoogleIdentityButton.template, /meat|mushroom|telegram/i);
+});
+
+test('[vue] GoogleIdentityButton supports popup and redirect response modes', () => {
+  const credentials = [];
+  const popup = createGoogleIdentityConfig({
+    clientId: 'client-id',
+    onCredential: (credential) => credentials.push(credential)
+  });
+  popup.callback({ credential: 'signed-token' });
+  assert.deepEqual(credentials, ['signed-token']);
+  assert.equal(popup.ux_mode, 'popup');
+  assert.equal(popup.use_fedcm_for_button, true);
+  assert.equal('login_uri' in popup, false);
+
+  const redirect = createGoogleIdentityConfig({
+    clientId: 'client-id',
+    uxMode: 'redirect',
+    loginUri: 'https://game.example/api/auth/google/callback',
+    onCredential: () => {}
+  });
+  assert.deepEqual(redirect, {
+    client_id: 'client-id',
+    ux_mode: 'redirect',
+    login_uri: 'https://game.example/api/auth/google/callback'
+  });
 });
 
 test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', () => {

@@ -16,6 +16,12 @@ export declare const BackpackZone: VueComponentOption;
 export declare const CatalogPageScreen: VueComponentOption;
 export declare const FighterCard: VueComponentOption;
 export declare const FusionReveal: VueComponentOption;
+export declare function createGoogleIdentityConfig(options: {
+  clientId: string;
+  uxMode?: 'popup' | 'redirect';
+  loginUri?: string;
+  onCredential: (credential: string) => void;
+}): Record<string, unknown>;
 export declare const GoogleIdentityButton: VueComponentOption;
 export declare const HomeSocialSidebar: VueComponentOption;
 export declare const InventoryZone: VueComponentOption;
