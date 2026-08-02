@@ -64,6 +64,8 @@ test('round copy uses authoritative values and correct English and Russian plura
   assert.equal(english.title, 'Round lost');
   assert.match(english.body, /1 life left/);
   assert.match(english.body, /2 rounds remain/);
+  assert.equal(english.anchorSelector, '[data-tutorial-anchor="run-progress"]');
+  assert.equal(english.anchorPlacement, 'bottom');
 
   const russian = tutorialStepView({
     stepId: 'round_progress',
@@ -132,6 +134,8 @@ test('shared Vue surfaces expose tutorial popup and replay setting contracts', (
   assert.equal(TutorialPopup.name, 'TutorialPopup');
   assert.deepEqual(TutorialPopup.emits, ['dismiss', 'skip']);
   assert.match(TutorialPopup.template, /role="dialog"/);
+  assert.doesNotMatch(TutorialPopup.template, /aria-modal="true"/);
+  assert.match(TutorialPopup.template, /data-placement/);
   assert.ok(SettingsScreen.emits.includes('update:tutorial-replay-pending'));
   assert.match(SettingsScreen.template, /tutorialReplayPending/);
 });

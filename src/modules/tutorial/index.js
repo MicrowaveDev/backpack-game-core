@@ -247,6 +247,27 @@ function mergedLocaleCopy(locale, copy = {}) {
   };
 }
 
+const TUTORIAL_STEP_ANCHORS = Object.freeze({
+  build_backpack: {
+    selector: '[data-tutorial-anchor="backpack"]',
+    placement: 'top'
+  },
+  automatic_artifacts: {
+    selector: '[data-tutorial-anchor="shop-artifact"]',
+    fallbackSelector: '[data-tutorial-anchor="shop"]',
+    placement: 'bottom'
+  },
+  bags_add_space: {
+    selector: '[data-tutorial-anchor="shop-bag"]',
+    fallbackSelector: '[data-tutorial-anchor="shop"]',
+    placement: 'bottom'
+  },
+  round_progress: {
+    selector: '[data-tutorial-anchor="run-progress"]',
+    placement: 'bottom'
+  }
+});
+
 export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {} } = {}) {
   if (!TUTORIAL_STEP_IDS.includes(stepId)) return null;
   const labels = mergedLocaleCopy(locale, copy);
@@ -272,6 +293,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
     };
     body = interpolate(rounds === 0 ? step.lastBody : step.body, values);
   }
+  const anchor = TUTORIAL_STEP_ANCHORS[stepId];
   return {
     id: stepId,
     title,
@@ -280,7 +302,10 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
     skipLabel: labels.skip,
     closeLabel: labels.close,
     imageSrc: payload.imageSrc || '',
-    imageAlt: payload.imageAlt || title
+    imageAlt: payload.imageAlt || title,
+    anchorSelector: anchor.selector,
+    anchorFallbackSelector: anchor.fallbackSelector || '',
+    anchorPlacement: anchor.placement
   };
 }
 

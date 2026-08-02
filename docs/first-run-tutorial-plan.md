@@ -383,6 +383,8 @@ step-seen rules.
 ## Acceptance Criteria
 
 - A fresh user sees the tutorial during the first run only.
+- Tutorial guidance is shown as a compact non-blocking coachmark beside the
+  backpack, relevant shop item, or run HUD instead of a full-screen modal.
 - A player understands that they arrange items but do not control the battle
   directly.
 - The bag popup appears only when a bag is relevant and explains that it adds
@@ -404,7 +406,6 @@ step-seen rules.
 
 ## Backlog
 
-- Spotlight/coachmark arrows anchored to a specific shop card or grid cell.
 - Audio narration and screen-reader verbosity modes.
 - Additional languages.
 - Telemetry for step completion and abandonment, with product-controlled

@@ -10094,68 +10094,117 @@ select {
   position: fixed;
   inset: 0;
   z-index: 1200;
-  display: grid;
-  place-items: center;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background: rgba(28, 24, 20, 0.52);
+  pointer-events: none;
 }
 
 .tutorial-popup {
-  position: relative;
-  width: min(520px, 100%);
-  max-height: min(680px, calc(100dvh - 32px));
-  overflow: auto;
-  padding: 28px;
+  position: fixed;
+  width: min(320px, calc(100vw - 24px));
+  max-height: min(360px, calc(100dvh - 24px));
+  overflow: visible auto;
+  padding: 16px;
   border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(22, 17, 12, 0.24);
+  text-align: left;
+  pointer-events: auto;
+  box-shadow: 0 12px 32px rgba(22, 17, 12, 0.22);
   animation: tutorial-popup-enter 160ms ease-out;
+}
+
+.tutorial-popup::before {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: inherit;
+  border: inherit;
+  content: '';
+  transform: rotate(45deg);
+}
+
+.tutorial-popup[data-placement='top']::before {
+  left: calc(var(--tutorial-arrow-offset) - 8px);
+  bottom: -9px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.tutorial-popup[data-placement='bottom']::before {
+  left: calc(var(--tutorial-arrow-offset) - 8px);
+  top: -9px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.tutorial-popup[data-placement='left']::before {
+  top: calc(var(--tutorial-arrow-offset) - 8px);
+  right: -9px;
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.tutorial-popup[data-placement='right']::before {
+  top: calc(var(--tutorial-arrow-offset) - 8px);
+  left: -9px;
+  border-top: 0;
+  border-right: 0;
 }
 
 .tutorial-popup-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border-radius: 50%;
-  font-size: 28px;
+  font-size: 22px;
   line-height: 1;
 }
 
 .tutorial-popup-image {
   display: block;
-  width: min(160px, 45%);
-  max-height: 150px;
-  margin: 0 auto 16px;
+  float: left;
+  width: 64px;
+  height: 64px;
+  margin: 0 12px 8px 0;
   object-fit: contain;
 }
 
 .tutorial-popup-title {
-  margin: 8px 40px 12px;
-  font-size: clamp(24px, 4vw, 34px);
+  margin: 0 32px 6px 0;
+  font-size: 20px;
   letter-spacing: 0;
 }
 
 .tutorial-popup-body {
-  margin: 0 auto;
-  max-width: 42ch;
-  font-size: 18px;
-  line-height: 1.45;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
 }
 
 .tutorial-popup-actions {
-  display: grid;
-  gap: 10px;
-  margin-top: 24px;
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .tutorial-popup-primary,
 .tutorial-popup-skip {
-  min-height: 48px;
+  min-height: 38px;
+  padding: 7px 12px;
+  font-size: 14px;
+}
+
+.tutorial-popup-primary {
+  flex: 1 1 auto;
+}
+
+.tutorial-popup-skip {
+  flex: 0 1 auto;
+  border-color: transparent;
 }
 
 .tutorial-popup--reduced-motion .tutorial-popup {
@@ -10176,17 +10225,14 @@ select {
 
 @media (max-width: 560px) {
   .tutorial-popup {
-    align-self: end;
-    padding: 24px 18px 18px;
+    padding: 14px;
   }
 
   .tutorial-popup-title {
-    margin-right: 36px;
-    margin-left: 36px;
-    font-size: 26px;
+    font-size: 18px;
   }
 
   .tutorial-popup-body {
-    font-size: 17px;
+    font-size: 14px;
   }
 }
