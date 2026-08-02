@@ -10,7 +10,10 @@ export const TutorialPopup = {
       positionStyle: {},
       placement: 'bottom',
       positionFrame: 0,
-      positionRetry: 0
+      positionRetry: 0,
+      positionTimer: 0,
+      positionObserver: null,
+      observedAnchor: null
     };
   },
   watch: {
@@ -25,6 +28,9 @@ export const TutorialPopup = {
     window.addEventListener('resize', this.queuePosition);
     window.addEventListener('scroll', this.queuePosition, true);
     document.addEventListener('keydown', this.onKeydown);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.positionObserver = new ResizeObserver(() => this.queuePosition());
+    }
     this.queuePosition();
   },
   beforeUnmount() {
@@ -32,6 +38,8 @@ export const TutorialPopup = {
     window.removeEventListener('scroll', this.queuePosition, true);
     document.removeEventListener('keydown', this.onKeydown);
     if (this.positionFrame) cancelAnimationFrame(this.positionFrame);
+    if (this.positionTimer) window.clearTimeout(this.positionTimer);
+    this.positionObserver?.disconnect();
   },
   methods: {
     queuePosition() {
@@ -53,11 +61,15 @@ export const TutorialPopup = {
           : null);
       if (!anchor) {
         this.positionFallback(popup);
-        if (this.positionRetry < 4) {
-          this.positionRetry += 1;
-          window.setTimeout(this.queuePosition, 80);
-        }
+        this.schedulePositionRetry(8);
         return;
+      }
+
+      if (this.positionObserver && this.observedAnchor !== anchor) {
+        this.positionObserver.disconnect();
+        this.positionObserver.observe(popup);
+        this.positionObserver.observe(anchor);
+        this.observedAnchor = anchor;
       }
 
       const margin = 12;
@@ -102,10 +114,16 @@ export const TutorialPopup = {
         left: `${Math.round(left)}px`,
         '--tutorial-arrow-offset': `${Math.round(arrowOffset)}px`
       };
-      if (this.positionRetry < 2) {
-        this.positionRetry += 1;
-        window.setTimeout(this.queuePosition, 80);
-      }
+      this.schedulePositionRetry(8);
+    },
+    schedulePositionRetry(limit) {
+      if (this.positionRetry >= limit) return;
+      this.positionRetry += 1;
+      if (this.positionTimer) window.clearTimeout(this.positionTimer);
+      this.positionTimer = window.setTimeout(() => {
+        this.positionTimer = 0;
+        this.queuePosition();
+      }, 80);
     },
     positionFallback(popup) {
       const margin = 12;
