@@ -182,6 +182,49 @@ test('[configured gameplay] localizes backend-shaped shop stat keys for display'
   assert.equal(rows[0].statRows[0].label, 'Stun chance');
 });
 
+test('[configured gameplay] excludes the selected storage row when auto-placing it', async () => {
+  let placementRows = null;
+  let savedRows = null;
+  const component = createConfiguredGameplayScreen(options({
+    getArtifactById: (id) => ({ id, family: 'bag' }),
+    findBagPlacement(rows) {
+      placementRows = rows;
+      return { x: 3, y: 0, width: 3, height: 2, rotated: 1, active: true };
+    }
+  }));
+  const context = {
+    run: {
+      loadoutItems: [
+        { id: 'starter', artifactId: 'starter', x: 0, y: 0, active: true },
+        { id: 'new-bag', artifactId: 'hook', x: 2, y: 4, active: false, rotated: 0 }
+      ]
+    },
+    getArtifact: (id) => ({ id, family: 'bag' }),
+    saveRows(rows) {
+      savedRows = rows;
+      return Promise.resolve(null);
+    },
+    controller: {}
+  };
+
+  await component.methods.autoPlace.call(context, { id: 'new-bag' });
+
+  assert.deepEqual(placementRows.map((row) => row.id), ['starter']);
+  assert.deepEqual(
+    savedRows.find((row) => row.id === 'new-bag'),
+    {
+      id: 'new-bag',
+      artifactId: 'hook',
+      x: 3,
+      y: 0,
+      width: 3,
+      height: 2,
+      active: true,
+      rotated: 1
+    }
+  );
+});
+
 test('[configured gameplay] returns home after closing a run summary', async () => {
   const component = createConfiguredGameplayScreen(options());
   const calls = [];

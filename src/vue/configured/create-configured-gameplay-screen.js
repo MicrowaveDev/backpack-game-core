@@ -568,9 +568,10 @@ export function createConfiguredGameplayScreen(options = {}) {
       const source = this.run?.loadoutItems?.find((row) => row.id === id);
       const artifact = this.getArtifact(source?.artifactId);
       if (!source || !artifact) return;
+      const otherRows = this.run.loadoutItems.filter((row) => row.id !== id);
       const placement = artifact.family === 'bag'
-        ? findBagPlacement(this.run.loadoutItems, artifact, source.rotated || 0)
-        : findPlacement(this.run.loadoutItems, artifact);
+        ? findBagPlacement(otherRows, artifact, source.rotated || 0)
+        : findPlacement(otherRows, artifact);
       if (!placement) return;
       const rows = this.run.loadoutItems.map((row) => (
         row.id === id ? { ...row, ...placement } : row
