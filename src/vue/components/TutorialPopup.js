@@ -9,6 +9,7 @@ export const TutorialPopup = {
     return {
       positionStyle: {},
       inlineHost: false,
+      hostSelector: '',
       placement: 'bottom',
       positionFrame: 0,
       positionRetry: 0,
@@ -57,9 +58,11 @@ export const TutorialPopup = {
       if (!popup || !this.step) return;
       // Preparation guidance belongs in the workspace, where it cannot
       // obscure the items the player needs to buy or place.
-      this.inlineHost = Boolean(document.querySelector('[data-tutorial-host="prep-shop"]'));
+      this.hostSelector = this.step.screen === 'home'
+        ? '[data-tutorial-host="home"]' : '[data-tutorial-host="prep-shop"]';
+      this.inlineHost = Boolean(document.querySelector(this.hostSelector));
       if (this.inlineHost) {
-        this.placement = 'above-shop';
+        this.placement = this.step.screen === 'home' ? 'home' : 'above-shop';
         this.positionStyle = {};
         this.positionObserver?.disconnect();
         this.observedAnchor = null;
@@ -202,7 +205,7 @@ export const TutorialPopup = {
     }
   },
   template: `
-    <Teleport :to="inlineHost ? '[data-tutorial-host=&quot;prep-shop&quot;]' : 'body'">
+    <Teleport :to="inlineHost ? hostSelector : 'body'">
       <div
         v-if="step"
         class="tutorial-popup-backdrop"

@@ -10314,3 +10314,6 @@ select {
 .tutorial-popup--inline .tutorial-popup::before {
   display: none;
 }
+
+[data-tutorial-host="home"]:empty { display: none; }
+[data-tutorial-host="home"] { grid-column: 1 / -1; min-width: 0; }

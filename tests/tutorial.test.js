@@ -308,3 +308,40 @@ test('preparation tutorial reserves space above the shop instead of positioning 
     globalThis.document = previousDocument;
   }
 });
+
+
+test('tutorial follows its screen without dismissing progress during navigation', async () => {
+  let screen = 'home';
+  const controller = createTutorialController({ getScreen: () => screen });
+  await controller.emit({ type: 'home_ready' });
+  assert.equal(controller.activeStep.id, 'home_start');
+  screen = 'settings';
+  assert.equal(controller.activeStep, null);
+  screen = 'home';
+  assert.equal(controller.activeStep.id, 'home_start');
+  screen = 'prep';
+  await controller.emit({ type: 'prep_ready' });
+  assert.equal(controller.activeStep.id, 'buy_first_item');
+  assert.ok(controller.state.preferences.seenStepIds.includes('home_start'));
+  screen = 'home';
+  await controller.emit({ type: 'home_ready' });
+  assert.equal(controller.activeStep, null);
+  screen = 'prep';
+  assert.equal(controller.activeStep.id, 'buy_first_item');
+  await controller.emit({ type: 'artifact_bought', artifactId: 'sword' });
+  screen = 'characters';
+  assert.equal(controller.activeStep, null);
+  screen = 'prep';
+  assert.equal(controller.activeStep.id, 'place_artifact');
+});
+
+test('home guidance respects dismissal and skipping', async () => {
+  const controller = createTutorialController({ getScreen: () => 'home' });
+  await controller.emit({ type: 'home_ready' });
+  await controller.dismissCurrent();
+  await controller.emit({ type: 'home_ready' });
+  assert.equal(controller.activeStep, null);
+  controller.reset({ disabled: true });
+  await controller.emit({ type: 'home_ready' });
+  assert.equal(controller.activeStep, null);
+});

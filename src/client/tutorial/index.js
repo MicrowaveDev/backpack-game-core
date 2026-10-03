@@ -10,6 +10,7 @@ export function createTutorialController({
   preferences = {},
   state = {},
   getLocale = () => 'en',
+  getScreen = null,
   copy = {},
   persistPreferences = null
 } = {}) {
@@ -33,12 +34,13 @@ export function createTutorialController({
   return {
     state,
     get activeStep() {
-      return tutorialStepView({
+      const step = tutorialStepView({
         stepId: state.activeStepId,
         payload: state.activePayload || {},
         locale: getLocale(),
         copy
       });
+      return typeof getScreen === 'function' && step?.screen !== getScreen() ? null : step;
     },
     async emit(event) {
       const beforeReplay = state.replay;

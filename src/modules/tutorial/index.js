@@ -1,6 +1,7 @@
 export const TUTORIAL_VERSION = 3;
 
 export const TUTORIAL_STEP_IDS = Object.freeze([
+  'home_start',
   'buy_first_item',
   'place_artifact',
   'automatic_artifacts',
@@ -12,6 +13,7 @@ export const TUTORIAL_STEP_IDS = Object.freeze([
 ]);
 
 const EVENT_STEP = Object.freeze({
+  home_ready: 'home_start',
   prep_ready: 'buy_first_item',
   artifact_bought: 'place_artifact',
   artifact_placed: 'automatic_artifacts',
@@ -23,6 +25,7 @@ const EVENT_STEP = Object.freeze({
 });
 
 const EVENT_PREREQUISITE_STEP = Object.freeze({
+  prep_ready: 'home_start',
   artifact_bought: 'buy_first_item',
   artifact_placed: 'place_artifact',
   bag_bought: 'bags_add_space'
@@ -37,6 +40,10 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     gotIt: 'Got it',
     skip: 'Skip tutorial',
     close: 'Close',
+    home_start: Object.freeze({
+      title: 'Choose a character and start a battle',
+      body: 'Select a character on this page, then press Start Game to prepare for your first battle.'
+    }),
     buy_first_item: Object.freeze({
       title: 'Buy your first item',
       body: 'Tap an affordable item in the shop to buy it. Your purchase will first go to Storage above the Backpack.'
@@ -74,6 +81,10 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     gotIt: 'Понятно',
     skip: 'Пропустить обучение',
     close: 'Закрыть',
+    home_start: Object.freeze({
+      title: 'Выбери персонажа и начни битву',
+      body: 'Выбери персонажа на этой странице, затем нажми «Начать игру», чтобы подготовиться к первой битве.'
+    }),
     buy_first_item: Object.freeze({
       title: 'Купи первый предмет',
       body: 'Нажми на доступный предмет в магазине, чтобы купить его. Сначала покупка попадёт в «Хранилище» над «Рюкзаком».'
@@ -216,7 +227,9 @@ export function reduceTutorialEvent(session, event = {}) {
   const stepId = EVENT_STEP[event.type];
   if (!stepId) return session;
   if (stepId === 'lost_life' && (event.runEnded || event.outcome !== 'loss')) return session;
-  const prerequisiteStepId = EVENT_PREREQUISITE_STEP[event.type];
+  const candidatePrerequisite = EVENT_PREREQUISITE_STEP[event.type];
+  const prerequisiteStepId = candidatePrerequisite === 'home_start' && !stepAlreadyTracked(session, 'home_start')
+    ? null : candidatePrerequisite;
   let next = session;
   if (prerequisiteStepId) {
     const prerequisiteWasActive = next.activeStepId === prerequisiteStepId;
@@ -324,6 +337,7 @@ function mergedLocaleCopy(locale, copy = {}) {
   return {
     ...defaults,
     ...overrides,
+    home_start: { ...defaults.home_start, ...overrides.home_start },
     buy_first_item: {
       ...defaults.buy_first_item,
       ...(overrides.build_backpack || {}),
@@ -340,6 +354,11 @@ function mergedLocaleCopy(locale, copy = {}) {
 }
 
 const TUTORIAL_STEP_ANCHORS = Object.freeze({
+  home_start: {
+    selector: '[data-testid="home-start-run"]',
+    fallbackSelector: '.home-roster-panel',
+    placement: 'top'
+  },
   buy_first_item: {
     selector: '[data-tutorial-anchor="shop-affordable-artifact"]',
     fallbackSelector: '[data-tutorial-anchor="shop"]',
@@ -408,6 +427,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
   const anchor = TUTORIAL_STEP_ANCHORS[stepId];
   return {
     id: stepId,
+    screen: stepId === 'home_start' ? 'home' : 'prep',
     title,
     body,
     primaryLabel: labels.gotIt,
@@ -415,7 +435,7 @@ export function tutorialStepView({ stepId, payload = {}, locale = 'en', copy = {
     closeLabel: labels.close,
     imageSrc: payload.imageSrc || '',
     imageAlt: payload.imageAlt || title,
-    actionRequired: ['buy_first_item', 'place_artifact', 'place_bag'].includes(stepId),
+    actionRequired: ['home_start', 'buy_first_item', 'place_artifact', 'place_bag'].includes(stepId),
     anchorSelector: anchor.selector,
     anchorSecondarySelector: anchor.secondarySelector || '',
     anchorFallbackSelector: anchor.fallbackSelector || '',

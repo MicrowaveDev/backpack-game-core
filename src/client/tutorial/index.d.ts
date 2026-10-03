@@ -13,6 +13,7 @@ export function createTutorialController(options?: {
   preferences?: unknown;
   state?: Record<string, unknown>;
   getLocale?: () => string;
+  getScreen?: (() => string) | null;
   copy?: Record<string, unknown>;
   persistPreferences?: ((preferences: TutorialPreferences) => void | Promise<void>) | null;
 }): TutorialController;
