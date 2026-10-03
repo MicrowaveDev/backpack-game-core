@@ -42,7 +42,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     close: 'Close',
     home_start: Object.freeze({
       title: 'Choose a character and start a battle',
-      body: 'Select a character on this page, then press Start Game to prepare for your first battle.'
+      body: 'Select a character on this page, then press the start button to prepare for your first battle.'
     }),
     buy_first_item: Object.freeze({
       title: 'Buy your first item',
@@ -83,7 +83,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     close: 'Закрыть',
     home_start: Object.freeze({
       title: 'Выбери персонажа и начни битву',
-      body: 'Выбери персонажа на этой странице, затем нажми «Начать игру», чтобы подготовиться к первой битве.'
+      body: 'Выбери персонажа на этой странице, затем нажми кнопку начала игры, чтобы подготовиться к первой битве.'
     }),
     buy_first_item: Object.freeze({
       title: 'Купи первый предмет',
