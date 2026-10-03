@@ -1,7 +1,7 @@
 const GIS_SCRIPT_ID = 'google-identity-services-client';
 let gisScriptPromise = null;
 
-function loadGoogleIdentityServices() {
+function loadGoogleIdentityServices(locale = 'en') {
   if (globalThis.google?.accounts?.id) return Promise.resolve(globalThis.google.accounts.id);
   if (!globalThis.document) return Promise.reject(new Error('Google Identity Services requires a browser'));
   if (gisScriptPromise) return gisScriptPromise;
@@ -16,7 +16,7 @@ function loadGoogleIdentityServices() {
     script.addEventListener('error', () => reject(new Error('Google Identity Services failed to load')), { once: true });
     if (!existing) {
       script.id = GIS_SCRIPT_ID;
-      script.src = 'https://accounts.google.com/gsi/client';
+      script.src = `https://accounts.google.com/gsi/client?hl=${encodeURIComponent(locale)}`;
       script.async = true;
       document.head.appendChild(script);
     }
@@ -78,7 +78,7 @@ export const GoogleIdentityButton = {
   },
   async mounted() {
     try {
-      const identity = await loadGoogleIdentityServices();
+      const identity = await loadGoogleIdentityServices(this.locale);
       if (!this.$refs.button || !this.clientId) return;
       if (this.uxMode === 'redirect' && !this.loginUri) {
         throw new Error('Google redirect mode requires a login URI');
