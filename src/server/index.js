@@ -1131,3 +1131,4 @@ export {
   clearRateLimitBuckets,
   rateLimit
 } from './middleware/rate-limit.js';
+export { createGoogleIdentityVerifier } from './modules/google-identity-verifier.js';

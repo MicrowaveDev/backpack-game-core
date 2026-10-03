@@ -604,3 +604,7 @@ export {
   clearRateLimitBuckets,
   rateLimit
 } from './middleware/rate-limit.js';
+export function createGoogleIdentityVerifier(options: {
+  clientId: string;
+  oauthClient: { verifyIdToken(options: { idToken: string; audience: string }): Promise<{ getPayload(): Record<string, unknown> | undefined }> };
+}): (credential: string) => Promise<{ provider: 'google'; subject: string; displayName: string; email?: string; emailVerified?: boolean; avatarUrl?: string }>;
