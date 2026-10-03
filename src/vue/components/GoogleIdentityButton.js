@@ -49,12 +49,32 @@ export const GoogleIdentityButton = {
     locale: { type: String, default: 'en' },
     disabled: { type: Boolean, default: false },
     text: { type: String, default: 'signin_with' },
+    shape: { type: String, default: 'rectangular' },
     uxMode: { type: String, default: 'popup' },
     loginUri: { type: String, default: '' }
   },
   emits: ['credential', 'error'],
   data() {
     return { loading: true };
+  },
+  watch: {
+    locale() { this.renderIdentityButton(); },
+    shape() { this.renderIdentityButton(); }
+  },
+  methods: {
+    renderIdentityButton() {
+      if (!this.$refs.button || !this.identity) return;
+      const width = Math.min(400, Math.max(240, Math.floor(this.$el?.clientWidth || 320)));
+      if (this.renderedWidth === width && this.renderedLocale === this.locale && this.renderedShape === this.shape) return;
+      this.$refs.button.replaceChildren();
+      this.identity.renderButton(this.$refs.button, {
+        type: 'standard', theme: 'outline', size: 'large', text: this.text,
+        shape: this.shape, logo_alignment: 'left', width, locale: this.locale
+      });
+      this.renderedWidth = width;
+      this.renderedLocale = this.locale;
+      this.renderedShape = this.shape;
+    }
   },
   async mounted() {
     try {
@@ -72,21 +92,21 @@ export const GoogleIdentityButton = {
           else this.$emit('error', new Error('Google did not return a credential'));
         }
       }));
-      identity.renderButton(this.$refs.button, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: this.text,
-        shape: 'rectangular',
-        logo_alignment: 'left',
-        width: Math.max(240, Math.floor(this.$el?.clientWidth || 320)),
-        locale: this.locale
-      });
+      this.identity = identity;
+      this.renderIdentityButton();
+      if (globalThis.ResizeObserver) {
+        this.resizeObserver = new globalThis.ResizeObserver(() => this.renderIdentityButton());
+        this.resizeObserver.observe(this.$el);
+      }
       this.loading = false;
     } catch (error) {
       this.loading = false;
       this.$emit('error', error);
     }
+  },
+  beforeUnmount() {
+    this.resizeObserver?.disconnect();
+    this.identity = null;
   },
   template: `
     <div class="google-identity-button" :class="{ 'is-disabled': disabled, 'is-loading': loading }">
