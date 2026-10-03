@@ -10302,7 +10302,14 @@ select {
   width: 100%;
   max-height: none;
   box-sizing: border-box;
-  box-shadow: none;
+  background: color-mix(in srgb, var(--accent-soft) 28%, #fffdf5);
+  border: 2px solid var(--accent-soft);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.tutorial-popup--inline .tutorial-popup-title {
+  color: var(--accent);
+  padding-right: 32px;
 }
 .tutorial-popup--inline .tutorial-popup::before {
   display: none;
