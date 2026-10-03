@@ -567,7 +567,6 @@ export const HomeScreen = {
         </button>
       </div>
 
-      <div data-tutorial-host="home"></div>
       <article class="panel home-roster-panel">
         <div class="home-section-header">
           <h3>{{ t.characters }}</h3>
@@ -715,6 +714,8 @@ export const HomeScreen = {
           </div>
         </div>
       </article>
+
+      <div data-tutorial-host="home"></div>
 
       <nav
         v-if="mobileActionMode !== 'menu'"
