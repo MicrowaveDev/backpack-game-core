@@ -10280,3 +10280,30 @@ select {
     font-size: 14px;
   }
 }
+
+/* Preparation guidance reserves space above the shop instead of covering cards. */
+.prep-shop-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.prep-shop-column > .artifact-shop {
+  flex: 1;
+}
+[data-tutorial-host="prep-shop"]:not(:empty) {
+  margin-bottom: 12px;
+}
+.tutorial-popup-backdrop.tutorial-popup--inline {
+  position: static;
+  z-index: auto;
+}
+.tutorial-popup--inline .tutorial-popup {
+  position: relative;
+  width: 100%;
+  max-height: none;
+  box-sizing: border-box;
+  box-shadow: none;
+}
+.tutorial-popup--inline .tutorial-popup::before {
+  display: none;
+}

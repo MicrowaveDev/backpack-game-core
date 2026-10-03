@@ -291,3 +291,20 @@ test('shared Vue surfaces expose tutorial popup and replay setting contracts', (
   assert.ok(SettingsScreen.emits.includes('update:tutorial-replay-pending'));
   assert.match(SettingsScreen.template, /tutorialReplayPending/);
 });
+
+test('preparation tutorial reserves space above the shop instead of positioning over cards', () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = { querySelector: (selector) => {
+    assert.equal(selector, '[data-tutorial-host="prep-shop"]');
+    return {};
+  } };
+  try {
+    const popup = { step: { id: 'buy_first_artifact' }, $refs: { popup: {} }, positionStyle: { top: '100px' } };
+    TutorialPopup.methods.positionPopup.call(popup);
+    assert.equal(popup.inlineHost, true);
+    assert.equal(popup.placement, 'above-shop');
+    assert.deepEqual(popup.positionStyle, {});
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});

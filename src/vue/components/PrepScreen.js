@@ -40,7 +40,10 @@ export const PrepScreen = {
         <div class="prep-loadout-column">
           <slot name="loadout"></slot>
         </div>
-        <slot name="shop"></slot>
+        <div class="prep-shop-column">
+          <div data-tutorial-host="prep-shop"></div>
+          <slot name="shop"></slot>
+        </div>
       </div>
 
       <slot name="reconnecting" :visible="showReconnecting" :text="reconnectingText">
