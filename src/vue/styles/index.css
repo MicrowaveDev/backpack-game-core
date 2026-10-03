@@ -10317,3 +10317,11 @@ select {
 
 [data-tutorial-host="home"]:empty { display: none; }
 [data-tutorial-host="home"] { grid-column: 1 / -1; min-width: 0; }
+
+@media (max-width: 679px) {
+  /* Keep first-run guidance readable beneath the roster, where floating
+     social shortcuts would otherwise cover its heading at the initial fold. */
+  .home-screen:has([data-tutorial-host="home"]:not(:empty)) .home-bottom-actions {
+    display: none;
+  }
+}
