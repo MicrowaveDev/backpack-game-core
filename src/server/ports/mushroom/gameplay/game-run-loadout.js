@@ -347,12 +347,12 @@ async function applyRunPlacements(client, gameRunId, playerId, roundNumber, item
     proposed.y = Number(entry.y ?? -1);
     proposed.width = Number(entry.width ?? row.width);
     proposed.height = Number(entry.height ?? row.height);
-    // Bag activation and rotation: missing fields preserve existing bag
-    // state, explicit fields update it. Non-bag rows ignore both fields.
+    // Activation applies to bags. Every row preserves its orientation when
+    // omitted and normalizes an explicitly requested orientation.
     const rowArtifact = getArtifactById(proposed.artifactId);
     const bagRow = isBag(rowArtifact);
     proposed.active = bagRow ? (entry.active == null ? row.active : (entry.active ? 1 : 0)) : 0;
-    proposed.rotated = bagRow ? (entry.rotated == null ? row.rotated : normalizeRotation(entry.rotated)) : 0;
+    proposed.rotated = entry.rotated == null ? row.rotated : normalizeRotation(entry.rotated);
     if (bagRow && !proposed.active) {
       proposed.x = -1;
       proposed.y = -1;

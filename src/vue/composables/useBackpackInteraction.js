@@ -296,6 +296,9 @@ export function createBackpackInteraction({
     if (Date.now() < suppressClickUntil) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (state.selectedId && !event.target?.closest?.('[data-backpack-interaction-board], [data-backpack-row-id], [data-backpack-context-action], .backpack-interaction-controls, [data-backpack-drop-zone], .artifact-container-zone, .sell-zone')) cancel();
   }
+  function onOutsidePointerDown(event) {
+    if (!pointer && state.selectedId && root?.contains && !root.contains(event.target)) cancel();
+  }
   function onKey(event) {
     if (event.key === 'Escape') cancel();
     if (event.key?.toLowerCase() === 'r' && state.selectedId
@@ -310,6 +313,7 @@ export function createBackpackInteraction({
     generation += 1;
     for (const [name, listener, options] of listeners) root?.removeEventListener?.(name, listener, options);
     doc?.removeEventListener?.('keydown', onKey);
+    doc?.removeEventListener?.('pointerdown', onOutsidePointerDown);
     win?.removeEventListener?.('blur', onPointerCancel);
     clearPointer();
     clearTimeout(messageTimer);
@@ -324,6 +328,7 @@ export function createBackpackInteraction({
     root = element;
     for (const [name, listener, options] of listeners) root?.addEventListener?.(name, listener, options);
     doc?.addEventListener?.('keydown', onKey);
+    doc?.addEventListener?.('pointerdown', onOutsidePointerDown);
     win?.addEventListener?.('blur', onPointerCancel);
   }
   function clickCell(cell) {

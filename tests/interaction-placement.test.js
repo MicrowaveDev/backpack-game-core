@@ -160,3 +160,13 @@ test('authoritative normalization evacuates old membership even if client omits 
   assert.equal(getBackpackLoadoutRevision(rows), getBackpackLoadoutRevision([...rows].reverse()));
   assert.notEqual(getBackpackLoadoutRevision(rows), getBackpackLoadoutRevision(result.rows));
 });
+
+test('authoritative locked bag policy rejects translation, rotation and deactivation', () => {
+  const old = bag('fixed', 0, 0);
+  for (const change of [{ x: 2 }, { rotated: 1 }, { x: -1, y: -1, active: false }]) {
+    const result = normalizeBackpackBagMoves({ rows: [old], proposedRows: [{ ...old, ...change }],
+      columns: 6, height: 6, getArtifact: (id) => catalog[id], isLockedBag: () => true });
+    assert.equal(result.reason, 'locked');
+    assert.equal(result.rows[0], old);
+  }
+});

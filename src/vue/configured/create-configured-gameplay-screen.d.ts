@@ -17,6 +17,8 @@ export interface ConfiguredGameplayScreenOptions {
   replayDuelComponent: VueComponentOption;
   getLocale?: (controller: unknown) => string;
   getText?: (controller: unknown) => Record<string, unknown>;
+  getSellPrice?: (row: any, controller: any) => number | null;
+  canSellItem?: (row: any, controller: any) => boolean;
   getInteractionLabels?: (controller: unknown) => Record<string, unknown>;
   getClientServices?: (controller: unknown) => unknown;
   getTutorialController?: (controller: unknown) => unknown;

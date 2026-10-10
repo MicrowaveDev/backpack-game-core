@@ -118,6 +118,10 @@ export function normalizeBackpackBagMoves({ rows = [], proposedRows = [], ...opt
   for (const next of proposedRows) {
     const old = previous.get(String(next.id));
     const artifact = getArtifact(artifactId(next), next);
+    if (old && artifact?.family === 'bag' && options.isLockedBag?.(old, artifact)
+      && (Number(old.x) !== Number(next.x) || Number(old.y) !== Number(next.y)
+        || normalizeRotation(old.rotated) !== normalizeRotation(next.rotated) || !!old.active !== !!next.active))
+      return { ok: false, reason: 'locked', rows, affectedIds: [] };
     if (!old || artifact?.family !== 'bag' || !old.active || !next.active
       || !isPlaced(old) || !isPlaced(next)
       || (Number(old.x) === Number(next.x) && Number(old.y) === Number(next.y))) continue;
@@ -145,5 +149,5 @@ export function getBackpackLoadoutRevision(rows = []) {
   return JSON.stringify(rows.map((row) => [String(row.id), String(artifactId(row)),
     Number(row.x), Number(row.y), row.width == null ? null : Number(row.width),
     row.height == null ? null : Number(row.height), normalizeRotation(row.rotated), !!row.active])
-    .sort((a, b) => a[0].localeCompare(b[0])));
+    .sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
 }
