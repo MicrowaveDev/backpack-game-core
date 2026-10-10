@@ -270,6 +270,7 @@ import {
   FighterCard,
   FusionReveal,
   InventoryZone,
+  StorageZone,
   PrepScreen,
   createReducedMotionTracker,
   GachaPackCard,
@@ -301,6 +302,7 @@ import {
   FighterCard as FighterCardFromComponents,
   FusionReveal as FusionRevealFromComponents,
   InventoryZone as InventoryZoneFromComponents,
+  StorageZone as StorageZoneFromComponents,
   PrepScreen as PrepScreenFromComponents,
   GachaPackCard as GachaPackCardFromComponents,
   GachaPackCardList as GachaPackCardListFromComponents,
@@ -581,7 +583,8 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(CatalogPageScreen.name, 'CatalogPageScreen');
   assert.equal(FighterCard.name, 'FighterCard');
   assert.equal(FusionReveal.name, 'FusionReveal');
-  assert.equal(InventoryZone.name, 'InventoryZone');
+  assert.equal(InventoryZone.name, 'BackpackZone');
+  assert.equal(StorageZone.name, 'StorageZone');
   assert.equal(PrepScreen.name, 'PrepScreen');
   assert.equal(GachaPackCard.name, 'GachaPackCard');
   assert.equal(GachaPackCardList.name, 'GachaPackCardList');
@@ -612,6 +615,7 @@ test('[modules] shop, loadout, battle, and fusion facades expose stable APIs', (
   assert.equal(FighterCardFromComponents, FighterCard);
   assert.equal(FusionRevealFromComponents, FusionReveal);
   assert.equal(InventoryZoneFromComponents, InventoryZone);
+  assert.equal(StorageZoneFromComponents, StorageZone);
   assert.equal(PrepScreenFromComponents, PrepScreen);
   assert.equal(GachaPackCardFromComponents, GachaPackCard);
   assert.equal(GachaPackCardListFromComponents, GachaPackCardList);

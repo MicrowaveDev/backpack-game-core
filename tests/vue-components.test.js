@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   AchievementBadge,
   ArtifactCatalogBrowser,
@@ -13,7 +14,9 @@ import {
   CatalogPageScreen,
   FighterCard,
   FusionReveal,
-  InventoryZone,
+  createGoogleIdentityConfig,
+  GoogleIdentityButton,
+  StorageZone,
   PrepScreen,
   GachaOddsTable,
   GachaPackCard,
@@ -23,6 +26,7 @@ import {
   RecipeList,
   ReplayDuel,
   ReplayScreen,
+  RunCompleteScreen,
   RunHud,
   RunSummaryScreen,
   SellZone,
@@ -32,6 +36,38 @@ import {
   ShopItemRow
 } from '@microwavedev/backpack-game-core/vue/components';
 
+test('[vue] GoogleIdentityButton exposes a provider-neutral credential event', () => {
+  assert.equal(GoogleIdentityButton.name, 'GoogleIdentityButton');
+  assert.deepEqual(GoogleIdentityButton.emits, ['credential', 'error']);
+  assert.match(GoogleIdentityButton.template, /google-identity-button/);
+  assert.doesNotMatch(GoogleIdentityButton.template, /meat|mushroom|telegram/i);
+});
+
+test('[vue] GoogleIdentityButton supports popup and redirect response modes', () => {
+  const credentials = [];
+  const popup = createGoogleIdentityConfig({
+    clientId: 'client-id',
+    onCredential: (credential) => credentials.push(credential)
+  });
+  popup.callback({ credential: 'signed-token' });
+  assert.deepEqual(credentials, ['signed-token']);
+  assert.equal(popup.ux_mode, 'popup');
+  assert.equal(popup.use_fedcm_for_button, true);
+  assert.equal('login_uri' in popup, false);
+
+  const redirect = createGoogleIdentityConfig({
+    clientId: 'client-id',
+    uxMode: 'redirect',
+    loginUri: 'https://game.example/api/auth/google/callback',
+    onCredential: () => {}
+  });
+  assert.deepEqual(redirect, {
+    client_id: 'client-id',
+    ux_mode: 'redirect',
+    login_uri: 'https://game.example/api/auth/google/callback'
+  });
+});
+
 test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', () => {
   assert.equal(ArtifactGridBoard.name, 'ArtifactGridBoard');
   assert.equal(ArtifactGridBoard.props.inventoryColumns.default, 6);
@@ -39,7 +75,19 @@ test('[vue] ArtifactGridBoard keeps product dimensions and imagery injectable', 
   assert.equal(ArtifactGridBoard.props.artifactFigureComponent.default, null);
   assert.equal(ArtifactGridBoard.props.artifactImageFor.default({ imagePath: '/item.png' }), '/item.png');
   assert.match(ArtifactGridBoard.template, /artifactFigureComponent/);
+  const styles = fs.readFileSync(new URL('../src/vue/styles/index.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.artifact-grid-piece-image\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*contain/s);
   assert.doesNotMatch(ArtifactGridBoard.template, /mushroom|spore|mycelium/i);
+});
+
+test('[vue] RunCompleteScreen exposes the rich product-neutral completion contract', () => {
+  assert.equal(RunCompleteScreen.name, 'RunCompleteScreen');
+  assert.match(RunCompleteScreen.template, /run-season-card/);
+  assert.match(RunCompleteScreen.template, /run-achievement-list/);
+  assert.match(RunCompleteScreen.template, /\$emit\('primary'\)/);
+  assert.equal(RunCompleteScreen.methods.achievementDelay(0), '760ms');
+  assert.equal(RunCompleteScreen.methods.achievementDelay(2), '1120ms');
+  assert.doesNotMatch(RunCompleteScreen.template, /mushroom|spore|mycelium/i);
 });
 
 test('[vue] AssetRollResultPanel exposes neutral panel rendering contract', () => {
@@ -302,27 +350,27 @@ test('[vue] FusionReveal exposes neutral artifact-slot animation shell', () => {
   );
 });
 
-test('[vue] BackpackZone exposes neutral item list and drop-zone shell', () => {
-  assert.equal(BackpackZone.name, 'BackpackZone');
-  assert.match(BackpackZone.template, /slot\s+name="visual"/);
-  assert.match(BackpackZone.template, /selectItem/);
+test('[vue] StorageZone exposes neutral item list and drop-zone shell', () => {
+  assert.equal(StorageZone.name, 'StorageZone');
+  assert.match(StorageZone.template, /slot\s+name="visual"/);
+  assert.match(StorageZone.template, /selectItem/);
 
   const items = [
     { id: 'bag', rowId: 'row_bag', family: 'bag', width: 2, height: 2, slotCount: 4, name: { en: 'Bag' } },
     null,
     { id: 'blade', rowId: 'row_blade', width: 1, height: 2, name: { en: 'Blade' } }
   ];
-  assert.deepEqual(BackpackZone.computed.renderedItems.call({ items }), [items[0], items[2]]);
-  assert.equal(BackpackZone.computed.titleLabel.call({ labels: { title: 'Inventory' } }), 'Inventory');
-  assert.equal(BackpackZone.methods.itemId(items[0]), 'bag');
-  assert.equal(BackpackZone.methods.itemRowId(items[0]), 'row_bag');
-  assert.equal(BackpackZone.methods.itemName.call({ nameForItem: null, lang: 'en', itemId: BackpackZone.methods.itemId }, items[0]), 'Bag');
-  assert.deepEqual(BackpackZone.methods.previewOrientation.call({
+  assert.deepEqual(StorageZone.computed.renderedItems.call({ items }), [items[0], items[2]]);
+  assert.equal(StorageZone.computed.titleLabel.call({ labels: { title: 'Storage' } }), 'Storage');
+  assert.equal(StorageZone.methods.itemId(items[0]), 'bag');
+  assert.equal(StorageZone.methods.itemRowId(items[0]), 'row_bag');
+  assert.equal(StorageZone.methods.itemName.call({ nameForItem: null, lang: 'en', itemId: StorageZone.methods.itemId }, items[0]), 'Bag');
+  assert.deepEqual(StorageZone.methods.previewOrientation.call({
     previewOrientationForItem: null
   }, items[2]), { width: 1, height: 2 });
-  assert.deepEqual(BackpackZone.methods.previewItem.call({
-    previewOrientation: BackpackZone.methods.previewOrientation,
-    itemId: BackpackZone.methods.itemId
+  assert.deepEqual(StorageZone.methods.previewItem.call({
+    previewOrientation: StorageZone.methods.previewOrientation,
+    itemId: StorageZone.methods.itemId
   }, items[2]), [{
     artifactId: 'blade',
     rowId: 'row_blade',
@@ -331,19 +379,19 @@ test('[vue] BackpackZone exposes neutral item list and drop-zone shell', () => {
     width: 1,
     height: 2
   }]);
-  assert.equal(BackpackZone.methods.isPending.call({
+  assert.equal(StorageZone.methods.isPending.call({
     pendingItemIds: new Set(['row_bag']),
-    itemRowId: BackpackZone.methods.itemRowId
+    itemRowId: StorageZone.methods.itemRowId
   }, items[0]), true);
-  assert.equal(BackpackZone.methods.itemTitle.call({
+  assert.equal(StorageZone.methods.itemTitle.call({
     labels: { pendingTitle: 'Pending' },
     isPending: () => true,
     isHighlighted: () => false
   }, items[0]), 'Pending');
 
   const emitted = [];
-  BackpackZone.methods.selectItem.call({
-    itemId: BackpackZone.methods.itemId,
+  StorageZone.methods.selectItem.call({
+    itemId: StorageZone.methods.itemId,
     $emit: (event, payload) => emitted.push([event, payload])
   }, items[0]);
   assert.equal(emitted[0][0], 'select-item');
@@ -351,10 +399,11 @@ test('[vue] BackpackZone exposes neutral item list and drop-zone shell', () => {
   assert.equal(emitted[0][1].id, 'row_bag');
 });
 
-test('[vue] InventoryZone exposes neutral inventory shell and container chips', () => {
-  assert.equal(InventoryZone.name, 'InventoryZone');
-  assert.match(InventoryZone.template, /slot\s+name="grid"/);
-  assert.match(InventoryZone.template, /slot\s+name="footer"/);
+test('[vue] BackpackZone exposes neutral inventory shell and container chips', () => {
+  assert.equal(BackpackZone.name, 'BackpackZone');
+  assert.match(BackpackZone.template, /slot\s+name="grid"/);
+  assert.match(BackpackZone.template, /slot\s+name="footer"/);
+  assert.equal(BackpackZone.computed.titleLabel.call({ labels: { title: 'Backpack' } }), 'Backpack');
 
   const items = [
     { artifactId: 'blade', rowId: 'row_blade' },
@@ -367,22 +416,22 @@ test('[vue] InventoryZone exposes neutral inventory shell and container chips', 
     { id: 'bag_2', artifactId: 'pack', label: 'Pack', draggable: false, locked: true }
   ];
 
-  assert.deepEqual(InventoryZone.computed.renderedItems.call({ items }), [items[0], items[2]]);
+  assert.deepEqual(BackpackZone.computed.renderedItems.call({ items }), [items[0], items[2]]);
   assert.deepEqual(
-    InventoryZone.computed.visibleContainers.call({ activeContainers: containers }),
+    BackpackZone.computed.visibleContainers.call({ activeContainers: containers }),
     [containers[1], containers[2]]
   );
-  assert.equal(InventoryZone.computed.showFooter.call({ renderedItems: [items[0]] }), true);
-  assert.equal(InventoryZone.computed.rotateActionLabel.call({ labels: {} }), 'Rotate');
-  assert.equal(InventoryZone.methods.containerName(containers[1]), 'Bag');
-  assert.deepEqual(InventoryZone.methods.containerStyle.call({
-    containerColor: InventoryZone.methods.containerColor
+  assert.equal(BackpackZone.computed.showFooter.call({ renderedItems: [items[0]] }), true);
+  assert.equal(BackpackZone.computed.rotateActionLabel.call({ labels: {} }), 'Rotate');
+  assert.equal(BackpackZone.methods.containerName(containers[1]), 'Bag');
+  assert.deepEqual(BackpackZone.methods.containerStyle.call({
+    containerColor: BackpackZone.methods.containerColor
   }, containers[1]), { borderColor: '#abc' });
-  assert.deepEqual(InventoryZone.methods.containerClasses.call({
+  assert.deepEqual(BackpackZone.methods.containerClasses.call({
     containerLockedClass: 'locked',
     containerDraggableClass: 'drag'
   }, containers[2]), { locked: true, drag: false });
-  assert.deepEqual(InventoryZone.methods.containerDataset(containers[2]), {
+  assert.deepEqual(BackpackZone.methods.containerDataset(containers[2]), {
     'data-bag-row-id': 'bag_2',
     'data-bag-locked': 'true'
   });
@@ -391,10 +440,10 @@ test('[vue] InventoryZone exposes neutral inventory shell and container chips', 
   const context = {
     $emit: (event, payload) => emitted.push([event, payload])
   };
-  InventoryZone.methods.onRemoveItem.call(context, { rowId: 'row_blade' });
-  InventoryZone.methods.onContainerDragStart.call(context, containers[1], { type: 'dragstart' });
-  InventoryZone.methods.rotateContainer.call(context, containers[1]);
-  InventoryZone.methods.deactivateContainer.call(context, containers[1]);
+  BackpackZone.methods.onRemoveItem.call(context, { rowId: 'row_blade' });
+  BackpackZone.methods.onContainerDragStart.call(context, containers[1], { type: 'dragstart' });
+  BackpackZone.methods.rotateContainer.call(context, containers[1]);
+  BackpackZone.methods.deactivateContainer.call(context, containers[1]);
   assert.deepEqual(emitted.map(([event]) => event), [
     'remove-item',
     'container-chip-drag-start',
@@ -491,6 +540,9 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
     refreshPricePrefix: '*'
   }), 'Reroll (*3)');
   assert.equal(ShopZone.computed.pricePrefix.call(context), '* ');
+  assert.equal(ShopZone.computed.characterItemLabel.call(context), 'Hero item');
+  assert.equal(ShopZone.computed.characterItemLabel.call({ labels: { characterItem: '' } }), '');
+  assert.match(ShopZone.template, /row\.characterItem && characterItemLabel/);
   assert.deepEqual(ShopZone.computed.sellZoneProps.call(context), {
     active: true,
     draggingItemId: 'row_1',
@@ -504,7 +556,14 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
   assert.deepEqual(ShopZone.methods.classFor.call({
     itemClass: 'shop-item',
     rowClass: (shopRow) => ({ expensive: !shopRow.canAfford })
-  }, row), ['shop-item', { expensive: false }]);
+  }, row), ['shop-item', { 'shop-item--expensive': false }, { expensive: false }]);
+  assert.deepEqual(ShopZone.methods.classFor.call({
+    itemClass: 'shop-item',
+    rowClass: ''
+  }, { ...row, canAfford: false, unavailable: true }), [
+    'shop-item',
+    { 'shop-item--expensive': true }
+  ]);
   assert.deepEqual(ShopZone.methods.attrsFor.call({
     itemAttrs: { role: 'button' }
   }, row), { role: 'button' });
@@ -521,6 +580,7 @@ test('[vue] ShopZone exposes neutral shop panel and sell-zone shell', () => {
     $emit: (event, payload) => emitted.push([event, payload])
   };
   ShopZone.methods.emitBuy.call(emitContext, row);
+  ShopZone.methods.emitBuy.call(emitContext, { ...row, canAfford: false, unavailable: true });
   ShopZone.methods.emitRefresh.call(emitContext);
   ShopZone.methods.emitSellDrop.call(emitContext, { type: 'drop' });
   assert.deepEqual(emitted, [
@@ -863,9 +923,14 @@ test('[vue] ShopItemRow exposes neutral shop row rendering contract', () => {
   };
   assert.equal(ShopItemRow.computed.visible.call({ row }), true);
   assert.deepEqual(ShopItemRow.computed.itemClasses.call({
+    row,
     itemClass: 'shop-item',
     rowClass: { 'shop-item--role-damage': true }
-  }), ['shop-item', { 'shop-item--role-damage': true }]);
+  }), [
+    'shop-item',
+    { 'shop-item--expensive': false },
+    { 'shop-item--role-damage': true }
+  ]);
   assert.deepEqual(ShopItemRow.computed.renderedStats.call({ row }), row.statRows);
   assert.equal(ShopItemRow.computed.previewWidth.call({ row }), 1);
   assert.equal(ShopItemRow.computed.previewHeight.call({ row }), 2);

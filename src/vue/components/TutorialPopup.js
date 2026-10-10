@@ -1,0 +1,261 @@
+export const TutorialPopup = {
+  name: 'TutorialPopup',
+  props: {
+    step: { type: Object, default: null },
+    reducedMotion: { type: Boolean, default: false }
+  },
+  emits: ['dismiss', 'skip'],
+  data() {
+    return {
+      positionStyle: {},
+      inlineHost: false,
+      hostSelector: '',
+      placement: 'bottom',
+      positionFrame: 0,
+      positionRetry: 0,
+      positionTimer: 0,
+      positionObserver: null,
+      observedAnchor: null,
+      observedSecondaryAnchor: null
+    };
+  },
+  watch: {
+    step: {
+      handler() {
+        this.positionRetry = 0;
+        this.queuePosition();
+      }
+    }
+  },
+  mounted() {
+    window.addEventListener('resize', this.queuePosition);
+    window.addEventListener('scroll', this.queuePosition, true);
+    document.addEventListener('keydown', this.onKeydown);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.positionObserver = new ResizeObserver(() => this.queuePosition());
+    }
+    this.queuePosition();
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.queuePosition);
+    window.removeEventListener('scroll', this.queuePosition, true);
+    document.removeEventListener('keydown', this.onKeydown);
+    if (this.positionFrame) cancelAnimationFrame(this.positionFrame);
+    if (this.positionTimer) window.clearTimeout(this.positionTimer);
+    this.positionObserver?.disconnect();
+  },
+  methods: {
+    queuePosition() {
+      if (!this.step) return;
+      this.$nextTick?.(() => {
+        if (this.positionFrame) cancelAnimationFrame(this.positionFrame);
+        this.positionFrame = requestAnimationFrame(() => this.positionPopup());
+      });
+    },
+    positionPopup() {
+      this.positionFrame = 0;
+      const popup = this.$refs.popup;
+      if (!popup || !this.step) return;
+      // Preparation guidance belongs in the workspace, where it cannot
+      // obscure the items the player needs to buy or place.
+      this.hostSelector = this.step.screen === 'home'
+        ? '[data-tutorial-host="home"]' : '[data-tutorial-host="prep-shop"]';
+      this.inlineHost = Boolean(document.querySelector(this.hostSelector));
+      if (this.inlineHost) {
+        this.placement = this.step.screen === 'home' ? 'home' : 'above-shop';
+        this.positionStyle = {};
+        this.positionObserver?.disconnect();
+        this.observedAnchor = null;
+        this.observedSecondaryAnchor = null;
+        return;
+      }
+      const anchor = (this.step.anchorSelector
+        ? document.querySelector(this.step.anchorSelector)
+        : null)
+        || (this.step.anchorFallbackSelector
+          ? document.querySelector(this.step.anchorFallbackSelector)
+          : null);
+      const secondaryAnchor = this.step.anchorSecondarySelector
+        ? document.querySelector(this.step.anchorSecondarySelector)
+        : null;
+      if (!anchor) {
+        this.positionFallback(popup);
+        this.schedulePositionRetry(8);
+        return;
+      }
+
+      if (this.positionObserver && (
+        this.observedAnchor !== anchor
+        || this.observedSecondaryAnchor !== secondaryAnchor
+      )) {
+        this.positionObserver.disconnect();
+        this.positionObserver.observe(popup);
+        this.positionObserver.observe(anchor);
+        if (secondaryAnchor) this.positionObserver.observe(secondaryAnchor);
+        this.observedAnchor = anchor;
+        this.observedSecondaryAnchor = secondaryAnchor;
+      }
+
+      const margin = 12;
+      const gap = 12;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const anchorRect = anchor.getBoundingClientRect();
+      const popupWidth = popup.offsetWidth;
+      const popupHeight = popup.offsetHeight;
+      const centerX = anchorRect.left + anchorRect.width / 2;
+      const centerY = anchorRect.top + anchorRect.height / 2;
+      const preferred = this.step.anchorPlacement || 'bottom';
+
+      if (preferred === 'between' && secondaryAnchor) {
+        const secondaryRect = secondaryAnchor.getBoundingClientRect();
+        const sideBySide = secondaryRect.left >= anchorRect.right;
+        const stacked = secondaryRect.top >= anchorRect.bottom;
+        if (sideBySide || stacked) {
+          let rawTop;
+          let rawLeft;
+          if (sideBySide) {
+            const overlapTop = Math.max(anchorRect.top, secondaryRect.top);
+            const overlapBottom = Math.min(anchorRect.bottom, secondaryRect.bottom);
+            const sharedCenterY = overlapBottom > overlapTop
+              ? (overlapTop + overlapBottom) / 2
+              : (centerY + secondaryRect.top + secondaryRect.height / 2) / 2;
+            rawTop = sharedCenterY - popupHeight / 2;
+            rawLeft = (anchorRect.right + secondaryRect.left) / 2 - popupWidth / 2;
+            this.placement = 'between-horizontal';
+          } else {
+            const overlapLeft = Math.max(anchorRect.left, secondaryRect.left);
+            const overlapRight = Math.min(anchorRect.right, secondaryRect.right);
+            const sharedCenterX = overlapRight > overlapLeft
+              ? (overlapLeft + overlapRight) / 2
+              : (centerX + secondaryRect.left + secondaryRect.width / 2) / 2;
+            rawTop = (anchorRect.bottom + secondaryRect.top) / 2 - popupHeight / 2;
+            rawLeft = sharedCenterX - popupWidth / 2;
+            this.placement = 'between-vertical';
+          }
+          this.positionStyle = {
+            top: `${Math.round(Math.min(
+              Math.max(rawTop, margin),
+              Math.max(margin, viewportHeight - popupHeight - margin)
+            ))}px`,
+            left: `${Math.round(Math.min(
+              Math.max(rawLeft, margin),
+              Math.max(margin, viewportWidth - popupWidth - margin)
+            ))}px`
+          };
+          this.schedulePositionRetry(8);
+          return;
+        }
+      }
+
+      const positions = {
+        top: { top: anchorRect.top - popupHeight - gap, left: centerX - popupWidth / 2 },
+        bottom: { top: anchorRect.bottom + gap, left: centerX - popupWidth / 2 },
+        left: { top: centerY - popupHeight / 2, left: anchorRect.left - popupWidth - gap },
+        right: { top: centerY - popupHeight / 2, left: anchorRect.right + gap }
+      };
+      const directionalPreferred = preferred === 'between' ? 'bottom' : preferred;
+      const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[directionalPreferred];
+      const order = [...new Set([directionalPreferred, opposite, 'bottom', 'top', 'right', 'left'])];
+      const fits = ({ top, left }) => (
+        top >= margin
+        && left >= margin
+        && top + popupHeight <= viewportHeight - margin
+        && left + popupWidth <= viewportWidth - margin
+      );
+      this.placement = order.find((candidate) => fits(positions[candidate])) || directionalPreferred;
+      const selected = positions[this.placement];
+      const top = Math.min(
+        Math.max(selected.top, margin),
+        Math.max(margin, viewportHeight - popupHeight - margin)
+      );
+      const left = Math.min(
+        Math.max(selected.left, margin),
+        Math.max(margin, viewportWidth - popupWidth - margin)
+      );
+      const arrowOffset = this.placement === 'top' || this.placement === 'bottom'
+        ? Math.min(Math.max(centerX - left, 24), popupWidth - 24)
+        : Math.min(Math.max(centerY - top, 24), popupHeight - 24);
+      this.positionStyle = {
+        top: `${Math.round(top)}px`,
+        left: `${Math.round(left)}px`,
+        '--tutorial-arrow-offset': `${Math.round(arrowOffset)}px`
+      };
+      this.schedulePositionRetry(8);
+    },
+    schedulePositionRetry(limit) {
+      if (this.positionRetry >= limit) return;
+      this.positionRetry += 1;
+      if (this.positionTimer) window.clearTimeout(this.positionTimer);
+      this.positionTimer = window.setTimeout(() => {
+        this.positionTimer = 0;
+        this.queuePosition();
+      }, 80);
+    },
+    positionFallback(popup) {
+      const margin = 12;
+      this.placement = 'fallback';
+      this.positionStyle = {
+        top: `${Math.max(margin, window.innerHeight - popup.offsetHeight - margin)}px`,
+        left: `${Math.max(margin, (window.innerWidth - popup.offsetWidth) / 2)}px`
+      };
+    },
+    onKeydown(event) {
+      if (event.key === 'Escape') this.$emit('dismiss');
+    }
+  },
+  template: `
+    <Teleport :to="inlineHost ? hostSelector : 'body'">
+      <div
+        v-if="step"
+        class="tutorial-popup-backdrop"
+        :class="{ 'tutorial-popup--reduced-motion': reducedMotion, 'tutorial-popup--inline': inlineHost }"
+        data-testid="tutorial-popup"
+      >
+        <section
+          ref="popup"
+          class="tutorial-popup panel"
+          :class="{ 'tutorial-popup--with-image': step.imageSrc }"
+          role="dialog"
+          aria-live="polite"
+          :data-placement="placement"
+          :style="positionStyle"
+          :aria-labelledby="'tutorial-title-' + step.id"
+          :aria-describedby="'tutorial-body-' + step.id"
+        >
+          <button
+            class="tutorial-popup-close"
+            type="button"
+            :aria-label="step.closeLabel"
+            @click="$emit('dismiss')"
+          >×</button>
+          <img
+            v-if="step.imageSrc"
+            class="tutorial-popup-image"
+            :src="step.imageSrc"
+            :alt="step.imageAlt || ''"
+            @load="queuePosition"
+          />
+          <h2 :id="'tutorial-title-' + step.id" class="tutorial-popup-title">{{ step.title }}</h2>
+          <p :id="'tutorial-body-' + step.id" class="tutorial-popup-body">{{ step.body }}</p>
+          <div
+            class="tutorial-popup-actions"
+            :class="{ 'tutorial-popup-actions--action-required': step.actionRequired }"
+          >
+            <button
+              v-if="!step.actionRequired"
+              class="primary tutorial-popup-primary"
+              type="button"
+              @click="$emit('dismiss')"
+            >{{ step.primaryLabel }}</button>
+            <button
+              class="ghost tutorial-popup-skip"
+              type="button"
+              @click="$emit('skip')"
+            >{{ step.skipLabel }}</button>
+          </div>
+        </section>
+      </div>
+    </Teleport>
+  `
+};

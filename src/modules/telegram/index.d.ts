@@ -22,6 +22,7 @@ export interface TelegramWindowLike {
 export function normalizeTelegramBotUsername(value: unknown): string;
 export function normalizeTelegramChatTarget(target: unknown): string;
 export function getTelegramWebApp(win?: TelegramWindowLike | null): Record<string, any> | null;
+export function getTelegramStartParam(webApp?: Record<string, any> | null): string;
 export function isTelegramMiniAppEnvironment(win?: TelegramWindowLike | null): boolean;
 export function buildFriendRefParam(friendCode: unknown): string;
 export function buildTelegramMiniAppLink(options?: {
@@ -33,6 +34,9 @@ export function buildTelegramShareUrl(options?: {
   url?: unknown;
   text?: unknown;
 }): string;
+export function openTelegramLink(url: unknown, options?: {
+  win?: TelegramWindowLike | null;
+}): 'telegram' | 'window' | 'none';
 export function shareTelegramText(options?: {
   text?: string;
   url?: string;
@@ -58,6 +62,10 @@ export function createTelegramInlineKeyboard(reply?: {
 }): { inline_keyboard: Array<Array<{ text: string; url: string }>> } | undefined;
 export function buildTelegramGameScorePayload(options?: Record<string, unknown>): Record<string, unknown>;
 export function parseTelegramCommand(text: unknown): TelegramCommand | null;
+export function extractTelegramAuthCode(text: unknown, options?: {
+  prefix?: string;
+  pattern?: RegExp;
+}): string;
 export function normalizeTelegramUpdate(update?: Record<string, any>): {
   kind: 'pre_checkout_query' | 'callback_query' | 'successful_payment' | 'command' | 'message' | 'ignored';
   value: any;

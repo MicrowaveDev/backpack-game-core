@@ -6,9 +6,11 @@ export {
   buildTelegramMiniAppLink,
   buildTelegramShareUrl,
   buildWebsiteFriendInviteLink,
+  getTelegramStartParam,
   getTelegramWebApp,
   isTelegramMiniAppEnvironment,
   normalizeTelegramBotUsername,
+  openTelegramLink,
   shareTelegramText
 } from './browser-links.js';
 
@@ -79,6 +81,26 @@ export function parseTelegramCommand(text) {
     botUsername: normalizeTelegramBotUsername(match[2]),
     args: String(match[3] || '').trim()
   };
+}
+
+export function extractTelegramAuthCode(text, {
+  prefix = 'auth-',
+  pattern = /^[A-Za-z0-9_-]{4,64}$/
+} = {}) {
+  const raw = String(text || '').trim();
+  const command = parseTelegramCommand(raw);
+  let candidate = raw;
+  if (command?.command === 'start' || command?.command === 'auth') candidate = command.args;
+  else {
+    const pastedStart = raw.match(/^start\s+([\s\S]+)$/i);
+    if (pastedStart) candidate = pastedStart[1].trim();
+  }
+  const normalizedPrefix = String(prefix || 'auth-');
+  if (candidate.toLowerCase().startsWith(normalizedPrefix.toLowerCase())) {
+    candidate = candidate.slice(normalizedPrefix.length);
+  }
+  candidate = candidate.trim();
+  return pattern.test(candidate) ? candidate : '';
 }
 
 export function normalizeTelegramUpdate(update = {}) {

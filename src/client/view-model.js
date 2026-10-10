@@ -1,4 +1,5 @@
-import { getEffectiveShape, isCellInShape, normalizeRotation } from '../modules/loadout/bag-shape.js';
+import { getEffectiveShape, isCellInShape, normalizeRotation, rotateShape } from '../modules/loadout/bag-shape.js';
+import { findBagPlacement } from '../modules/loadout/backpack-loadout.js';
 
 function artifactLookup(getArtifact) {
   if (typeof getArtifact === 'function') return getArtifact;
@@ -10,7 +11,7 @@ function bagIdSet(bagArtifactIds) {
   return bagArtifactIds instanceof Set ? bagArtifactIds : new Set(bagArtifactIds || []);
 }
 
-export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getArtifact = null) {
+export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getArtifact = null, { preserveOrientation = false } = {}) {
   const bagsSet = bagIdSet(bagArtifactIds);
   const builderItems = [];
   const containerItems = [];
@@ -19,6 +20,11 @@ export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getA
   const freshPurchases = [];
 
   for (const item of loadoutItems || []) {
+    const orientation = preserveOrientation ? {
+      ...(item.width != null ? { width: Number(item.width) } : {}),
+      ...(item.height != null ? { height: Number(item.height) } : {}),
+      ...(item.rotated != null ? { rotated: normalizeRotation(item.rotated) } : {})
+    } : {};
     const isBagRow = bagsSet.has(item.artifactId);
     if (isBagRow) {
       if (item.active) {
@@ -29,7 +35,7 @@ export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getA
           anchorY: Number(item.y ?? 0)
         });
       } else {
-        containerItems.push({ id: item.id, artifactId: item.artifactId });
+        containerItems.push({ id: item.id, artifactId: item.artifactId, ...orientation });
       }
       const rotation = normalizeRotation(item.rotated);
       if (rotation) rotatedBags.push({ id: item.id, artifactId: item.artifactId, rotation });
@@ -44,10 +50,11 @@ export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getA
         x: Number(item.x),
         y: Number(item.y),
         width: Number(item.width),
-        height: Number(item.height)
+        height: Number(item.height),
+        ...orientation
       });
     } else {
-      containerItems.push({ id: item.id, artifactId: item.artifactId });
+      containerItems.push({ id: item.id, artifactId: item.artifactId, ...orientation });
     }
     if (item.freshPurchase) freshPurchases.push(item.artifactId);
   }
@@ -641,17 +648,54 @@ export function planPrepActivateBag({
 
   const controller = prepControllerForPlan({ state: resolvedState, getArtifact, columns, minRows, bagFamily });
   const rotation = controller.bagRotation(resolvedArtifactId, removed.id);
-  const shape = controller.shapeForArtifact(artifact, rotation);
-  const cols = Math.min(Math.max(0, shape[0]?.length || 0), Math.max(1, numberOr(columns, 6)));
-  const rows = shape.length;
-  const { anchorX, anchorY } = controller.findFirstFitAnchor(cols, rows, null, shape);
+  const rotations = [0, 1, 2, 3].map((offset) => (rotation + offset) % 4);
+  const placedBags = prepArray(resolvedState, 'activeBags');
+  const placementOptions = {
+    item: artifact,
+    placedBags,
+    rotations,
+    getPlacedBagItem: (bag) => lookupArtifact(bag.artifactId),
+    getPlacedBagX: (bag) => numberOr(bag.anchorX),
+    getPlacedBagY: (bag) => numberOr(bag.anchorY),
+    getPlacedBagRotation: (bag) => controller.bagRotation(bag.artifactId, bag.id)
+  };
+  let placement = findBagPlacement({
+    ...placementOptions,
+    grid: { columns, rows: Math.max(numberOr(minRows, 6), controller.effectiveRows()) }
+  });
+  if (!placement) {
+    placement = findBagPlacement({
+      ...placementOptions,
+      grid: {
+        columns,
+        rows: controller.effectiveRows() + Math.max(numberOr(artifact.width, 1), numberOr(artifact.height, 1))
+      }
+    });
+  }
+  if (!placement) return { ok: false, reason: 'does_not_fit' };
+
+  const activatedBag = {
+    ...removed,
+    anchorX: placement.x,
+    anchorY: placement.y
+  };
+  const rotatedBags = prepArray(resolvedState, 'rotatedBags').filter((entry) => entry.id !== removed.id);
+  if (normalizeRotation(placement.rotated)) {
+    rotatedBags.push({
+      id: removed.id,
+      artifactId: removed.artifactId,
+      rotation: normalizeRotation(placement.rotated)
+    });
+  }
 
   return {
     ok: true,
     reason: '',
-    activeBags: [...prepArray(resolvedState, 'activeBags'), { ...removed, anchorX, anchorY }],
+    activeBags: [...placedBags, activatedBag],
     containerItems,
-    activatedBag: { ...removed, anchorX, anchorY }
+    rotatedBags,
+    activatedBag,
+    rotation: normalizeRotation(placement.rotated)
   };
 }
 
@@ -1278,6 +1322,7 @@ function resolveArtifactTileVisual(artifact, options = {}) {
 export function shapeArtifactTileDisplay(artifact, {
   displayWidth = null,
   displayHeight = null,
+  rotation = 0,
   shape = null,
   shapeForArtifact = null,
   visualForArtifact = null,
@@ -1297,7 +1342,9 @@ export function shapeArtifactTileDisplay(artifact, {
 } = {}) {
   if (!artifact) return null;
 
-  const maskShape = explicitTileShapeFor(artifact, { shape, shapeForArtifact });
+  let maskShape = explicitTileShapeFor(artifact, { shape, shapeForArtifact });
+  const turns = normalizeRotation(rotation);
+  if (maskShape) for (let turn = 0; turn < turns; turn += 1) maskShape = rotateShape(maskShape);
   const resolvedDisplayWidth = displayWidth != null && Number(displayWidth) > 0
     ? Number(displayWidth)
     : numberOr(artifact.width, 1);
@@ -1383,7 +1430,14 @@ export function shapeArtifactTileDisplay(artifact, {
     imageClassNames,
     imageStyle: {
       ...(imageSrc ? { backgroundImage: `url('${imageSrc}')` } : {}),
-      ...rotatedImageVars
+      ...rotatedImageVars,
+      ...(maskShape && turns ? {
+        position: 'absolute', left: '50%', top: '50%',
+        width: `${(turns % 2 ? height / width : 1) * 100}%`,
+        height: `${(turns % 2 ? width / height : 1) * 100}%`,
+        transform: `translate(-50%, -50%) rotate(${turns * 90}deg)`,
+        transformOrigin: 'center'
+      } : {})
     },
     rotatedImageVars,
     roleGlyph: {

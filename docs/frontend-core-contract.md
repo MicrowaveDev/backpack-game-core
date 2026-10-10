@@ -88,10 +88,10 @@ Vue installed.
   Product repos still own applying those plans to their live store, API
   persistence, haptics, route events, shop purchase/sell/refresh side effects,
   fusion reveal queue mutation, local error copy, and final rendering slots.
-- Inventory/drop-zone widgets such as `BackpackZone` should receive resolved
+- Storage widgets such as `StorageZone` should receive resolved
   item DTOs, labels, stat formatters, highlight sets, and visual slots from the
   product app. Core owns only stable structure, event names, and class hooks.
-- Inventory/grid-section widgets such as `InventoryZone` should receive
+- Backpack grid widgets such as `BackpackZone` should receive
   prepared item rows, active container chip DTOs, labels, grid metadata, and
   grid/footer slots from the product app. Core owns event bridging, chip
   structure, and class hooks, while placement rules and stat rendering stay in

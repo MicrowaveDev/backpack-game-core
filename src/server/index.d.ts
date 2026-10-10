@@ -10,6 +10,19 @@ export interface BackpackServerModuleDefinition {
   setup?: (ctx: BackpackServerContext) => BackpackServerModuleSetupResult;
 }
 
+export function validateGoogleIdentityRedirectRequest(options?: {
+  cookieHeader?: string;
+  body?: Record<string, unknown>;
+}): string;
+
+export function createBrowserSessionRedirectHtml(options?: {
+  appName?: string;
+  sessionToken?: string;
+  storageKey?: string;
+  redirectPath?: string;
+  nonce?: string;
+}): string;
+
 export interface BackpackServerModule {
   name: string;
   requires: string[];
@@ -591,3 +604,7 @@ export {
   clearRateLimitBuckets,
   rateLimit
 } from './middleware/rate-limit.js';
+export function createGoogleIdentityVerifier(options: {
+  clientId: string;
+  oauthClient: { verifyIdToken(options: { idToken: string; audience: string }): Promise<{ getPayload(): Record<string, unknown> | undefined }> };
+}): (credential: string) => Promise<{ provider: 'google'; subject: string; displayName: string; email?: string; emailVerified?: boolean; avatarUrl?: string }>;

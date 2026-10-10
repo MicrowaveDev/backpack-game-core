@@ -49,6 +49,24 @@ function shapeRewardAmounts(rewards = {}, multiplier = 1) {
   };
 }
 
+function addRewardAmounts(...rows) {
+  return rows.reduce((total, row) => ({
+    profileCurrency: total.profileCurrency + toFiniteNumber(row?.profileCurrency, 0),
+    characterProgress: total.characterProgress + toFiniteNumber(row?.characterProgress, 0),
+    spore: total.spore + toFiniteNumber(row?.spore, 0),
+    mycelium: total.mycelium + toFiniteNumber(row?.mycelium, 0)
+  }), shapeRewardAmounts());
+}
+
+function completionRewardsForWins(completionRewardTable = [], wins = 0) {
+  const normalizedWins = toNonNegativeInt(wins, 0);
+  const tier = Array.from(completionRewardTable || []).find((row) => (
+    normalizedWins >= toNonNegativeInt(row?.minWins, 0)
+    && normalizedWins <= toNonNegativeInt(row?.maxWins, Number.MAX_SAFE_INTEGER)
+  ));
+  return shapeRewardAmounts(tier);
+}
+
 function normalizeStarterBag(starterBag = {}) {
   return {
     artifactId: starterBag.artifactId || 'starter_bag',
@@ -236,6 +254,7 @@ export function createRunRoundResolutionPlan({
   playerState = {},
   roundIncome = [],
   rewardTable = {},
+  completionRewardTable = [],
   rewardMultiplier = 1,
   maxRounds = 1
 } = {}) {
@@ -263,12 +282,18 @@ export function createRunRoundResolutionPlan({
   const endReason = runEnded
     ? (livesRemaining <= 0 ? 'max_losses' : 'max_rounds')
     : null;
+  const roundAwards = shapeRewardAmounts(rewards, multiplier);
+  const completionAwards = runEnded
+    ? shapeRewardAmounts(completionRewardsForWins(completionRewardTable, wins), multiplier)
+    : shapeRewardAmounts();
 
   return {
     outcome,
     roundNumber: normalizedRound,
     rewards,
-    awards: shapeRewardAmounts(rewards, multiplier),
+    awards: addRewardAmounts(roundAwards, completionAwards),
+    roundAwards,
+    completionAwards,
     roundIncome: roundIncomeAmount,
     player: {
       completedRounds,

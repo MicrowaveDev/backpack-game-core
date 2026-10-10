@@ -28,11 +28,12 @@ barrels belong directly in it.
 | Fusion matching and recipe evaluation | `src/modules/fusion/` | `@microwavedev/backpack-game-core/modules/fusion` |
 | Shop offers and run-shop state planners | `src/modules/shop/` | `@microwavedev/backpack-game-core/modules/shop` |
 | Run lifecycle and persistence-neutral runtime coordination | `src/modules/run/` | `@microwavedev/backpack-game-core/modules/run` |
+| First-run tutorial state, step eligibility, copy DTOs, and replay scheduling | `src/modules/tutorial/` | `@microwavedev/backpack-game-core/modules/tutorial` |
 | Battle simulation | `src/modules/battle/` | `@microwavedev/backpack-game-core/modules/battle` |
 | Gacha selection, validation, simulation, and admin planning | `src/modules/gacha/` | `@microwavedev/backpack-game-core/modules/gacha` |
 | Wallet accounting and settlement planning | `src/modules/wallet/` | `@microwavedev/backpack-game-core/modules/wallet` |
 | Profile-owned assets and equipment state | `src/modules/assets/` | `@microwavedev/backpack-game-core/modules/assets` |
-| Browser-safe Telegram links, keyboards, commands, update normalization, and score payloads | `src/modules/telegram/` | `@microwavedev/backpack-game-core/modules/telegram` |
+| Browser-safe Telegram links, auth-code parsing, keyboards, commands, update normalization, and score payloads | `src/modules/telegram/` | `@microwavedev/backpack-game-core/modules/telegram` |
 | Auth, config, season, support, community, and social-preview contracts | Matching `src/modules/<domain>/` | Matching `.../modules/<domain>` export |
 | Shared deterministic RNG | `src/shared/` | Package root or compatibility `.../rng` export |
 | Browser-safe request adapters and view-model DTOs | `src/client/` | `.../client` or `.../client-view-model` |
@@ -40,11 +41,27 @@ barrels belong directly in it.
 | Neutral Vue application shell and screen registry | `src/vue/app/` | `.../vue/app` |
 | Neutral Vue pages, components, and composables | Matching folder under `src/vue/` | `.../vue/pages`, `.../vue/components`, or `.../vue/composables` |
 | Server module factories and middleware | `src/server/` | `.../server` or `.../server/middleware` |
-| Node-only Telegram init-data verification, Bot API transport, update routing, and reusable bot runtime | `src/server/telegram/` | `.../server/telegram` |
+| Node-only Telegram init-data/OIDC verification, PKCE, Bot API transport, update routing, and reusable bot runtime | `src/server/telegram/` | `.../server/telegram` |
 | Node-only scripts and image/release utilities | `src/tooling/` | Matching `.../tooling/<name>` export; route execution through [`tooling-routing.md`](tooling-routing.md) |
 
 Artifacts are combat/loadout items. Assets are profile-owned cosmetics or
 other collectible inventory. Keep that naming distinction when routing code.
+
+## Preparation Terminology
+
+Use these names consistently in shared gameplay code and consumer adapters:
+
+- **Storage** is the temporary upper area that receives purchased, unplaced
+  items and bags. Use `StorageZone`, `storageItems`, and `storage-*` tutorial
+  anchors for this surface.
+- **Backpack** is the lower battle grid containing placed items and active bag
+  cells. Use `BackpackZone`, loadout/backpack domain terms, and the `backpack`
+  tutorial anchor for this surface.
+
+Do not call Storage a backpack or call the Backpack an inventory in new code.
+Persisted legacy fields such as `containerItems`, compatibility exports such as
+`InventoryZone`, and the old tutorial step `build_backpack` may be accepted at
+boundaries, but normalize them to the canonical terms immediately.
 
 ## Import Rules
 

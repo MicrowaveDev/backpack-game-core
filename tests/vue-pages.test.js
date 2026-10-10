@@ -19,6 +19,25 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.equal(AuthScreen.name, 'AuthScreen');
   assert.match(AuthScreen.template, /data-character-id/);
   assert.match(AuthScreen.template, /portraitAttributes/);
+  assert.match(AuthScreen.template, /auth-code-command-label/);
+  assert.match(AuthScreen.template, /auth-code-command-copy/);
+  assert.match(AuthScreen.template, /botLinkLabel/);
+  assert.match(AuthScreen.template, /slot name="identity-provider"/);
+  assert.equal(AuthScreen.computed.botStartCommand.call({
+    authCode: { publicCode: 'AC7F6FDC' }
+  }), 'start auth-AC7F6FDC');
+  assert.equal(AuthScreen.computed.botLinkLabel.call({
+    authCode: { botUsername: '@meat_master_bot' },
+    labels: { codeBotLink: 'Telegram bot' }
+  }), '@meat_master_bot');
+  assert.equal(AuthScreen.computed.botLinkLabel.call({
+    authCode: { botUrl: 'https://t.me/EraOfMeatBot?start=auth-CODE' },
+    labels: { codeBotLink: 'Telegram bot' }
+  }), '@EraOfMeatBot');
+  assert.equal(AuthScreen.computed.botLinkLabel.call({
+    authCode: {},
+    labels: { codeBotLink: 'Telegram bot' }
+  }), 'Telegram bot');
   assert.doesNotMatch(AuthScreen.template, /mushroom|spore|meat/i);
   assert.equal(OnboardingScreen.name, 'OnboardingScreen');
   assert.match(OnboardingScreen.template, /characters/);
@@ -60,7 +79,28 @@ test('[vue/pages] common account pages expose product-neutral contracts', () => 
   assert.match(HomeScreen.template, /home-character-list/);
   assert.match(HomeScreen.template, /compatibilityClass\('picker'\)/);
   assert.match(HomeScreen.template, /home-social-sidebar/);
+  assert.equal(HomeScreen.computed.battleLimitIsUnlimited.call({
+    battleLimit: { used: 0, limit: Number.MAX_SAFE_INTEGER }
+  }), true);
+  assert.equal(HomeScreen.computed.battleLimitText.call({
+    battleLimitIsUnlimited: true,
+    battleLimit: { used: 0, limit: null },
+    t: { unlimited: 'Unlimited' }
+  }), 'Unlimited');
+  assert.equal(HomeScreen.computed.battleLimitText.call({
+    battleLimitIsUnlimited: false,
+    battleLimit: { used: 2, limit: 5 },
+    t: { unlimited: 'Unlimited' }
+  }), '2 / 5');
   assert.doesNotMatch(HomeScreen.template, /mushroom|spore|mycel|telegram|meat/i);
+
+  const labels = { t: { startRun: 'Start run', resumeRun: 'Resume run' } };
+  assert.equal(HomeScreen.methods.activeRunActionLabel.call(labels, {
+    activeRun: { player: { completedRounds: 0 }, battles: [] }
+  }), 'Start run');
+  assert.equal(HomeScreen.methods.activeRunActionLabel.call(labels, {
+    activeRun: { player: { completedRounds: 1 }, battles: [{}] }
+  }), 'Resume run');
 
   assert.equal(ReplayDetailScreen.name, 'ReplayDetailScreen');
   assert.match(ReplayDetailScreen.template, /core-replay-screen/);

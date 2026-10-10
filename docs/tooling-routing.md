@@ -66,6 +66,8 @@ core command only when its defaults and safety behavior are genuinely shared.
 | Raster crop, resize, composition, diagnostics, fitting | `tooling/raster` | Library | Layout, dimensions, colors, and approval policy |
 | Alpha, palette, component, frame, and matte analysis | `tooling/image-analysis` | Library | Thresholds and product verdicts |
 | Dimension, alpha, margin, and freshness checks | `tooling/image-validation` | Library | Product image policy |
+| Social card layouts and title styles | `tooling/social-preview` | Library | Key art, copy, paths, browser launcher, and publication choice |
+| SEO, Open Graph, Twitter metadata and crawler documents | `tooling/social-metadata` | Library | Product copy, public URL, image, and server/build mounting |
 | HTML/raster review rendering | `tooling/image-review` | Library | Browser dependency, page layout, destinations |
 | Atomic JSON and hash-bound evidence | `tooling/evidence` | Library | Evidence schema and product lifecycle |
 | Image provenance bundles and checks | `tooling/provenance` | Library | Catalog, status policy, metadata paths |

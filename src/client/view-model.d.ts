@@ -344,6 +344,7 @@ export interface ArtifactTileCell {
 }
 
 export interface ArtifactTileDisplayOptions {
+  rotation?: number;
   displayWidth?: number | null;
   displayHeight?: number | null;
   shape?: readonly (readonly unknown[])[];
@@ -1050,7 +1051,8 @@ export const DEFAULT_REPLAY_SPEEDS: number[];
 export function projectLoadoutItems(
   loadoutItems?: readonly LoadoutProjectionRow[],
   bagArtifactIds?: Iterable<string>,
-  getArtifact?: ((artifactId: string) => unknown) | Map<string, unknown> | null
+  getArtifact?: ((artifactId: string) => unknown) | Map<string, unknown> | null,
+  options?: { preserveOrientation?: boolean }
 ): LoadoutProjection;
 
 export function prepareGridProps(

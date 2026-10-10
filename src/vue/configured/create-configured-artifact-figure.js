@@ -23,7 +23,8 @@ export function createConfiguredArtifactFigure({
     props: {
       artifact: { type: Object, default: null },
       displayWidth: { type: Number, default: 0 },
-      displayHeight: { type: Number, default: 0 }
+      displayHeight: { type: Number, default: 0 },
+      rotation: { type: Number, default: 0 }
     },
     render() {
       if (!this.artifact) return null;
@@ -31,6 +32,7 @@ export function createConfiguredArtifactFigure({
         tile: projectTile(this.artifact, {
           displayWidth: this.displayWidth,
           displayHeight: this.displayHeight,
+          rotation: this.rotation,
           imageForArtifact,
           shapeForArtifact,
           visualForArtifact,

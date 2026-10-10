@@ -234,3 +234,4 @@ export {
   formatReplayEvent,
   getReplayCombatantName
 } from './replay/format.js';
+export { createTutorialController } from './tutorial/index.js';

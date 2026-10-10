@@ -10,6 +10,14 @@ export function getTelegramWebApp(win = defaultWindow()) {
   return win?.Telegram?.WebApp || null;
 }
 
+export function getTelegramStartParam(webApp = getTelegramWebApp()) {
+  const parsed = String(webApp?.initDataUnsafe?.start_param || '').trim();
+  if (parsed) return parsed;
+  const initData = String(webApp?.initData || '').trim();
+  if (!initData) return '';
+  return String(new URLSearchParams(initData).get('start_param') || '').trim();
+}
+
 export function isTelegramMiniAppEnvironment(win = defaultWindow()) {
   return !!getTelegramWebApp(win);
 }
@@ -39,6 +47,21 @@ export function buildTelegramShareUrl({ url = '', text = '' } = {}) {
   if (url) shareUrl.searchParams.set('url', url);
   if (text) shareUrl.searchParams.set('text', text);
   return shareUrl.toString();
+}
+
+export function openTelegramLink(url, { win = defaultWindow() } = {}) {
+  const target = String(url || '').trim();
+  if (!target) return 'none';
+  const tg = getTelegramWebApp(win);
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(target);
+    return 'telegram';
+  }
+  if (typeof win?.open === 'function') {
+    win.open(target, '_blank', 'noopener,noreferrer');
+    return 'window';
+  }
+  return 'none';
 }
 
 export async function shareTelegramText({ text = '', url = '', win = defaultWindow(), navigatorRef = win?.navigator } = {}) {

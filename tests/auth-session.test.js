@@ -2,10 +2,29 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createProfileRuntimeService,
+  normalizeGoogleIdentityClaims,
   shapeAuthLogoutResult,
   shapeAuthSessionResult,
   shapeAuthUserProfile
 } from '../src/modules/auth/index.js';
+
+test('[auth] normalizes verified Google claims without using email as identity', () => {
+  assert.deepEqual(normalizeGoogleIdentityClaims({
+    sub: 'google-subject',
+    name: 'Meat Player',
+    email: 'player@example.com',
+    email_verified: true,
+    picture: 'https://example.com/avatar.png'
+  }), {
+    provider: 'google',
+    subject: 'google-subject',
+    displayName: 'Meat Player',
+    email: 'player@example.com',
+    emailVerified: true,
+    avatarUrl: 'https://example.com/avatar.png'
+  });
+  assert.throws(() => normalizeGoogleIdentityClaims({ email: 'player@example.com' }), /require sub/);
+});
 
 test('[auth] shapes public auth user profiles from product rows', () => {
   assert.deepEqual(shapeAuthUserProfile({

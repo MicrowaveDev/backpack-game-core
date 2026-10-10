@@ -10,3 +10,5 @@ export {
 } from './composables/useTelegramWebApp.js';
 
 export { useTouch } from './composables/useTouch.js';
+
+export { createBackpackInteraction, createBackpackInteractionState } from './composables/useBackpackInteraction.js';

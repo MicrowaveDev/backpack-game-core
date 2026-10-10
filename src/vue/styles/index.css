@@ -206,6 +206,22 @@ select {
   margin-top: 6px;
 }
 
+.google-identity-button {
+  min-height: 44px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.google-identity-button > div {
+  display: flex;
+  justify-content: center;
+}
+
+.google-identity-button.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .auth-cta {
   font-size: 1.1em;
   padding: 14px 20px;
@@ -285,15 +301,41 @@ select {
   font-size: 0.86em;
 }
 
-.auth-code-command code {
-  display: block;
+.auth-code-command-copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
   padding: 10px 12px;
+  border: 1px solid var(--border);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.auth-code-command-copy code {
   font-size: 0.95rem;
   overflow-wrap: anywhere;
   user-select: all;
+}
+
+.auth-code-command-copy svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.auth-code-command-label a {
+  color: var(--accent);
+  font-weight: 700;
+  text-underline-offset: 2px;
 }
 
 .auth-lang-row {
@@ -3326,7 +3368,7 @@ select {
   font-size: 0.85em;
 }
 
-/* Container (backpack) zone */
+/* Temporary Storage zone */
 
 .artifact-container-zone {
   display: flex;
@@ -3553,8 +3595,13 @@ select {
 }
 
 .shop-item--expensive {
-  opacity: 0.5;
+  opacity: 0.46;
+  filter: grayscale(0.58) saturate(0.45);
   cursor: not-allowed;
+}
+
+.shop-item--expensive .shop-item-price {
+  color: rgba(80, 68, 56, 0.68);
 }
 .shop-item--tier2 {
   border-color: var(--accent-soft);
@@ -4145,6 +4192,15 @@ select {
   filter:
     drop-shadow(0 9px 16px rgba(91, 64, 36, 0.13))
     drop-shadow(0 2px 2px rgba(255, 255, 255, 0.42));
+}
+
+.artifact-grid-piece-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .artifact-shine--radiant .artifact-figure-bitmap,
@@ -5478,15 +5534,15 @@ select {
   content: '';
   position: absolute;
   left: var(--bubble-tail-left, 32%);
-  top: var(--bubble-tail-top, -10px);
-  bottom: var(--bubble-tail-bottom, auto);
+  top: var(--bubble-tail-top, auto);
+  bottom: var(--bubble-tail-bottom, -10px);
   width: 18px;
   height: 18px;
   background: rgba(255, 250, 239, 0.96);
-  border-left: 1px solid var(--bubble-tail-border-left, rgba(138, 97, 53, 0.22));
-  border-top: 1px solid var(--bubble-tail-border-top, rgba(138, 97, 53, 0.22));
-  border-right: 1px solid var(--bubble-tail-border-right, transparent);
-  border-bottom: 1px solid var(--bubble-tail-border-bottom, transparent);
+  border-left: 1px solid var(--bubble-tail-border-left, transparent);
+  border-top: 1px solid var(--bubble-tail-border-top, transparent);
+  border-right: 1px solid var(--bubble-tail-border-right, rgba(138, 97, 53, 0.22));
+  border-bottom: 1px solid var(--bubble-tail-border-bottom, rgba(138, 97, 53, 0.22));
   transform: rotate(45deg);
 }
 
@@ -8976,6 +9032,13 @@ select {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
 }
 
+.prep-screen .artifact-inventory-header {
+  position: relative;
+  z-index: 1;
+  padding: 0 2px;
+  font-size: 1.05em;
+}
+
 .prep-screen .artifact-inventory-section::before {
   content: '';
   position: absolute;
@@ -10032,3 +10095,295 @@ select {
 .reduced-motion ::view-transition-new(root) {
   animation-duration: 0.01ms !important;
 }
+
+/* --- First-run tutorial --- */
+.tutorial-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.tutorial-popup {
+  position: fixed;
+  width: min(320px, calc(100vw - 24px));
+  max-height: min(360px, calc(100dvh - 24px));
+  overflow: visible auto;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: left;
+  pointer-events: auto;
+  box-shadow: 0 12px 32px rgba(22, 17, 12, 0.22);
+  animation: tutorial-popup-enter 160ms ease-out;
+}
+
+.tutorial-popup--with-image {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: 12px;
+}
+
+.tutorial-popup::before {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: inherit;
+  border: inherit;
+  content: '';
+  transform: rotate(45deg);
+}
+
+.tutorial-popup[data-placement^='between-']::before {
+  display: none;
+}
+
+.tutorial-popup[data-placement='top']::before {
+  left: calc(var(--tutorial-arrow-offset) - 8px);
+  bottom: -9px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.tutorial-popup[data-placement='bottom']::before {
+  left: calc(var(--tutorial-arrow-offset) - 8px);
+  top: -9px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.tutorial-popup[data-placement='left']::before {
+  top: calc(var(--tutorial-arrow-offset) - 8px);
+  right: -9px;
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.tutorial-popup[data-placement='right']::before {
+  top: calc(var(--tutorial-arrow-offset) - 8px);
+  left: -9px;
+  border-top: 0;
+  border-right: 0;
+}
+
+.tutorial-popup-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.tutorial-popup-image {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  object-fit: contain;
+}
+
+.tutorial-popup--with-image .tutorial-popup-image {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.tutorial-popup--with-image .tutorial-popup-title,
+.tutorial-popup--with-image .tutorial-popup-body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.tutorial-popup--with-image .tutorial-popup-actions {
+  grid-column: 1 / -1;
+}
+
+.tutorial-popup-title {
+  margin: 0 32px 6px 0;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.tutorial-popup-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.tutorial-popup-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tutorial-popup-primary,
+.tutorial-popup-skip {
+  min-height: 38px;
+  padding: 7px 12px;
+  font-size: 14px;
+}
+
+.tutorial-popup-primary {
+  flex: 1 1 auto;
+}
+
+.tutorial-popup-skip {
+  flex: 0 1 auto;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.78;
+}
+
+.tutorial-popup-skip:hover,
+.tutorial-popup-skip:focus-visible {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  opacity: 1;
+}
+
+.tutorial-popup-actions--action-required {
+  justify-content: flex-end;
+}
+
+.tutorial-popup--reduced-motion .tutorial-popup {
+  animation: none;
+}
+
+.setting-hint {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.72;
+  font-weight: 400;
+}
+
+@keyframes tutorial-popup-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 560px) {
+  .tutorial-popup {
+    padding: 14px;
+  }
+
+  .tutorial-popup-title {
+    font-size: 18px;
+  }
+
+  .tutorial-popup-body {
+    font-size: 14px;
+  }
+}
+
+/* Preparation guidance reserves space above the shop instead of covering cards. */
+.prep-shop-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.prep-shop-column > .artifact-shop {
+  flex: 1;
+}
+[data-tutorial-host="prep-shop"]:not(:empty) {
+  margin-bottom: 12px;
+}
+.tutorial-popup-backdrop.tutorial-popup--inline {
+  position: static;
+  z-index: auto;
+}
+.tutorial-popup--inline .tutorial-popup {
+  position: relative;
+  width: 100%;
+  max-height: none;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--accent-soft) 28%, #fffdf5);
+  border: 2px solid var(--accent-soft);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.tutorial-popup--inline .tutorial-popup-title {
+  color: var(--accent);
+  padding-right: 32px;
+}
+.tutorial-popup--inline .tutorial-popup::before {
+  display: none;
+}
+
+[data-tutorial-host="home"]:empty { display: none; }
+[data-tutorial-host="home"] { grid-column: 1 / -1; min-width: 0; }
+
+@media (max-width: 679px) {
+  /* Keep first-run guidance readable beneath the roster, where floating
+     social shortcuts would otherwise cover its heading at the initial fold. */
+  [data-testid="home-screen"]:has([data-tutorial-host="home"]:not(:empty)) .home-bottom-actions {
+    display: none;
+  }
+}
+
+/* Shared preparation interaction states; consumer themes supply colors. */
+.backpack-interaction-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-block: 8px;
+  max-width: 100%;
+}
+.backpack-interaction-action {
+  min-height: 44px;
+  padding: 8px 12px;
+  font: inherit;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: var(--panel-bg, #fffaf0);
+  color: inherit;
+}
+.backpack-interaction-action[aria-pressed="true"] { outline: 2px solid currentColor; }
+.backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
+.backpack-interaction-hint,
+.backpack-interaction-reason { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
+.backpack-interaction-reason { min-height: 1.5em; font-weight: 600; }
+.backpack-interaction-source { touch-action: none; cursor: grab; }
+.backpack-interaction-selected { outline: 3px solid var(--accent, #446c40); outline-offset: 2px; }
+.backpack-interaction-board .artifact-grid-cell--bag-empty,
+.backpack-interaction-board .artifact-grid-cell--bag-disabled {
+  background: repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(70,70,70,.08) 5px, rgba(70,70,70,.08) 7px);
+  border-style: dashed;
+  opacity: .65;
+}
+.backpack-interaction-board .artifact-grid-cell--preview { opacity: 1; }
+.backpack-interaction-board .backpack-interaction-conflict {
+  opacity: 1;
+  outline: 3px solid #a83228;
+  background: repeating-linear-gradient(135deg, rgba(168,50,40,.12), rgba(168,50,40,.12) 5px, rgba(168,50,40,.3) 5px, rgba(168,50,40,.3) 8px);
+}
+.backpack-interaction-bags { touch-action: none; }
+.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
+.backpack-interaction-board .artifact-grid-pieces { pointer-events: none; }
+.backpack-interaction-board .artifact-piece-wrap[data-artifact-id] { pointer-events: auto; }
+.backpack-interaction-board.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
+.backpack-interaction-board button.artifact-grid-cell { padding: 0; font: inherit; }
+
+.backpack-interaction-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  gap: 8px;
+}
+/* Instruction and rejection share one stable slot, so selecting or dragging
+   never moves the board beneath the pointer. Three lines fit narrow screens. */
+.backpack-interaction-guidance {
+  flex-basis: 100%;
+  display: grid;
+  min-height: 3.75em;
+  line-height: 1.25;
+}
+.backpack-interaction-guidance > p { grid-area: 1 / 1; margin: 0; }
+.backpack-interaction-guidance--reason .backpack-interaction-hint { opacity: 0; }
+.backpack-interaction-guidance .backpack-interaction-reason { min-height: 0; }

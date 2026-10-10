@@ -228,6 +228,36 @@ test('[run-lifecycle] plans max-loss and max-round completion reasons', () => {
   assert.equal(fullClear.player.wins, 9);
 });
 
+test('[run-lifecycle] applies a configured completion reward tier only when the run ends', () => {
+  const completionRewardTable = [
+    { minWins: 0, maxWins: 2, profileCurrency: 0 },
+    { minWins: 3, maxWins: 4, profileCurrency: 5 },
+    { minWins: 5, maxWins: 9, profileCurrency: 10 }
+  ];
+  const active = createRunRoundResolutionPlan({
+    outcome: 'win',
+    roundNumber: 4,
+    playerState: { completedRounds: 3, wins: 3, livesRemaining: 5 },
+    rewardTable: { win: { profileCurrency: 2 } },
+    completionRewardTable,
+    maxRounds: 9
+  });
+  const completed = createRunRoundResolutionPlan({
+    outcome: 'win',
+    roundNumber: 9,
+    playerState: { completedRounds: 8, wins: 8, livesRemaining: 5 },
+    rewardTable: { win: { profileCurrency: 2 } },
+    completionRewardTable,
+    maxRounds: 9
+  });
+
+  assert.equal(active.completionAwards.profileCurrency, 0);
+  assert.equal(active.awards.profileCurrency, 2);
+  assert.equal(completed.roundAwards.profileCurrency, 2);
+  assert.equal(completed.completionAwards.profileCurrency, 10);
+  assert.equal(completed.awards.profileCurrency, 12);
+});
+
 test('[run-lifecycle] plans challenge group completion reasons', () => {
   assert.deepEqual(createRunGroupCompletionPlan({
     playerResults: {

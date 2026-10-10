@@ -4,6 +4,10 @@ function nonEmptyArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
+function rowUnavailable(row) {
+  return Boolean(row?.unavailable || row?.canAfford === false);
+}
+
 export const ShopZone = {
   name: 'ShopZone',
   components: { SellZone },
@@ -160,6 +164,7 @@ export const ShopZone = {
     classFor(row) {
       return [
         this.itemClass,
+        { 'shop-item--expensive': rowUnavailable(row) },
         typeof this.rowClass === 'function' ? this.rowClass(row) : this.rowClass
       ].filter(Boolean);
     },
@@ -188,6 +193,7 @@ export const ShopZone = {
       ].filter(Boolean);
     },
     emitBuy(row) {
+      if (rowUnavailable(row)) return;
       this.$emit('buy', row);
     },
     emitRefresh() {
@@ -204,12 +210,13 @@ export const ShopZone = {
     }
   },
   template: `
-    <div :class="rootClass">
+    <div :class="rootClass" data-tutorial-anchor="shop">
       <div :class="headerClass">
         <strong>{{ titleLabel }}</strong>
         <button
           type="button"
           :class="refreshButtonClass"
+          data-tutorial-anchor="shop-refresh"
           :disabled="refreshDisabled"
           @click="emitRefresh"
         >{{ refreshText }}</button>
@@ -222,10 +229,16 @@ export const ShopZone = {
           :data-artifact-draggable="row.canAfford ? 'true' : 'false'"
           :data-artifact-id="row.artifactId || null"
           :data-artifact-family="row.artifact?.family || null"
+          :data-tutorial-anchor="row.artifact?.family === 'bag' || row.isBag ? 'shop-bag' : (row.canAfford === false ? 'shop-artifact' : 'shop-affordable-artifact')"
           :data-artifact-width="previewWidth(row)"
           :data-artifact-height="previewHeight(row)"
           v-bind="attrsFor(row)"
+          role="button"
+          :aria-disabled="row.unavailable || row.canAfford === false ? 'true' : null"
+          :tabindex="row.unavailable || row.canAfford === false ? -1 : 0"
           @click="emitBuy(row)"
+          @keydown.enter.prevent="emitBuy(row)"
+          @keydown.space.prevent="emitBuy(row)"
         >
           <slot name="item-header" :row="row">
             <div :class="itemHeaderClass">
@@ -242,7 +255,7 @@ export const ShopZone = {
           <slot name="item-tags" :row="row" :stats="renderedStats(row)">
             <div :class="itemTagsClass">
               <span
-                v-if="row.characterItem"
+                v-if="row.characterItem && characterItemLabel"
                 :class="[statChipClass, characterTagClass]"
               >{{ characterItemLabel }}</span>
               <span

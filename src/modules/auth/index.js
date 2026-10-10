@@ -8,6 +8,19 @@ function omitUndefined(record) {
   );
 }
 
+export function normalizeGoogleIdentityClaims(claims = {}) {
+  const subject = String(claims.sub || '').trim();
+  if (!subject) throw new TypeError('Verified Google identity claims require sub');
+  return omitUndefined({
+    provider: 'google',
+    subject,
+    displayName: String(claims.name || '').trim() || 'Google Player',
+    email: claims.email ? String(claims.email) : undefined,
+    emailVerified: claims.email_verified === undefined ? undefined : Boolean(claims.email_verified),
+    avatarUrl: claims.picture ? String(claims.picture) : undefined
+  });
+}
+
 export function shapeAuthUserProfile(user = {}, {
   id = user.id,
   telegramId = firstDefined(user.telegramId, user.telegram_id),

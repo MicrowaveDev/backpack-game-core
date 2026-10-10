@@ -2,6 +2,7 @@ export const SettingsScreen = {
   name: 'SettingsScreen',
   props: {
     settings: { type: Object, required: true },
+    tutorialReplayPending: { type: Boolean, default: false },
     mobileActionsMode: { type: String, default: 'auto' },
     locale: { type: String, default: 'en' },
     labels: { type: Object, default: () => ({}) },
@@ -10,7 +11,7 @@ export const SettingsScreen = {
       default: () => [{ value: 'ru', label: 'RU' }, { value: 'en', label: 'EN' }]
     }
   },
-  emits: ['update:locale', 'update:reduced-motion', 'update:battle-speed', 'update:mobile-actions-mode', 'save'],
+  emits: ['update:locale', 'update:reduced-motion', 'update:battle-speed', 'update:mobile-actions-mode', 'update:tutorial-replay-pending', 'save'],
   template: `
     <section class="panel settings-panel">
       <h2>{{ labels.title }}</h2>
@@ -21,6 +22,17 @@ export const SettingsScreen = {
           <select class="setting-select" :value="locale" @change="$emit('update:locale', $event.target.value)">
             <option v-for="language in languages" :key="language.value" :value="language.value">{{ language.label }}</option>
           </select>
+        </span>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-label">
+          {{ labels.tutorialReplay }}
+          <small v-if="labels.tutorialReplayHint" class="setting-hint">{{ labels.tutorialReplayHint }}</small>
+        </span>
+        <span class="setting-toggle">
+          <input type="checkbox" :checked="tutorialReplayPending" @change="$emit('update:tutorial-replay-pending', $event.target.checked)" />
+          <span class="setting-toggle-track"><span class="setting-toggle-thumb"></span></span>
         </span>
       </label>
 

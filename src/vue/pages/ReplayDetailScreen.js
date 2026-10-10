@@ -8,6 +8,7 @@ export const ReplayDetailScreen = {
     'activeReplayState', 'visibleReplayEvents', 'longBattleSpeedBoost',
     'buildReplayFighter', 'getCharacter', 'loadoutStatsText',
     'renderArtifactFigure', 'getArtifact', 'replayDuelComponent',
+    'replaySpeedOptions',
     'profileRewardKey', 'progressionRewardKey', 'progressionRewardIcon',
     'getSnapshotCharacterId'
   ],
@@ -276,6 +277,7 @@ export const ReplayDetailScreen = {
           :status-text="battleStatusText"
           :lang="state.lang"
           :replay-speed="state.replaySpeed || 1"
+          :speed-options="replaySpeedOptions"
           :speed-boost="longBattleSpeedBoost || 1"
           @set-speed="$emit('set-speed', $event)"
         />

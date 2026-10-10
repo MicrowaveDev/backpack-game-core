@@ -45,6 +45,7 @@ export function createConfiguredReplayDuel({
       lang: { type: String, default: 'en' },
       statusText: { type: String, default: '' },
       replaySpeed: { type: Number, default: 1 },
+      speedOptions: { type: Array, default: null },
       speedBoost: { type: Number, default: 1 }
     },
     emits: ['set-speed'],
@@ -104,6 +105,7 @@ export function createConfiguredReplayDuel({
         :acting-side="actingSide"
         :status-text="statusText"
         :replay-speed="replaySpeed"
+        :speed-options="speedOptions"
         :speed-boost="speedBoost"
         :left-visual-effects="effectsFor('left')"
         :right-visual-effects="effectsFor('right')"

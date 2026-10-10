@@ -9,11 +9,13 @@ export { ArtifactStatSummary } from './components/ArtifactStatSummary.js';
 export { BackpackGrid } from './components/BackpackGrid.js';
 export { BattleLog } from './components/BattleLog.js';
 export { BackpackZone } from './components/BackpackZone.js';
+export { StorageZone } from './components/StorageZone.js';
 export { CatalogPageScreen } from './components/CatalogPageScreen.js';
 export { FighterCard } from './components/FighterCard.js';
 export { FusionReveal } from './components/FusionReveal.js';
+export { createGoogleIdentityConfig, GoogleIdentityButton } from './components/GoogleIdentityButton.js';
 export { HomeSocialSidebar } from './components/HomeSocialSidebar.js';
-export { InventoryZone } from './components/InventoryZone.js';
+export { BackpackZone as InventoryZone } from './components/BackpackZone.js';
 export { PrepScreen } from './components/PrepScreen.js';
 export { PrepActions } from './components/PrepActions.js';
 export { RecipeCard } from './components/RecipeCard.js';
@@ -21,10 +23,12 @@ export { RecipeList } from './components/RecipeList.js';
 export { ReplayDuel } from './components/ReplayDuel.js';
 export { ReplayScreen } from './components/ReplayScreen.js';
 export { RunHud } from './components/RunHud.js';
+export { RunCompleteScreen } from './components/RunCompleteScreen.js';
 export { RunSummaryScreen } from './components/RunSummaryScreen.js';
 export { SellZone } from './components/SellZone.js';
 export { SeasonRankEmblem } from './components/SeasonRankEmblem.js';
 export { ShopZone } from './components/ShopZone.js';
+export { TutorialPopup } from './components/TutorialPopup.js';
 
 export const AssetRollResultPanel = {
   name: 'AssetRollResultPanel',
@@ -363,7 +367,11 @@ export const ShopItemRow = {
       return Boolean(this.row);
     },
     itemClasses() {
-      return [this.itemClass, this.rowClass].filter(Boolean);
+      return [
+        this.itemClass,
+        { 'shop-item--expensive': Boolean(this.row?.unavailable || this.row?.canAfford === false) },
+        this.rowClass
+      ].filter(Boolean);
     },
     renderedStats() {
       return nonEmptyArray(this.row?.statRows);
@@ -377,7 +385,7 @@ export const ShopItemRow = {
   },
   methods: {
     emitBuy() {
-      if (!this.row) return;
+      if (!this.row || this.row.unavailable || this.row.canAfford === false) return;
       this.$emit('buy', this.row);
       this.$emit('select', this.row);
     },
@@ -402,7 +410,12 @@ export const ShopItemRow = {
       :data-artifact-width="previewWidth"
       :data-artifact-height="previewHeight"
       v-bind="itemAttrs"
+      role="button"
+      :aria-disabled="row.unavailable || row.canAfford === false ? 'true' : null"
+      :tabindex="row.unavailable || row.canAfford === false ? -1 : 0"
       @click="emitBuy"
+      @keydown.enter.prevent="emitBuy"
+      @keydown.space.prevent="emitBuy"
     >
       <slot name="header" :row="row">
         <component :is="headerTag" :class="headerClass || null">
@@ -423,7 +436,7 @@ export const ShopItemRow = {
       <slot name="tags" :row="row" :stats="renderedStats">
         <component :is="tagsTag" :class="tagsClass || null">
           <component
-            v-if="row.characterItem"
+            v-if="row.characterItem && characterItemLabel"
             :is="tagTag"
             :class="[tagClass, characterTagClass]"
           >{{ characterItemLabel }}</component>
@@ -977,3 +990,5 @@ export const GachaPackCardList = {
     </component>
   `
 };
+
+export { BackpackInteractionControls } from './components/BackpackInteractionControls.js';

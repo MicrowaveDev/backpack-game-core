@@ -293,7 +293,7 @@ restart_with_retry() {
   first_attempt_exit=$?
   set -e
 
-  [[ "$first_attempt_exit" -ne 0 ]] || return
+  [[ "$first_attempt_exit" -ne 0 ]] || return 0
 
   if [[ "$CACHE_CLEANUP" -eq 1 && "$AGGRESSIVE_CLEANUP" -eq 1 ]]; then
     echo ""

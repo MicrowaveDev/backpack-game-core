@@ -13,5 +13,6 @@ export * from './modules/battle/simulation.js';
 export * from './modules/wallet/accounting.js';
 export * from './modules/assets/profile-state.js';
 export * from './modules/gacha/engine.js';
+export * from './modules/tutorial/index.js';
 export * from './client/view-model.js';
 export * from './client/index.js';
