@@ -78,3 +78,12 @@ coverage. The user has agreed to perform iOS/Android device verification:
 
 Record device, OS, Telegram version, game, and failing step when reporting an
 issue. Real-device acceptance remains pending until those results are supplied.
+
+## Pointer-following artifact visual
+
+After the drag threshold, `state.dragVisual` tracks viewport position and the
+exact pixel grab offset. The inventory board teleports the consumer's existing
+artifact renderer to a fixed, non-interactive overlay. Both artifacts and bags
+retain their canonical orientation and grid size. This freely moving art is
+separate from snapped destination/conflict cells. Drop, cancellation, capture
+loss, blur and detach remove the visual without changing the page layout.
