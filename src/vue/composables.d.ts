@@ -65,6 +65,7 @@ export interface BackpackInteractionState {
   selectedId: string;
   bagMode: boolean;
   preview: (import('../modules/loadout/interaction-placement.js').BackpackPlacementResult & { valid: boolean; x?: number; y?: number }) | null;
+  dragVisual: { clientX: number; clientY: number; width: number; height: number; cellWidth: number; gap: number; grabX: number; grabY: number } | null;
   messageCode: string;
   busy: boolean;
 }

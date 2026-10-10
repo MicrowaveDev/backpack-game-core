@@ -5,7 +5,7 @@ import {
 } from '../../modules/loadout/interaction-placement.js';
 
 export function createBackpackInteractionState() {
-  return { selectedId: '', bagMode: false, preview: null, messageCode: '', busy: false };
+  return { selectedId: '', bagMode: false, preview: null, dragVisual: null, messageCode: '', busy: false };
 }
 
 /** One input owner for both configured and adapter-based preparation screens. */
@@ -36,6 +36,7 @@ export function createBackpackInteraction({
   function clearPointer() {
     const current = pointer;
     pointer = null;
+    state.dragVisual = null;
     if (current?.moved) suppressClickUntil = Date.now() + 400;
     try { current?.target?.releasePointerCapture?.(current.id); } catch { /* Already released. */ }
   }
@@ -158,20 +159,25 @@ export function createBackpackInteraction({
     cancel();
     state.bagMode = !state.bagMode;
   }
+  function boardGeometry(board) {
+    const first = board?.querySelector('[data-cell-x="0"][data-cell-y="0"]');
+    if (!first) return null;
+    const rect = first.getBoundingClientRect();
+    const nextX = board.querySelector('[data-cell-x="1"][data-cell-y="0"]')?.getBoundingClientRect();
+    const nextY = board.querySelector('[data-cell-x="0"][data-cell-y="1"]')?.getBoundingClientRect();
+    const pitchX = nextX ? nextX.left - rect.left : rect.width;
+    const pitchY = nextY ? nextY.top - rect.top : rect.height;
+    return pitchX > 0 && pitchY > 0 ? { rect, pitchX, pitchY, board } : null;
+  }
   function boardAt(x, y) {
     for (const board of root?.querySelectorAll?.('[data-backpack-interaction-board]') || []) {
-      const first = board.querySelector('[data-cell-x="0"][data-cell-y="0"]');
-      if (!first) continue;
-      const rect = first.getBoundingClientRect();
-      const nextX = board.querySelector('[data-cell-x="1"][data-cell-y="0"]')?.getBoundingClientRect();
-      const nextY = board.querySelector('[data-cell-x="0"][data-cell-y="1"]')?.getBoundingClientRect();
-      const pitchX = nextX ? nextX.left - rect.left : rect.width;
-      const pitchY = nextY ? nextY.top - rect.top : rect.height;
-      if (pitchX <= 0 || pitchY <= 0) continue;
+      const geometry = boardGeometry(board);
+      if (!geometry) continue;
+      const { rect, pitchX, pitchY } = geometry;
       const cellX = Math.floor((x - rect.left) / pitchX);
       const cellY = Math.floor((y - rect.top) / pitchY);
       if (cellX < 0 || cellY < 0 || cellX >= columns || cellY >= getHeight()) continue;
-      return { x: cellX, y: cellY, pitchX, pitchY, board };
+      return { x: cellX, y: cellY, ...geometry };
     }
     return null;
   }
@@ -196,9 +202,26 @@ export function createBackpackInteraction({
       : Math.floor(((event.clientX - (rect?.left ?? event.clientX)) / (rect?.width || 1)) * dimensions.width);
     const offsetY = active(item) && zone ? zone.y - Number(item.y)
       : Math.floor(((event.clientY - (rect?.top ?? event.clientY)) / (rect?.height || 1)) * dimensions.height);
+    const geometry = zone || boardGeometry([...root?.querySelectorAll?.('[data-backpack-interaction-board]') || []][0]);
+    const pitchX = geometry?.pitchX || 50;
+    const pitchY = geometry?.pitchY || 50;
+    const cellWidth = geometry?.rect.width || pitchX;
+    const cellHeight = geometry?.rect.height || pitchY;
+    const width = dimensions.width * pitchX - (pitchX - cellWidth);
+    const height = dimensions.height * pitchY - (pitchY - cellHeight);
+    // Placed rows retain the exact pixel grab point, including gaps. Storage
+    // and chips use the same relative point scaled to the destination grid.
+    const grabX = active(item) && zone
+      ? event.clientX - (geometry.rect.left + Number(item.x) * pitchX)
+      : ((event.clientX - (rect?.left ?? event.clientX)) / (rect?.width || 1)) * width;
+    const grabY = active(item) && zone
+      ? event.clientY - (geometry.rect.top + Number(item.y) * pitchY)
+      : ((event.clientY - (rect?.top ?? event.clientY)) / (rect?.height || 1)) * height;
     pointer = {
       id: event.pointerId, startX: event.clientX, startY: event.clientY,
       item, moved: false, target: root,
+      visual: { width, height, cellWidth, gap: pitchX - cellWidth,
+        grabX: Math.max(0, Math.min(width, grabX)), grabY: Math.max(0, Math.min(height, grabY)) },
       offsetX: Math.max(0, Math.min(dimensions.width - 1, offsetX)),
       offsetY: Math.max(0, Math.min(dimensions.height - 1, offsetY))
     };
@@ -219,6 +242,7 @@ export function createBackpackInteraction({
       try { root.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older WebView. */ }
     }
     event.preventDefault();
+    state.dragVisual = { ...pointer.visual, clientX: event.clientX, clientY: event.clientY };
     const cell = boardAt(event.clientX, event.clientY);
     if (cell) previewAt({ x: cell.x - pointer.offsetX, y: cell.y - pointer.offsetY });
     else state.preview = null;

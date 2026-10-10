@@ -393,3 +393,37 @@ test('new pointerdown immediately after drag permits the real following click', 
   assert.equal(realClick.stopped, false);
   assert.equal(realClick.prevented, false);
 });
+
+
+test('drag art retains the exact pixel grab, follows outside the board and clears on drop', async (t) => {
+  const placed = { ...stored, x: 0, y: 0 };
+  const f = fixture(t, { initialRows: [bag, placed] });
+  f.root.emit('pointerdown', { target: f.target(placed.id), ...f.point(0, 1) });
+  assert.equal(f.interaction.state.dragVisual, null);
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.deepEqual(f.interaction.state.dragVisual, {
+    width: 36, height: 76, cellWidth: 36, gap: 4, grabX: 10, grabY: 50,
+    clientX: 190, clientY: 190
+  });
+  f.root.emit('pointermove', { clientX: 800, clientY: 700 });
+  assert.equal(f.interaction.state.dragVisual.clientX, 800);
+  assert.equal(f.interaction.state.preview, null);
+  f.root.emit('pointerup', { clientX: 800, clientY: 700 });
+  assert.equal(f.interaction.state.dragVisual, null);
+  assert.equal(f.calls.length, 0);
+});
+
+for (const cancelEvent of ['pointercancel', 'lostpointercapture', 'blur', 'Escape', 'detach']) {
+  test(`drag art clears on ${cancelEvent}`, (t) => {
+    const f = fixture(t);
+    f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30, pointerType: 'touch' });
+    f.root.emit('pointermove', f.point(1, 1));
+    assert.ok(f.interaction.state.dragVisual);
+    if (cancelEvent === 'blur') f.win.emit('blur');
+    else if (cancelEvent === 'Escape') f.doc.emit('keydown', { key: 'Escape' });
+    else if (cancelEvent === 'detach') f.interaction.detach();
+    else f.root.emit(cancelEvent);
+    assert.equal(f.interaction.state.dragVisual, null);
+    assert.equal(f.calls.length, 0);
+  });
+}
