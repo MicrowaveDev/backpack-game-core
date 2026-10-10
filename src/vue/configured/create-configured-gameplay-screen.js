@@ -1,5 +1,5 @@
 import { markRaw } from 'vue';
-import { createBackpackInteraction, createBackpackInteractionState } from '@microwavedev/backpack-game-core/vue/composables';
+import { createBackpackInteraction, createBackpackInteractionState } from '../composables.js';
 import {
   ArtifactGridBoard,
   ArtifactStatSummary,
