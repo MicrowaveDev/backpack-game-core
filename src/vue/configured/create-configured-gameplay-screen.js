@@ -311,6 +311,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       canInteract: () => this.runIsActive && !this.loading && !this.showReplay,
       commitRows: (rows) => this.saveRows(rows),
       onSell: (item) => this.sell({ id: item.id }),
+      getSellPrice: (item) => options.getSellPrice?.(item, this.controller) ?? null,
       onCommitted: (change) => this.onInteractionCommitted(change),
       isLockedBag: (row) => row.artifactId === 'starter_bag'
     }));

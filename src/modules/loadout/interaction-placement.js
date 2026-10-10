@@ -30,7 +30,7 @@ const artifactId = (row) => row?.artifactId ?? row?.artifact_id ?? row?.id;
 export function evaluateBackpackPlacement({
   rows = [], item, x, y, columns, height,
   getArtifact = (_id, row) => row?.artifact,
-  isLockedBag = () => false
+  isLockedBag = () => false, evacuateBagContents = false
 }) {
   const artifact = item && getArtifact(artifactId(item), item);
   const family = artifact?.family;
@@ -40,12 +40,26 @@ export function evaluateBackpackPlacement({
     ...(family === 'bag' ? { active: true } : {})
   } : item;
   const cells = artifact ? getBackpackItemCells(proposed, artifact) : [];
+  const original = rows.find((row) => sameInstance(row, item));
+  const moved = family === 'bag' && original && original.active && isPlaced(original)
+    && (Number(original.x) !== Number(x) || Number(original.y) !== Number(y));
+  const oldCells = new Set(moved && evacuateBagContents
+    ? getBackpackItemCells(original, artifact) : []);
+  const affectedIds = rows.filter((row) => isPlaced(row)
+    && getArtifact(artifactId(row), row)?.family !== 'bag'
+    && getBackpackItemCells(row, getArtifact(artifactId(row), row)).some((cell) => oldCells.has(cell)))
+    .map((row) => row.id);
+  const evacuate = (row) => affectedIds.includes(row.id)
+    ? { ...row, x: -1, y: -1, active: false } : row;
+  const noOp = !!original && Number(original.x) === proposed?.x && Number(original.y) === proposed?.y
+    && normalizeRotation(original.rotated) === normalizeRotation(proposed?.rotated);
+
   const result = (reason, conflictCells = []) => ({
     ok: !reason, reason: reason ?? null, cells,
     conflictCells: [...new Set(conflictCells)], family,
-    item: proposed,
+    item: proposed, affectedIds, noOp,
     rows: reason ? rows : rows.some((row) => sameInstance(row, item))
-      ? rows.map((row) => sameInstance(row, item) ? proposed : row)
+      ? rows.map((row) => sameInstance(row, item) ? proposed : evacuate(row))
       : [...rows, proposed]
   });
   if (!artifact) return result('unknown_item');
@@ -69,7 +83,7 @@ export function evaluateBackpackPlacement({
   const occupied = new Set();
   const placedItems = [];
   for (const row of rows) {
-    if (sameInstance(row, item) || !isPlaced(row)) continue;
+    if (sameInstance(row, item) || !isPlaced(row) || affectedIds.includes(row.id)) continue;
     const otherArtifact = getArtifact(artifactId(row), row);
     if (!otherArtifact) return result('unknown_item');
     const otherCells = getBackpackItemCells(row, otherArtifact);
@@ -92,4 +106,44 @@ export function evaluateBackpackPlacement({
     if (uncovered.length) return result('uncovered', uncovered);
   }
   return result(null);
+}
+
+/** Authoritative normalization for a snapshot save. Only translations of already
+ * placed bags evacuate contents; rotation/removal retain their existing rules. */
+export function normalizeBackpackBagMoves({ rows = [], proposedRows = [], ...options }) {
+  const getArtifact = options.getArtifact || ((_id, row) => row?.artifact);
+  const previous = new Map(rows.map((row) => [String(row.id), row]));
+  const affectedIds = new Set();
+  const movedBags = [];
+  for (const next of proposedRows) {
+    const old = previous.get(String(next.id));
+    const artifact = getArtifact(artifactId(next), next);
+    if (!old || artifact?.family !== 'bag' || !old.active || !next.active
+      || !isPlaced(old) || !isPlaced(next)
+      || (Number(old.x) === Number(next.x) && Number(old.y) === Number(next.y))) continue;
+    if (options.isLockedBag?.(old, artifact)) return { ok: false, reason: 'locked', rows, affectedIds: [] };
+    movedBags.push(next);
+    const mask = new Set(getBackpackItemCells(old, artifact));
+    for (const row of rows) {
+      const other = getArtifact(artifactId(row), row);
+      if (other && other.family !== 'bag' && isPlaced(row)
+        && getBackpackItemCells(row, other).some((key) => mask.has(key))) affectedIds.add(String(row.id));
+    }
+  }
+  const normalized = proposedRows.map((row) => affectedIds.has(String(row.id))
+    ? { ...previous.get(String(row.id)), x: -1, y: -1, active: false } : row);
+  for (const item of movedBags) {
+    const result = evaluateBackpackPlacement({ ...options, getArtifact,
+      rows: normalized, item, x: item.x, y: item.y });
+    if (!result.ok) return { ...result, rows, affectedIds: [] };
+  }
+  return { ok: true, reason: null, rows: normalized, affectedIds: [...affectedIds] };
+}
+
+/** Stable optimistic concurrency token; browser/server share plain row fields. */
+export function getBackpackLoadoutRevision(rows = []) {
+  return JSON.stringify(rows.map((row) => [String(row.id), String(artifactId(row)),
+    Number(row.x), Number(row.y), row.width == null ? null : Number(row.width),
+    row.height == null ? null : Number(row.height), normalizeRotation(row.rotated), !!row.active])
+    .sort((a, b) => a[0].localeCompare(b[0])));
 }

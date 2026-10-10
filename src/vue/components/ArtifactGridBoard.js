@@ -150,7 +150,8 @@ export const ArtifactGridBoard = {
           classNames: {
             'artifact-piece-wrap': true,
             'artifact-piece-wrap--fusion-pending': this.isHighlighted(item),
-            'backpack-interaction-selected': this.interaction?.state.selectedId === (item.id || item.rowId)
+            'backpack-interaction-selected': this.interaction?.state.selectedId === (item.id || item.rowId),
+            'backpack-interaction-evacuating': this.interaction?.state.preview?.affectedIds?.includes(item.id || item.rowId)
           },
           style: this.pieceStyle(item),
           title: this.isHighlighted(item) ? this.highlightedTitle : null,
@@ -207,8 +208,7 @@ export const ArtifactGridBoard = {
         'inventory-shell': this.isInventoryVariant,
         'artifact-grid-board--inventory': this.isInventoryVariant,
         'artifact-grid-board--catalog': this.variant === 'catalog',
-        'backpack-interaction-board': !!this.interaction,
-        'backpack-interaction-bags': !!this.interaction?.state.bagMode
+        'backpack-interaction-board': !!this.interaction
       };
     }
   },
@@ -400,7 +400,7 @@ export const ArtifactGridBoard = {
       :test-id="isInventoryVariant ? 'unified-grid' : ''"
       :interactive-cells="interactiveCells || !!interaction"
       :clickable-pieces="clickablePieces || !!interaction"
-      :rotatable-pieces="rotatablePieces"
+      :rotatable-pieces="rotatablePieces && !interaction"
       :draggable-pieces="draggablePieces && !interaction"
       :droppable="droppable"
       rotate-text="↻"

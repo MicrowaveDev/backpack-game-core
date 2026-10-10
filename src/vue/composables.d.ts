@@ -63,7 +63,7 @@ export declare function useTouch(
 
 export interface BackpackInteractionState {
   selectedId: string;
-  bagMode: boolean;
+  dropTarget: 'storage' | 'sell' | null;
   preview: (import('../modules/loadout/interaction-placement.js').BackpackPlacementResult & { valid: boolean; x?: number; y?: number }) | null;
   dragVisual: { clientX: number; clientY: number; width: number; height: number; cellWidth: number; gap: number; grabX: number; grabY: number } | null;
   messageCode: string;
@@ -83,7 +83,7 @@ export interface BackpackInteraction {
   canSell(): boolean;
   isBusy(): boolean;
   cancel(): void;
-  toggleBagMode(): void;
+  getSellPrice(): number | null;
   attach(root: HTMLElement): void;
   detach(): void;
   clickCell(cell: { x: number; y: number }): void;
@@ -100,6 +100,7 @@ export declare function createBackpackInteraction(options: {
   isLockedBag?: (row: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => boolean;
   canInteract?: () => boolean;
   onSell?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => Promise<unknown> | unknown;
+  getSellPrice?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => number | null;
   document?: Document | null;
   win?: Window | null;
 }): BackpackInteraction;

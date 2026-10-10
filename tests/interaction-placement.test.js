@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLoadoutValidator, evaluateBackpackPlacement, getBackpackItemCells, getBackpackItemDimensions } from '../src/modules/loadout/index.js';
+import { createLoadoutValidator, evaluateBackpackPlacement, getBackpackItemCells, getBackpackItemDimensions, normalizeBackpackBagMoves, getBackpackLoadoutRevision } from '../src/modules/loadout/index.js';
 
 const catalog = {
   bag: { family: 'bag', width: 2, height: 2 },
@@ -127,4 +127,36 @@ test('successful normalized proposals satisfy authoritative loadout coverage and
   const invalid = evaluate([bag('a', 0, 0), moving], moving, 0, 1);
   assert.equal(invalid.reason, 'uncovered');
   assert.throws(() => validator.validateItemCoverage([bag('a', 0, 0), invalid.item]), /uncovered/);
+});
+
+test('bag translation evacuates whole seam items and duplicates once, preserving rotations', () => {
+  const moving = bag('a', 0, 0);
+  const seam = { id: 'one', artifactId: 'blade', x: 0, y: 1, width: 1, height: 2, rotated: 2 };
+  const duplicate = { ...seam, id: 'two', x: 1 };
+  const untouched = { ...seam, id: 'three', x: 0, y: 2, height: 1 };
+  const rows = [moving, bag('b', 0, 2), seam, duplicate, untouched];
+  const result = evaluate(rows, moving, 3, 0, { evacuateBagContents: true });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.affectedIds, ['one', 'two']);
+  assert.equal(result.rows[2].rotated, 2);
+  assert.equal(result.rows[2].x, -1);
+  assert.equal(result.rows[3].x, -1);
+  assert.equal(result.rows[4], untouched);
+  assert.equal(rows[2].x, 0);
+  const rejected = evaluate(rows, moving, 0, 2, { evacuateBagContents: true });
+  assert.equal(rejected.reason, 'occupied');
+  assert.equal(rejected.rows, rows);
+});
+
+test('authoritative normalization evacuates old membership even if client omits evacuation', () => {
+  const old = bag('a', 0, 0);
+  const item = { id: 2, artifactId: 'blade', x: 0, y: 0, rotated: 2 };
+  const rows = [old, item];
+  const result = normalizeBackpackBagMoves({ rows, proposedRows: [{ ...old, x: 3 }, { ...item, x: 3 }],
+    columns: 6, height: 6, getArtifact: (id) => catalog[id] });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.affectedIds, ['2']);
+  assert.deepEqual(result.rows[1], { ...item, x: -1, y: -1, active: false });
+  assert.equal(getBackpackLoadoutRevision(rows), getBackpackLoadoutRevision([...rows].reverse()));
+  assert.notEqual(getBackpackLoadoutRevision(rows), getBackpackLoadoutRevision(result.rows));
 });

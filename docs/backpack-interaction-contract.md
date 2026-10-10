@@ -29,10 +29,18 @@ after a successful save and cannot undo it. Disposal prevents late UI feedback.
 - `BackpackInteractionControls` offers rotate, Storage, auto-place, cancel, and
   optional sale through the consumer's `onSell` callback. Pointer sale and Storage
   destinations use these same actions. Sale availability remains product-owned.
-- Bag mode selects bags on the board. Chips provide an additional selection
-  path. Fixed bags are rejected with `locked` feedback.
-- Moving a bag preserves item coordinates. Coverage loss blocks the operation;
-  core does not guess which bag owns an item spanning multiple bags.
+- A drag from an empty usable bag cell selects that bag after the threshold.
+  Occupied cells prefer items; shape holes cannot grab the bag. Bag labels provide
+  keyboard/tap selection even when every usable cell is filled. Fixed bags remain locked.
+- Translating a placed bag atomically returns every item intersecting its old
+  usable mask to Storage. A seam item moves whole, once by instance ID. Preview
+  highlights affected items and announces their count. Same-position/same-rotation
+  drops do not evacuate or save. Rotation/removal retain coverage validation.
+- Idle controls are hidden in a stable compact rail. Selection reveals ↻/⋯;
+  Storage, auto-place, sale and cancel live in the context menu. During drag a
+  distinct sale zone displays the injected refund before release. `R` rotates
+  a draft under the pointer without saving; Escape cancels. Storage and sale
+  destinations use `data-backpack-drop-zone` with `storage` / `sell` values.
 - Escape cancels selection. Capture loss, pointer cancellation, blur, release
   outside a valid destination, and detach clear the drag without saving.
 
@@ -69,8 +77,9 @@ coverage. The user has agreed to perform iOS/Android device verification:
    cell and match the final position, including across adjacent bag boundaries.
 3. Drop over occupied/uncovered cells. Check the exact conflicting cells and
    short reason, no popup, and an unchanged confirmed layout.
-4. Enter bag mode; move a bag directly on the board. A move that uncovers items
-   must be blocked. Move those items first and retry.
+4. Drag a bag by an empty usable cell. Preview identifies its affected items;
+   a successful move returns them to Storage together. Cancel and invalid drops
+   leave everything unchanged. Fill a bag and select its label to move via tap.
 5. Rotate, move to Storage, cancel, and reload. Confirm orientation and position
    persist. Also sell a selected item and confirm coins and persistence in both games.
 6. Scroll around the board, interrupt a drag, switch away and return. There must
@@ -87,3 +96,13 @@ artifact renderer to a fixed, non-interactive overlay. Both artifacts and bags
 retain their canonical orientation and grid size. This freely moving art is
 separate from snapped destination/conflict cells. Drop, cancellation, capture
 loss, blur and detach remove the visual without changing the page layout.
+
+## Persistence validation
+
+`normalizeBackpackBagMoves` derives affected instance IDs from authoritative old
+rows and final proposed bag anchors. Products call it inside their transaction,
+then validate and save the complete normalized snapshot once. This also handles
+clients which omit evacuation. IDs, dimensions and rotations survive Storage.
+Mushroom supplies `getBackpackLoadoutRevision` as `loadoutRevision`; the server
+checks it inside the run lock and reloads are required after a 409. Meat retains
+its integer snapshot revision. A failed write never exposes a partial evacuation.

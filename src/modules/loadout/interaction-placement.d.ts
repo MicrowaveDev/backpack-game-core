@@ -17,6 +17,8 @@ export type BackpackPlacementReason = 'out_of_bounds' | 'occupied' | 'uncovered'
   | 'bag_contents' | 'locked' | 'unknown_item';
 export interface BackpackPlacementResult<Row extends BackpackInteractionRow = BackpackInteractionRow> {
   ok: boolean;
+  affectedIds: (ItemId | null | undefined)[];
+  noOp: boolean;
   reason: BackpackPlacementReason | null;
   /** Canonical grid-geometry keys, `x:y`. */
   cells: string[];
@@ -34,8 +36,12 @@ export interface BackpackPlacementOptions<Row extends BackpackInteractionRow = B
   columns: number;
   height: number;
   getArtifact?: (id: ItemId | null | undefined, row: Row) => ArtifactLike | null | undefined;
+  evacuateBagContents?: boolean;
   isLockedBag?: (row: Row, artifact: ArtifactLike) => boolean;
 }
 export function getBackpackItemDimensions(item: BackpackInteractionRow, artifact: ArtifactLike): { width: number; height: number };
 export function getBackpackItemCells(item: BackpackInteractionRow, artifact: ArtifactLike): string[];
 export function evaluateBackpackPlacement<Row extends BackpackInteractionRow>(options: BackpackPlacementOptions<Row>): BackpackPlacementResult<Row>;
+
+export function normalizeBackpackBagMoves<Row extends BackpackInteractionRow>(options: Omit<BackpackPlacementOptions<Row>, 'item' | 'x' | 'y'> & { proposedRows: Row[] }): { ok: boolean; reason: BackpackPlacementReason | null; rows: Row[]; affectedIds: string[] };
+export function getBackpackLoadoutRevision(rows: BackpackInteractionRow[]): string;

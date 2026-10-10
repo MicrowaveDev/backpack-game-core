@@ -10326,31 +10326,84 @@ select {
   }
 }
 
-/* Shared preparation interaction states; consumer themes supply colors. */
+/* Context actions use a compact reserved rail outside the board. Selection,
+   preview and sale targets never change the grid's origin. */
 .backpack-interaction-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-block: 8px;
+  position: relative;
+  display: block;
+  margin-block: 4px;
   max-width: 100%;
+}
+.backpack-interaction-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 44px;
 }
 .backpack-interaction-action {
   min-height: 44px;
   padding: 8px 12px;
   font: inherit;
-  border: 1px solid currentColor;
-  border-radius: 8px;
-  background: var(--panel-bg, #fffaf0);
+  border: 0;
+  background: transparent;
   color: inherit;
+  cursor: pointer;
 }
-.backpack-interaction-action[aria-pressed="true"] { outline: 2px solid currentColor; }
 .backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
-.backpack-interaction-hint,
-.backpack-interaction-reason { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
-.backpack-interaction-reason { min-height: 1.5em; font-weight: 600; }
+.backpack-interaction-action:focus-visible,
+.backpack-bag-context-label:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.backpack-interaction-icon { min-width: 44px; font-size: 1.3em; }
+.backpack-interaction-item-actions { display: flex; gap: 4px; margin-left: auto; }
+.backpack-interaction-item-actions--hidden { visibility: hidden; pointer-events: none; }
+.backpack-interaction-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  max-width: 100%;
+  background: var(--panel-bg, #fffaf0);
+  outline: 1px solid currentColor;
+}
+.backpack-interaction-menu .backpack-interaction-action { text-align: left; }
+.backpack-interaction-menu .backpack-interaction-action:hover { background: rgba(70,70,70,.08); }
+.backpack-interaction-reason {
+  height: 2.5em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: .85em;
+  font-weight: 600;
+}
+.backpack-interaction-sell-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 100px;
+  max-width: calc(100% - 100px);
+  padding-inline: 12px;
+  border: 1px dashed currentColor;
+  color: var(--danger, #a83228);
+}
+.backpack-interaction-drop-active { outline: 3px solid currentColor; outline-offset: -3px; }
 .backpack-interaction-source { touch-action: none; cursor: grab; }
 .backpack-interaction-selected { outline: 3px solid var(--accent, #446c40); outline-offset: 2px; }
+.backpack-interaction-evacuating { opacity: .45; outline: 2px dashed currentColor; outline-offset: -2px; }
+.backpack-bag-context-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  border: 0 !important;
+  background: transparent !important;
+}
+.backpack-bag-context-label[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 4px; }
+.backpack-bag-context-label[aria-disabled="true"] { cursor: default; opacity: .5; }
 .backpack-interaction-board .artifact-grid-cell--bag-empty,
 .backpack-interaction-board .artifact-grid-cell--bag-disabled {
   background: repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(70,70,70,.08) 5px, rgba(70,70,70,.08) 7px);
@@ -10363,30 +10416,9 @@ select {
   outline: 3px solid #a83228;
   background: repeating-linear-gradient(135deg, rgba(168,50,40,.12), rgba(168,50,40,.12) 5px, rgba(168,50,40,.3) 5px, rgba(168,50,40,.3) 8px);
 }
-.backpack-interaction-bags { touch-action: none; }
-.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
 .backpack-interaction-board .artifact-grid-pieces { pointer-events: none; }
 .backpack-interaction-board .artifact-piece-wrap[data-artifact-id] { pointer-events: auto; }
-.backpack-interaction-board.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
 .backpack-interaction-board button.artifact-grid-cell { padding: 0; font: inherit; }
-
-.backpack-interaction-item-actions {
-  display: flex;
-  flex-wrap: wrap;
-  flex: 1 1 auto;
-  gap: 8px;
-}
-/* Instruction and rejection share one stable slot, so selecting or dragging
-   never moves the board beneath the pointer. Three lines fit narrow screens. */
-.backpack-interaction-guidance {
-  flex-basis: 100%;
-  display: grid;
-  min-height: 3.75em;
-  line-height: 1.25;
-}
-.backpack-interaction-guidance > p { grid-area: 1 / 1; margin: 0; }
-.backpack-interaction-guidance--reason .backpack-interaction-hint { opacity: 0; }
-.backpack-interaction-guidance .backpack-interaction-reason { min-height: 0; }
 
 /* The freely moving art follows the grab point; snapped cells remain the drop
    preview. The overlay never participates in hit testing or page layout. */
@@ -10401,3 +10433,7 @@ select {
   will-change: transform;
 }
 .backpack-drag-visual * { pointer-events: none; }
+
+/* Pointer gestures own only the grid cells and pieces; surrounding page stays scrollable. */
+.backpack-interaction-board button.artifact-grid-cell,
+.backpack-interaction-board .artifact-piece-wrap { touch-action: none; }

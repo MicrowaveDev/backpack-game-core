@@ -125,13 +125,14 @@ export const BackpackZone = {
     containerClasses(container) {
       return {
         [this.containerLockedClass]: Boolean(container?.locked),
-        [this.containerDraggableClass]: container?.draggable !== false
+        [this.containerDraggableClass]: !this.interaction && container?.draggable !== false,
+        ...(this.interaction ? { 'backpack-bag-context-label': true } : {})
       };
     },
     containerDataset(container) {
       return {
         'data-bag-row-id': container?.id || '',
-        ...(this.interaction ? { 'data-backpack-row-id': container?.id ?? '' } : {}),
+        ...(this.interaction ? { 'data-testid': 'backpack-bag-context' } : {}),
         'data-bag-locked': container?.locked ? 'true' : 'false'
       };
     },
@@ -212,11 +213,12 @@ export const BackpackZone = {
           :style="containerStyle(container)"
           :draggable="!interaction && container.draggable !== false"
           :role="interaction ? 'button' : null"
-          :tabindex="interaction ? 0 : null"
+          :tabindex="interaction && !container.locked ? 0 : null"
+          :aria-disabled="interaction ? !!container.locked || interaction.isBusy() : null"
           :aria-pressed="interaction ? interaction.state.selectedId === container.id : null"
-          @click="interaction && interaction.select(container)"
-          @keydown.enter.prevent="interaction && interaction.select(container)"
-          @keydown.space.prevent="interaction && interaction.select(container)"
+          @click="interaction && !container.locked && interaction.select(container)"
+          @keydown.enter.prevent="interaction && !container.locked && interaction.select(container)"
+          @keydown.space.prevent="interaction && !container.locked && interaction.select(container)"
           :title="container.title || null"
           v-bind="containerDataset(container)"
           @dragstart="onContainerDragStart(container, $event)"
@@ -226,12 +228,13 @@ export const BackpackZone = {
             {{ containerName(container) }}
           </slot>
           <button
-            v-if="container.rotatable"
+            v-if="!interaction && container.rotatable"
             :class="containerActionClass"
             type="button"
             @click.stop="rotateContainer(container)"
           >{{ rotateActionLabel }}</button>
           <button
+            v-if="!interaction"
             :class="containerActionClass"
             type="button"
             @click.stop="deactivateContainer(container)"

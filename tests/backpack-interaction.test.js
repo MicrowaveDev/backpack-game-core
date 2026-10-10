@@ -221,11 +221,10 @@ test('release outside board cancels drop and detach removes every listener', asy
   assert.equal(f.win.listenerCount(), 0);
 });
 
-test('bags select on the field in bag mode and cannot lose contents on move or unplace', async (t) => {
+test('explicit bag selection cannot unplace contents through Storage', async (t) => {
   const placed = { ...stored, x: 0, y: 0 };
   const f = fixture(t, { initialRows: [bag, placed] });
-  f.interaction.toggleBagMode();
-  f.interaction.clickCell({ x: 0, y: 0 });
+  f.interaction.select(bag.id);
   assert.equal(f.interaction.state.selectedId, bag.id);
   assert.equal(await f.interaction.unplace(), false);
   assert.equal(f.interaction.state.messageCode, 'bag_contents');
@@ -294,8 +293,7 @@ test('product mutation guard blocks selection, placement, rotation, storage, sal
   assert.equal(await f.interaction.unplace(), false);
   assert.equal(await f.interaction.autoPlace(), false);
   assert.equal(await f.interaction.sell(), false);
-  f.interaction.toggleBagMode();
-  assert.equal(f.interaction.state.bagMode, false);
+  f.interaction.clickCell({ x: 0, y: 0 });
   f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
   f.root.emit('pointermove', f.point(1, 1));
   f.root.emit('pointerup', f.point(1, 1));
@@ -427,3 +425,58 @@ for (const cancelEvent of ['pointercancel', 'lostpointercapture', 'blur', 'Escap
     assert.equal(f.calls.length, 0);
   });
 }
+
+test('free usable cell grabs bag after threshold, occupied cell prefers item, tap does not select bag', async (t) => {
+  const small = { ...bag, artifactId: 'strip' };
+  const item = { ...stored, x: 0, y: 0, width: 1, height: 1 };
+  const f = fixture(t, { initialRows: [small, item] });
+  f.root.emit('pointerdown', f.point(1, 0));
+  f.root.emit('pointerup', f.point(1, 0));
+  f.interaction.clickCell({ x: 1, y: 0 });
+  assert.equal(f.interaction.state.selectedId, '');
+  assert.equal(f.calls.length, 0);
+  f.root.emit('pointerdown', f.point(1, 0));
+  f.root.emit('pointermove', f.point(3, 1));
+  assert.equal(f.interaction.getSelectedItem().id, small.id);
+  assert.deepEqual(f.interaction.state.preview.affectedIds, [item.id]);
+  assert.equal(f.getRows()[1].x, 0, 'preview cannot evacuate');
+  f.root.emit('pointerup', f.point(3, 1));
+  await settle();
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.getRows()[0].x, 2);
+  assert.equal(f.getRows()[1].x, -1);
+});
+
+test('mask holes cannot grab a bag through its bounding box', (t) => {
+  catalog.hook = { family: 'bag', width: 2, height: 2, shape: [[1, 1], [1, 0]] };
+  const f = fixture(t, { initialRows: [{ ...bag, artifactId: 'hook' }] });
+  f.root.emit('pointerdown', f.point(1, 1));
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.equal(f.interaction.state.dragVisual, null);
+  assert.equal(f.calls.length, 0);
+});
+
+test('R during drag rotates draft and grab point without saving until valid drop', async (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 30, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  f.doc.emit('keydown', { key: 'r' });
+  assert.equal(f.calls.length, 0);
+  assert.equal(f.interaction.getSelectedItem().rotated, 1);
+  assert.equal(f.interaction.state.dragVisual.width, 76);
+  const preview = f.interaction.state.preview;
+  f.root.emit('pointerup', f.point(1, 1));
+  await settle();
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.getRows()[1].rotated, 1);
+  assert.equal(f.getRows()[1].x, preview.x);
+});
+
+test('bag noop returns without save or evacuating contents', async (t) => {
+  const item = { ...stored, x: 0, y: 0 };
+  const f = fixture(t, { initialRows: [bag, item] });
+  f.interaction.select(bag.id);
+  assert.equal(await f.interaction.placeAt({ x: 0, y: 0 }), true);
+  assert.equal(f.calls.length, 0);
+  assert.equal(f.getRows()[1].x, 0);
+});
