@@ -190,6 +190,7 @@ test('[configured gameplay] uses the shared controller for selection and commits
   const notifications = [];
   const context = {
     interactionState: {},
+    runIsActive: true, loading: false, showReplay: false,
     run: { id: 'run-1', revision: 7, loadoutItems: [
       { id: 'starter', artifactId: 'starter_bag', x: 0, y: 0, width: 2, height: 2, active: true },
       { id: 'blade-instance', artifactId: 'blade', x: -1, y: -1, width: 1, height: 1 }

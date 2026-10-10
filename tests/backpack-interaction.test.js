@@ -28,7 +28,7 @@ function surface() {
   };
 }
 
-function fixture(t, { initialRows = [bag, stored], save, origin = 100 } = {}) {
+function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell } = {}) {
   let rows = structuredClone(initialRows);
   const calls = [];
   const committed = [];
@@ -52,7 +52,7 @@ function fixture(t, { initialRows = [bag, stored], save, origin = 100 } = {}) {
       const result = save ? await save(next) : true;
       if (result !== false && result !== null) rows = next;
       return result;
-    }, onCommitted: (event) => committed.push(event), document: doc, win });
+    }, onCommitted: (event) => committed.push(event), canInteract, onSell, document: doc, win });
   interaction.attach(root);
   t.after(() => interaction.detach());
   const target = (id, rect = { left: 20, top: 20, width: 40, height: 80 }) => {
@@ -279,4 +279,117 @@ test('detaching during pending save suppresses late feedback on disposed screen'
   assert.equal(f.committed.length, 0);
   assert.equal(f.interaction.state.busy, false);
   assert.equal(f.interaction.state.preview, null);
+});
+
+test('product mutation guard blocks selection, placement, rotation, storage, sale and pointer drag', async (t) => {
+  let allowed = true;
+  const sales = [];
+  const f = fixture(t, { canInteract: () => allowed, onSell: (item) => { sales.push(item); return true; } });
+  f.interaction.select(stored.id);
+  allowed = false;
+  assert.equal(f.interaction.isBusy(), true);
+  assert.equal(f.interaction.select(bag.id), false);
+  assert.equal(await f.interaction.placeAt({ x: 0, y: 0 }), false);
+  assert.equal(await f.interaction.rotate(), false);
+  assert.equal(await f.interaction.unplace(), false);
+  assert.equal(await f.interaction.autoPlace(), false);
+  assert.equal(await f.interaction.sell(), false);
+  f.interaction.toggleBagMode();
+  assert.equal(f.interaction.state.bagMode, false);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  f.root.emit('pointerup', f.point(1, 1));
+  await settle();
+  assert.equal(f.calls.length, 0);
+  assert.equal(sales.length, 0);
+  assert.equal(f.interaction.state.selectedId, stored.id);
+});
+
+test('explicit sale sends the selected instance once and preserves selection on API failure', async (t) => {
+  for (const outcome of [false, null, 'throw', true]) {
+    const sales = [];
+    const f = fixture(t, { onSell: (item) => { sales.push(item); if (outcome === 'throw') throw new Error('offline'); return outcome; } });
+    f.interaction.select(stored.id);
+    assert.equal(f.interaction.canSell(), true);
+    assert.equal(await f.interaction.sell(), outcome === true);
+    assert.deepEqual(sales.map((item) => item.id), [stored.id]);
+    assert.equal(f.calls.length, 0, 'selling must not submit a second placement save');
+    assert.equal(f.interaction.state.selectedId, outcome === true ? '' : stored.id);
+    assert.equal(f.interaction.state.messageCode, outcome === true ? '' : 'save_failed');
+  }
+});
+
+test('pointer sale destination invokes sale and no placement save', async (t) => {
+  const sales = [];
+  const f = fixture(t, { onSell: async (item) => { sales.push(item); return true; } });
+  f.doc.elementFromPoint = () => ({ closest: (selector) => selector === '.sell-zone' ? {} : null });
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', { clientX: 800, clientY: 800 });
+  f.root.emit('pointerup', { clientX: 800, clientY: 800 });
+  await settle();
+  assert.deepEqual(sales.map((item) => item.id), [stored.id]);
+  assert.equal(f.calls.length, 0);
+  assert.equal(f.interaction.state.selectedId, '');
+});
+
+test('failed pointer sale keeps selection and rapid retries cannot double-submit', async (t) => {
+  let finish;
+  const sales = [];
+  const f = fixture(t, { onSell: (item) => { sales.push(item); return new Promise((resolve) => { finish = resolve; }); } });
+  f.doc.elementFromPoint = () => ({ closest: (selector) => selector === '.sell-zone' ? {} : null });
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', { clientX: 800, clientY: 800 });
+  f.root.emit('pointerup', { clientX: 800, clientY: 800 });
+  assert.equal(f.interaction.state.busy, true);
+  assert.equal(await f.interaction.sell(), false);
+  assert.equal(sales.length, 1);
+  finish(false);
+  await settle();
+  assert.equal(f.interaction.state.messageCode, 'save_failed');
+  assert.equal(f.interaction.state.selectedId, stored.id);
+  assert.equal(f.calls.length, 0);
+});
+
+test('pointer storage destination unplaces the dragged instance once', async (t) => {
+  const placed = { ...stored, x: 0, y: 0 };
+  const f = fixture(t, { initialRows: [bag, placed] });
+  f.doc.elementFromPoint = () => ({ closest: (selector) => selector === '.artifact-container-zone' ? {} : null });
+  f.root.emit('pointerdown', { target: f.target(placed.id), ...f.point(0, 0) });
+  f.root.emit('pointermove', { clientX: 30, clientY: 30 });
+  f.root.emit('pointerup', { clientX: 30, clientY: 30 });
+  await settle();
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.getRows()[1].x, -1);
+  assert.equal(f.getRows()[1].y, -1);
+  assert.equal(f.committed[0].action, 'unplace');
+});
+
+test('detach and reattach while save is pending ignores stale completion on new screen', async (t) => {
+  let finish;
+  const f = fixture(t, { save: () => new Promise((resolve) => { finish = resolve; }) });
+  f.interaction.select(stored.id);
+  const saving = f.interaction.placeAt({ x: 0, y: 0 });
+  f.interaction.detach();
+  f.interaction.attach(f.root);
+  finish(true);
+  assert.equal(await saving, false);
+  assert.equal(f.committed.length, 0);
+  assert.equal(f.interaction.state.selectedId, stored.id);
+  assert.equal(f.interaction.state.busy, false);
+});
+
+test('new pointerdown immediately after drag permits the real following click', async (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  assert.equal(f.captures.length, 0, 'simple clicks must not capture and reroute their target');
+  f.root.emit('pointermove', f.point(1, 1));
+  f.root.emit('pointerup', f.point(1, 1));
+  await settle();
+  const trailing = f.root.emit('click');
+  assert.equal(trailing.stopped, true);
+  f.root.emit('pointerdown', { target: f.target(stored.id), ...f.point(1, 1) });
+  f.root.emit('pointerup', f.point(1, 1));
+  const realClick = f.root.emit('click');
+  assert.equal(realClick.stopped, false);
+  assert.equal(realClick.prevented, false);
 });

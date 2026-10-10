@@ -12,7 +12,7 @@ export function createBackpackInteractionState() {
 export function createBackpackInteraction({
   state = createBackpackInteractionState(), getRows, getArtifact,
   columns = 6, getHeight = () => 6, commitRows, onCommitted = () => {},
-  isLockedBag = () => false, document: doc = globalThis.document,
+  isLockedBag = () => false, canInteract = () => true, onSell = null, document: doc = globalThis.document,
   win = globalThis.window
 }) {
   let root = null;
@@ -24,6 +24,7 @@ export function createBackpackInteraction({
   const rows = () => getRows() || [];
   const sameId = (a, b) => a != null && b != null && String(a) === String(b);
   const selected = () => rows().find((row) => sameId(row.id, state.selectedId)) || null;
+  const blocked = () => state.busy || !canInteract();
   const bag = (row) => getArtifact(row?.artifactId)?.family === 'bag';
   const active = (row) => row && Number(row.x) >= 0 && Number(row.y) >= 0;
 
@@ -46,7 +47,7 @@ export function createBackpackInteraction({
     message('');
   }
   function select(value) {
-    if (state.busy) return false;
+    if (blocked()) return false;
     const id = typeof value === 'object' ? value?.rowId ?? value?.id : value;
     const item = rows().find((row) => sameId(row.id, id));
     if (!item) return false;
@@ -69,7 +70,7 @@ export function createBackpackInteraction({
     return preview;
   }
   async function commit(result, action) {
-    if (state.busy || disposed) return false;
+    if (blocked() || disposed) return false;
     if (!result.ok) { state.preview = { ...result, valid: false }; message(result.reason); return false; }
     const previousRows = rows();
     const commitGeneration = generation;
@@ -89,12 +90,12 @@ export function createBackpackInteraction({
   }
   function placeAt({ x, y }) {
     const item = selected();
-    if (!item || state.busy) return Promise.resolve(false);
+    if (!item || blocked()) return Promise.resolve(false);
     return commit(evaluate(item, x, y), 'place');
   }
   function rotate() {
     const item = selected();
-    if (!item || state.busy) return Promise.resolve(false);
+    if (!item || blocked()) return Promise.resolve(false);
     const dimensions = getBackpackItemDimensions(item, getArtifact(item.artifactId));
     const rotated = {
       ...item, width: dimensions.height, height: dimensions.width,
@@ -107,7 +108,7 @@ export function createBackpackInteraction({
   }
   function unplace() {
     const item = selected();
-    if (!item || state.busy) return Promise.resolve(false);
+    if (!item || blocked()) return Promise.resolve(false);
     if (bag(item) && isLockedBag(item)) { message('locked'); return Promise.resolve(false); }
     const next = { ...item, x: -1, y: -1, active: false };
     const nextRows = rows().map((row) => sameId(row.id, item.id) ? next : row);
@@ -127,7 +128,7 @@ export function createBackpackInteraction({
   }
   function autoPlace() {
     const item = selected();
-    if (!item || state.busy) return Promise.resolve(false);
+    if (!item || blocked()) return Promise.resolve(false);
     for (let y = 0; y < getHeight(); y += 1) {
       for (let x = 0; x < columns; x += 1) {
         const result = evaluate(item, x, y);
@@ -137,8 +138,23 @@ export function createBackpackInteraction({
     message('no_space');
     return Promise.resolve(false);
   }
+  async function sell() {
+    const item = selected();
+    if (!item || blocked() || typeof onSell !== 'function') return false;
+    const commitGeneration = generation;
+    state.busy = true;
+    let saved;
+    try { saved = await onSell(item); } catch { saved = false; }
+    finally { state.busy = false; }
+    if (disposed || generation !== commitGeneration) return false;
+    if (saved === false || saved === null) { message('save_failed'); return false; }
+    state.selectedId = '';
+    state.preview = null;
+    message('');
+    return true;
+  }
   function toggleBagMode() {
-    if (state.busy) return;
+    if (blocked()) return;
     cancel();
     state.bagMode = !state.bagMode;
   }
@@ -165,7 +181,8 @@ export function createBackpackInteraction({
       && getBackpackItemCells(row, getArtifact(row.artifactId)).includes(`${cell.x}:${cell.y}`));
   }
   function onPointerDown(event) {
-    if (state.busy || pointer || event.isPrimary === false || (event.button != null && event.button !== 0)) return;
+    suppressClickUntil = 0;
+    if (blocked() || pointer || event.isPrimary === false || (event.button != null && event.button !== 0)) return;
     if (event.target?.closest?.('button.backpack-interaction-action, .artifact-piece-rotate, .active-bag-action')) return;
     const zone = boardAt(event.clientX, event.clientY);
     const target = event.target?.closest?.('[data-backpack-row-id]');
@@ -188,7 +205,7 @@ export function createBackpackInteraction({
   }
   function onPointerMove(event) {
     if (!pointer) {
-      if (state.selectedId && !state.busy) {
+      if (state.selectedId && !blocked()) {
         const cell = boardAt(event.clientX, event.clientY);
         if (cell) previewAt(cell);
       }
@@ -214,7 +231,12 @@ export function createBackpackInteraction({
     if (!current.moved) return;
     event.preventDefault();
     if (cell) void placeAt({ x: cell.x - current.offsetX, y: cell.y - current.offsetY });
-    else state.preview = null;
+    else {
+      state.preview = null;
+      const target = doc?.elementFromPoint?.(event.clientX, event.clientY);
+      if (target?.closest?.('.sell-zone')) void sell();
+      else if (target?.closest?.('.artifact-container-zone')) void unplace();
+    }
   }
   function onPointerCancel(event) {
     if (pointer && (event.pointerId == null || pointer.id === event.pointerId)) {
@@ -258,7 +280,8 @@ export function createBackpackInteraction({
     else void placeAt(cell);
   }
   return {
-    state, select, previewAt, placeAt, rotate, unplace, autoPlace, cancel,
+    state, select, previewAt, placeAt, rotate, unplace, autoPlace, cancel, sell,
+    canSell: () => typeof onSell === 'function', isBusy: blocked,
     toggleBagMode, attach, detach, clickCell, getRows: rows, getSelectedItem: selected
   };
 }

@@ -307,6 +307,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       getArtifact: (id) => this.getArtifact(id),
       columns: gridColumns,
       getHeight: () => Math.max(gridRows, this.grid.totalRows || gridRows),
+      canInteract: () => this.runIsActive && !this.loading && !this.showReplay,
       commitRows: (rows) => this.saveRows(rows),
       onCommitted: (change) => this.onInteractionCommitted(change),
       isLockedBag: (row) => row.artifactId === 'starter_bag'

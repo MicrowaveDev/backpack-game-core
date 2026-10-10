@@ -344,6 +344,7 @@ export interface ArtifactTileCell {
 }
 
 export interface ArtifactTileDisplayOptions {
+  rotation?: number;
   displayWidth?: number | null;
   displayHeight?: number | null;
   shape?: readonly (readonly unknown[])[];

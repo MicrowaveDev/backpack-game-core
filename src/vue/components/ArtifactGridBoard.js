@@ -406,6 +406,7 @@ export const ArtifactGridBoard = {
           :artifact="getArtifact(piece.artifactId)"
           :display-width="piece.width"
           :display-height="piece.height"
+          :rotation="piece.rotated || 0"
         />
         <img
           v-else-if="artifactImageFor(getArtifact(piece.artifactId), piece)"

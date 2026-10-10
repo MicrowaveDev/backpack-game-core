@@ -78,6 +78,9 @@ export interface BackpackInteraction {
   rotate(): Promise<boolean>;
   unplace(): Promise<boolean>;
   autoPlace(): Promise<boolean>;
+  sell(): Promise<boolean>;
+  canSell(): boolean;
+  isBusy(): boolean;
   cancel(): void;
   toggleBagMode(): void;
   attach(root: HTMLElement): void;
@@ -94,6 +97,8 @@ export declare function createBackpackInteraction(options: {
   commitRows(rows: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow[]): Promise<unknown> | unknown;
   onCommitted?: (change: { action: 'place' | 'rotate' | 'unplace'; item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow; rows: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow[]; previousRows: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow[] }) => unknown;
   isLockedBag?: (row: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => boolean;
+  canInteract?: () => boolean;
+  onSell?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => Promise<unknown> | unknown;
   document?: Document | null;
   win?: Window | null;
 }): BackpackInteraction;

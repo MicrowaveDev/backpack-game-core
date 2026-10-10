@@ -15,16 +15,18 @@ export const BackpackInteractionControls = {
   template: `
     <div class="backpack-interaction-controls" data-testid="backpack-interaction-controls">
       <button class="backpack-interaction-action" type="button" data-testid="backpack-bag-mode"
-        :aria-pressed="state.bagMode" :disabled="state.busy" @click="interaction.toggleBagMode()">{{ labels.bagMode }}</button>
+        :aria-pressed="state.bagMode" :disabled="interaction.isBusy()" @click="interaction.toggleBagMode()">{{ labels.bagMode }}</button>
       <template v-if="selected">
         <button class="backpack-interaction-action" type="button" data-testid="backpack-rotate"
-          :disabled="state.busy" @click="interaction.rotate()">{{ labels.rotate }}</button>
+          :disabled="interaction.isBusy()" @click="interaction.rotate()">{{ labels.rotate }}</button>
         <button class="backpack-interaction-action" type="button" data-testid="backpack-storage"
-          :disabled="state.busy" @click="interaction.unplace()">{{ labels.storage }}</button>
+          :disabled="interaction.isBusy()" @click="interaction.unplace()">{{ labels.storage }}</button>
         <button class="backpack-interaction-action" type="button" data-testid="backpack-auto-place"
-          :disabled="state.busy" @click="interaction.autoPlace()">{{ labels.autoPlace }}</button>
+          :disabled="interaction.isBusy()" @click="interaction.autoPlace()">{{ labels.autoPlace }}</button>
+        <button v-if="interaction.canSell()" class="backpack-interaction-action" type="button" data-testid="backpack-sell"
+          :disabled="interaction.isBusy()" @click="interaction.sell()">{{ labels.sell }}</button>
         <button class="backpack-interaction-action" type="button" data-testid="backpack-cancel"
-          :disabled="state.busy" @click="interaction.cancel()">{{ labels.cancel }}</button>
+          :disabled="interaction.isBusy()" @click="interaction.cancel()">{{ labels.cancel }}</button>
       </template>
       <p class="backpack-interaction-hint">{{ state.bagMode ? labels.bagModeHint : labels.selectHint }}</p>
       <p class="backpack-interaction-reason" role="status" aria-live="polite" aria-atomic="true"
