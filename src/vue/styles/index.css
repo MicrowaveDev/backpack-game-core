@@ -10345,6 +10345,7 @@ select {
   color: inherit;
 }
 .backpack-interaction-action[aria-pressed="true"] { outline: 2px solid currentColor; }
+.backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
 .backpack-interaction-hint,
 .backpack-interaction-reason { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
 .backpack-interaction-reason { min-height: 1.5em; font-weight: 600; }
@@ -10372,8 +10373,17 @@ select {
 .backpack-interaction-item-actions {
   display: flex;
   flex-wrap: wrap;
-  flex-basis: 100%;
+  flex: 1 1 auto;
   gap: 8px;
 }
-.backpack-interaction-hint { min-height: 3em; }
-.backpack-interaction-reason { min-height: 3em; }
+/* Instruction and rejection share one stable slot, so selecting or dragging
+   never moves the board beneath the pointer. Three lines fit narrow screens. */
+.backpack-interaction-guidance {
+  flex-basis: 100%;
+  display: grid;
+  min-height: 3.75em;
+  line-height: 1.25;
+}
+.backpack-interaction-guidance > p { grid-area: 1 / 1; margin: 0; }
+.backpack-interaction-guidance--reason .backpack-interaction-hint { opacity: 0; }
+.backpack-interaction-guidance .backpack-interaction-reason { min-height: 0; }

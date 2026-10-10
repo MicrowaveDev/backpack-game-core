@@ -228,6 +228,36 @@ test('[configured gameplay] refuses overlapping product mutations and reports sa
   assert.equal(calls, 1);
 });
 
+test('[configured gameplay] serializes a loadout save against purchases and keeps its revision', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const writes = [];
+  let finishSave;
+  const context = {
+    runIsActive: true, loading: false, activeRun: { id: 'run-1', revision: 7 },
+    controller: { state: {} }, text: { saveLoadout: 'Save', buy: 'Buy' },
+    getArtifact: (id) => ({ id }),
+    async refreshBootstrap() {},
+    clientServices: { services: { run: {
+      saveLoadout(id, rows, revision) {
+        writes.push({ id, rows, revision });
+        return new Promise((resolve) => { finishSave = resolve; });
+      },
+      buy() { writes.push('unexpected buy'); }
+    } } }
+  };
+  Object.defineProperty(context, 'run', { get: () => context.activeRun });
+  context.mutate = component.methods.mutate.bind(context);
+  const saving = component.methods.saveRows.call(context, [{ id: 'item' }]);
+  assert.equal(context.loading, true);
+  const purchase = await component.methods.buy.call(context, { artifactId: 'blade', canAfford: true });
+  assert.equal(purchase, null);
+  assert.deepEqual(writes, [{ id: 'run-1', rows: [{ id: 'item' }], revision: 7 }]);
+  finishSave({ run: { id: 'run-1', revision: 8 } });
+  await saving;
+  assert.equal(context.run.revision, 8);
+  assert.equal(context.loading, false);
+});
+
 test('[configured gameplay] returns home after closing a run summary', async () => {
   const component = createConfiguredGameplayScreen(options());
   const calls = [];

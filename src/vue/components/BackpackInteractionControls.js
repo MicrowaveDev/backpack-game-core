@@ -28,9 +28,11 @@ export const BackpackInteractionControls = {
         <button class="backpack-interaction-action" type="button" data-testid="backpack-cancel"
           :disabled="!selected || interaction.isBusy()" @click="interaction.cancel()">{{ labels.cancel }}</button>
       </div>
-      <p class="backpack-interaction-hint">{{ state.bagMode ? labels.bagModeHint : labels.selectHint }}</p>
-      <p class="backpack-interaction-reason" role="status" aria-live="polite" aria-atomic="true"
-        data-testid="backpack-placement-reason">{{ reason }}</p>
+      <div class="backpack-interaction-guidance" :class="{ 'backpack-interaction-guidance--reason': !!reason }">
+        <p class="backpack-interaction-hint">{{ state.bagMode ? labels.bagModeHint : labels.selectHint }}</p>
+        <p class="backpack-interaction-reason" role="status" aria-live="polite" aria-atomic="true"
+          data-testid="backpack-placement-reason">{{ reason }}</p>
+      </div>
     </div>
   `
 };

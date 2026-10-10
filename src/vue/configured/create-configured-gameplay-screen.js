@@ -182,6 +182,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     shopRows() {
       return (this.run?.shopItems || []).map((row) => ({
         ...row,
+        unavailable: this.loading || row.unavailable,
         name: this.artifactName(row.artifact),
         description: this.artifactDescription(row.artifact),
         statRows: (row.statRows || []).map((stat) => ({
@@ -309,6 +310,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       getHeight: () => Math.max(gridRows, this.grid.totalRows || gridRows),
       canInteract: () => this.runIsActive && !this.loading && !this.showReplay,
       commitRows: (rows) => this.saveRows(rows),
+      onSell: (item) => this.sell({ id: item.id }),
       onCommitted: (change) => this.onInteractionCommitted(change),
       isLockedBag: (row) => row.artifactId === 'starter_bag'
     }));
@@ -486,6 +488,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       this.activeRun = this.controller.state.bootstrap?.activeRun || this.activeRun;
     },
     async mutate(action, operation) {
+      if (this.loading) return null;
       this.loading = true;
       this.notice = '';
       this.controller.state.error = '';
@@ -732,7 +735,7 @@ export function createConfiguredGameplayScreen(options = {}) {
             :rows="shopRows"
             :labels="shopLabels"
             :refresh-cost="1"
-            :refresh-disabled="(run.player?.coins || 0) < 1"
+            :refresh-disabled="loading || (run.player?.coins || 0) < 1"
             :show-sell-zone="false"
             @buy="buy"
             @refresh="refreshShop"

@@ -72,7 +72,7 @@ coverage. The user has agreed to perform iOS/Android device verification:
 4. Enter bag mode; move a bag directly on the board. A move that uncovers items
    must be blocked. Move those items first and retry.
 5. Rotate, move to Storage, cancel, and reload. Confirm orientation and position
-   persist. In Mushroom also sell a selected item and confirm coins and persistence.
+   persist. Also sell a selected item and confirm coins and persistence in both games.
 6. Scroll around the board, interrupt a drag, switch away and return. There must
    be no stuck preview, accidental action, clipped controls or duplicate saves.
 
