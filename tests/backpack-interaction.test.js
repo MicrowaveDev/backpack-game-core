@@ -489,3 +489,11 @@ test('a deliberate context action after pointer cancellation is never suppressed
   const click = f.root.emit('click', { target: { closest: (selector) => selector.includes('.backpack-interaction-action') ? {} : null } });
   assert.equal(click.stopped, false);
 });
+
+test('spacing between bag cells does not start a bag drag', (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { clientX: 138, clientY: 110 });
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.equal(f.interaction.state.dragVisual, null);
+  assert.equal(f.calls.length, 0);
+});
