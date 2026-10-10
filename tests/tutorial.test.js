@@ -86,7 +86,8 @@ test('coin and lost-life copy use authoritative values and localized plural form
   const placement = tutorialStepView({ stepId: 'place_artifact', locale: 'en' });
   assert.equal(placement.anchorSelector, '[data-tutorial-anchor="storage-item"]');
   assert.match(placement.body, /waiting in Storage/);
-  assert.match(placement.body, /place it in the Backpack/);
+  assert.match(placement.body, /Select it, then tap a Backpack cell/);
+  assert.match(placement.body, /Auto-place/);
 
   const english = tutorialStepView({
     stepId: 'lost_life',

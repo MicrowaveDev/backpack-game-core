@@ -1,7 +1,10 @@
+import { markRaw } from 'vue';
+import { createBackpackInteraction, createBackpackInteractionState } from '../composables.js';
 import {
   ArtifactGridBoard,
   ArtifactStatSummary,
   BackpackZone,
+  BackpackInteractionControls,
   StorageZone,
   PrepActions,
   PrepScreen,
@@ -39,8 +42,6 @@ export function createConfiguredGameplayScreen(options = {}) {
   const gridColumns = Number(options.gridColumns);
   const gridRows = Number(options.gridRows);
   const getArtifactById = requiredFunction(options, 'getArtifactById');
-  const findBagPlacement = requiredFunction(options, 'findBagPlacement');
-  const findPlacement = requiredFunction(options, 'findPlacement');
   const loadoutGridProps = requiredFunction(options, 'loadoutGridProps');
   const artifactFigureComponent = options.artifactFigureComponent;
   const replayDuelComponent = options.replayDuelComponent;
@@ -87,6 +88,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       ArtifactGridBoard,
       ArtifactStatSummary,
       BackpackZone,
+      BackpackInteractionControls,
       StorageZone,
       PrepActions,
       PrepScreen,
@@ -111,7 +113,8 @@ export function createConfiguredGameplayScreen(options = {}) {
         battle: this.controller.state.bootstrap?.activeRun?.lastBattle || null,
         loading: false,
         notice: '',
-        draggingRowId: '',
+        interactionState: createBackpackInteractionState(),
+        interaction: null,
         showReplay: false,
         replayTimer: null,
         replayState: {
@@ -167,22 +170,19 @@ export function createConfiguredGameplayScreen(options = {}) {
     activeContainers() {
       return (this.run?.loadoutItems || [])
         .filter((row) => !unplaced(row) && this.getArtifact(row.artifactId)?.family === 'bag')
-        .filter((row) => row.artifactId !== 'starter_bag')
-        .map((row) => {
-          const artifact = this.getArtifact(row.artifactId);
-          return {
-            id: row.id,
-            artifactId: row.artifactId,
-            name: this.artifactName(artifact),
-            color: artifact?.color || '#888',
-            draggable: true,
-            rotatable: artifact?.width !== artifact?.height
-          };
-        });
+        .map((row) => ({
+          ...row,
+          name: this.artifactName(this.getArtifact(row.artifactId)),
+          color: this.getArtifact(row.artifactId)?.color || '#888',
+          locked: row.artifactId === 'starter_bag',
+          draggable: false,
+          rotatable: false
+        }));
     },
     shopRows() {
       return (this.run?.shopItems || []).map((row) => ({
         ...row,
+        unavailable: this.loading || row.unavailable,
         name: this.artifactName(row.artifact),
         description: this.artifactDescription(row.artifact),
         statRows: (row.statRows || []).map((stat) => ({
@@ -261,6 +261,9 @@ export function createConfiguredGameplayScreen(options = {}) {
         empty: this.text.storageEmpty || this.text.backpackEmpty
       };
     },
+    interactionLabels() {
+      return options.getInteractionLabels?.(this.controller) || this.text.backpackInteraction || {};
+    },
     backpackLabels() {
       return {
         title: this.text.backpack
@@ -298,10 +301,34 @@ export function createConfiguredGameplayScreen(options = {}) {
       return replayDuelComponent;
     }
   },
+  created() {
+    this.interaction = markRaw(createBackpackInteraction({
+      state: this.interactionState,
+      getRows: () => this.run?.loadoutItems || [],
+      getArtifact: (id) => this.getArtifact(id),
+      columns: gridColumns,
+      getHeight: () => Math.max(gridRows, this.grid.totalRows || gridRows),
+      canInteract: () => this.runIsActive && !this.loading && !this.showReplay,
+      commitRows: (rows) => this.saveRows(rows),
+      onSell: (item) => this.sell({ id: item.id }),
+      onCommitted: (change) => this.onInteractionCommitted(change),
+      isLockedBag: (row) => row.artifactId === 'starter_bag'
+    }));
+  },
   mounted() {
+    this.interaction.attach(this.$el);
     this.emitPrepTutorial();
   },
   watch: {
+    showReplay(value) {
+      if (value) this.interaction?.cancel();
+    },
+    runIsActive(value) {
+      if (!value) this.interaction?.cancel();
+    },
+    'run.id'(value, previous) {
+      if (value !== previous) this.interaction?.cancel();
+    },
     shopRows: {
       handler() {
         this.emitPrepTutorial();
@@ -310,6 +337,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     }
   },
   beforeUnmount() {
+    this.interaction?.detach();
     this.clearReplayTimer();
   },
   methods: {
@@ -460,6 +488,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       this.activeRun = this.controller.state.bootstrap?.activeRun || this.activeRun;
     },
     async mutate(action, operation) {
+      if (this.loading) return null;
       this.loading = true;
       this.notice = '';
       this.controller.state.error = '';
@@ -555,72 +584,26 @@ export function createConfiguredGameplayScreen(options = {}) {
       ));
     },
     async saveRows(rows) {
-      return this.mutate(this.text.saveLoadout, () => (
+      if (!this.runIsActive || this.loading) return false;
+      return (await this.mutate(this.text.saveLoadout, () => (
         this.clientServices.services.run.saveLoadout(
           this.run.id,
           rows,
           this.run.revision
         )
-      ));
+      ))) || false;
     },
-    autoPlace(payload) {
-      const id = rowId(payload);
-      const source = this.run?.loadoutItems?.find((row) => row.id === id);
-      const artifact = this.getArtifact(source?.artifactId);
-      if (!source || !artifact) return;
-      const otherRows = this.run.loadoutItems.filter((row) => row.id !== id);
-      const placement = artifact.family === 'bag'
-        ? findBagPlacement(otherRows, artifact, source.rotated || 0)
-        : findPlacement(otherRows, artifact);
-      if (!placement) return;
-      const rows = this.run.loadoutItems.map((row) => (
-        row.id === id ? { ...row, ...placement } : row
-      ));
-      return this.saveRows(rows).then((result) => {
-        const tutorial = getTutorialController(this.controller);
-        if (result && tutorial) {
-          const events = createArtifactPlacedTutorialEvents({
-            artifact,
-            shopItems: this.run?.shopItems || [],
-            getArtifact: (entry) => entry?.artifact || this.getArtifact(entry?.artifactId || entry?.id),
-            imageForArtifact: (entry) => this.artifactImage(entry)
-          });
-          for (const event of events) tutorial.emit(event);
-        }
-        return result;
+    onInteractionCommitted(change) {
+      const artifact = this.getArtifact(change?.item?.artifactId);
+      const tutorial = getTutorialController(this.controller);
+      if (change?.action !== 'place' || !artifact || !tutorial || unplaced(change.item)) return;
+      const events = createArtifactPlacedTutorialEvents({
+        artifact,
+        shopItems: this.run?.shopItems || [],
+        getArtifact: (entry) => entry?.artifact || this.getArtifact(entry?.artifactId || entry?.id),
+        imageForArtifact: (entry) => this.artifactImage(entry)
       });
-    },
-    unplace(payload) {
-      const id = rowId(payload);
-      if (!id) return;
-      const rows = this.run.loadoutItems.map((row) => (
-        row.id === id ? { ...row, x: -1, y: -1, active: false } : row
-      ));
-      return this.saveRows(rows);
-    },
-    rotate(payload) {
-      const id = rowId(payload);
-      if (!id) return;
-      const rows = this.run.loadoutItems.map((row) => (
-        row.id === id
-          ? { ...row, width: row.height, height: row.width, rotated: ((row.rotated || 0) + 1) % 4 }
-          : row
-      ));
-      return this.saveRows(rows);
-    },
-    dragStart(payload) {
-      const id = rowId(payload);
-      this.draggingRowId = id;
-      payload?.event?.dataTransfer?.setData?.('text/plain', id);
-    },
-    cellDrop(payload) {
-      const id = payload?.event?.dataTransfer?.getData?.('text/plain') || this.draggingRowId;
-      if (!id) return;
-      const rows = this.run.loadoutItems.map((row) => (
-        row.id === id ? { ...row, x: payload.x, y: payload.y } : row
-      ));
-      this.draggingRowId = '';
-      return this.saveRows(rows);
+      for (const event of events) tutorial.emit(event);
     },
     openRound(battleId) {
       const battle = this.run?.battles?.find((entry) => entry.id === battleId) || this.battle;
@@ -693,12 +676,12 @@ export function createConfiguredGameplayScreen(options = {}) {
         <template #loadout>
           <StorageZone
             :items="storageItems"
+            :interaction="interaction"
             :labels="storageLabels"
             :lang="locale"
             :name-for-item="artifactName"
             :format-item-stats="formatStats"
             :preview-orientation-for-item="previewOrientation"
-            @select-item="autoPlace"
           >
             <template #visual="{ item, orientation, previewItem }">
               <ArtifactGridBoard
@@ -714,21 +697,16 @@ export function createConfiguredGameplayScreen(options = {}) {
             </template>
           </StorageZone>
 
+          <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels" />
+
           <BackpackZone
-            :items="placedItems"
+            :interaction="interaction"
             :active-containers="activeContainers"
+            :items="placedItems"
             :totals="run.loadoutTotals"
             :total-rows="grid.totalRows"
             :bag-rows="grid.bagRows"
             :labels="{ title: backpackLabels.title, rotateAction: '↻', removeAction: '×', statSummaryAriaLabel: text.stats }"
-            @remove-item="unplace"
-            @rotate-item="rotate"
-            @cell-drop="cellDrop"
-            @item-drag-start="dragStart"
-            @item-drag-end="draggingRowId = ''"
-            @deactivate-container="unplace"
-            @rotate-container="rotate"
-            @container-chip-drag-start="dragStart"
           >
             <template #grid="slot">
               <ArtifactGridBoard
@@ -743,15 +721,7 @@ export function createConfiguredGameplayScreen(options = {}) {
                 :get-artifact="getArtifact"
                 :artifact-figure-component="ArtifactFigure"
                 :artifact-image-for="artifactImage"
-                :clickable-pieces="true"
-                :rotatable-pieces="true"
-                :droppable="true"
-                :draggable-pieces="true"
-                @piece-click="slot.onRemoveItem"
-                @piece-rotate="slot.onRotateItem"
-                @cell-drop="slot.onCellDrop"
-                @piece-drag-start="slot.onItemDragStart"
-                @piece-drag-end="slot.onItemDragEnd"
+                :interaction="interaction"
               />
             </template>
             <template #footer="{ totals, ariaLabel }">
@@ -765,7 +735,7 @@ export function createConfiguredGameplayScreen(options = {}) {
             :rows="shopRows"
             :labels="shopLabels"
             :refresh-cost="1"
-            :refresh-disabled="(run.player?.coins || 0) < 1"
+            :refresh-disabled="loading || (run.player?.coins || 0) < 1"
             :show-sell-zone="false"
             @buy="buy"
             @refresh="refreshShop"
