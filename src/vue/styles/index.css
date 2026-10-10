@@ -10368,3 +10368,12 @@ select {
 .backpack-interaction-board .artifact-piece-wrap[data-artifact-id] { pointer-events: auto; }
 .backpack-interaction-board.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
 .backpack-interaction-board button.artifact-grid-cell { padding: 0; font: inherit; }
+
+.backpack-interaction-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  gap: 8px;
+}
+.backpack-interaction-hint { min-height: 3em; }
+.backpack-interaction-reason { min-height: 3em; }
