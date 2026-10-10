@@ -12,7 +12,7 @@ export function createBackpackInteractionState() {
 export function createBackpackInteraction({
   state = createBackpackInteractionState(), getRows, getArtifact,
   columns = 6, getHeight = () => 6, commitRows, onCommitted = () => {},
-  isLockedBag = () => false, canInteract = () => true, onSell = null, getSellPrice = () => null, document: doc = globalThis.document,
+  isLockedBag = () => false, canInteract = () => true, onSell = null, canSellItem = () => true, getSellPrice = () => null, document: doc = globalThis.document,
   win = globalThis.window
 }) {
   let root = null;
@@ -156,7 +156,7 @@ export function createBackpackInteraction({
   }
   async function sell() {
     const item = selected();
-    if (!item || blocked() || typeof onSell !== 'function') return false;
+    if (!item || blocked() || typeof onSell !== 'function' || !canSellItem(item)) return false;
     const commitGeneration = generation;
     state.busy = true;
     let saved;
@@ -264,8 +264,9 @@ export function createBackpackInteraction({
   function dropTargetAt(x, y) {
     const target = doc?.elementFromPoint?.(x, y);
     const zone = target?.closest?.('[data-backpack-drop-zone]')?.dataset?.backpackDropZone;
-    if (zone === 'sell' || zone === 'storage') return zone;
-    if (target?.closest?.('.sell-zone')) return 'sell';
+    if (zone === 'storage') return zone;
+    if (zone === 'sell') return selected() && canSellItem(selected()) && getSellPrice(selected()) != null ? zone : null;
+    if (target?.closest?.('.sell-zone')) return selected() && canSellItem(selected()) && getSellPrice(selected()) != null ? 'sell' : null;
     if (target?.closest?.('.artifact-container-zone')) return 'storage';
     return null;
   }
@@ -330,7 +331,7 @@ export function createBackpackInteraction({
   }
   return {
     state, select, previewAt, placeAt, rotate, unplace, autoPlace, cancel, sell,
-    canSell: () => typeof onSell === 'function', isBusy: blocked,
+    canSell: () => typeof onSell === 'function' && !!selected() && canSellItem(selected()), isBusy: blocked,
     getSellPrice: () => { const item = selected(); return item ? getSellPrice(item) : null; },
     attach, detach, clickCell, getRows: rows, getSelectedItem: selected
   };

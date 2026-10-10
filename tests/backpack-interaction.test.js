@@ -52,7 +52,7 @@ function fixture(t, { initialRows = [bag, stored], save, origin = 100, canIntera
       const result = save ? await save(next) : true;
       if (result !== false && result !== null) rows = next;
       return result;
-    }, onCommitted: (event) => committed.push(event), canInteract, onSell, document: doc, win });
+    }, onCommitted: (event) => committed.push(event), canInteract, onSell, getSellPrice: () => 1, document: doc, win });
   interaction.attach(root);
   t.after(() => interaction.detach());
   const target = (id, rect = { left: 20, top: 20, width: 40, height: 80 }) => {

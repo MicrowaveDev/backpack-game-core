@@ -100,6 +100,7 @@ export declare function createBackpackInteraction(options: {
   isLockedBag?: (row: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => boolean;
   canInteract?: () => boolean;
   onSell?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => Promise<unknown> | unknown;
+  canSellItem?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => boolean;
   getSellPrice?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => number | null;
   document?: Document | null;
   win?: Window | null;
