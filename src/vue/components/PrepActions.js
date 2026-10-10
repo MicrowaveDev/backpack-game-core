@@ -71,10 +71,12 @@ export const PrepActions = {
   },
   methods: {
     emitReady() {
+      if (this.actionInFlight) return;
       this.$emit('ready');
       this.$emit('primary-action');
     },
     emitAbandon() {
+      if (this.actionInFlight) return;
       this.$emit('abandon');
       this.$emit('secondary-action');
     }
@@ -85,7 +87,7 @@ export const PrepActions = {
         <span :class="opponentClass || null">{{ opponentText }}</span>
       </div>
       <button type="button" :class="primaryClass || null" :disabled="actionInFlight" @click="emitReady">{{ primaryText }}</button>
-      <button type="button" :class="secondaryClass || null" @click="emitAbandon">{{ abandonLabel }}</button>
+      <button type="button" :class="secondaryClass || null" :disabled="actionInFlight" @click="emitAbandon">{{ abandonLabel }}</button>
     </div>
   `
 };

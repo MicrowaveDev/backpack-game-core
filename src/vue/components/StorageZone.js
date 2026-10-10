@@ -1,3 +1,5 @@
+import { getBackpackItemDimensions } from '../../modules/loadout/interaction-placement.js';
+
 function nonEmptyArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
@@ -15,6 +17,7 @@ function localizedName(value, lang = 'en') {
 export const StorageZone = {
   name: 'StorageZone',
   props: {
+    interaction: { type: Object, default: null },
     items: {
       type: Array,
       default: () => []
@@ -145,6 +148,10 @@ export const StorageZone = {
       return this.formatItemStats ? nonEmptyArray(this.formatItemStats(item)) : [];
     },
     previewOrientation(item) {
+      if (this.interaction) {
+        const row = this.interaction.getRows().find((entry) => String(entry.id) === String(this.itemRowId(item)));
+        if (row) return getBackpackItemDimensions(row, item);
+      }
       if (this.previewOrientationForItem) return this.previewOrientationForItem(item);
       return {
         width: item?.width || 1,
@@ -156,6 +163,7 @@ export const StorageZone = {
       return [{
         artifactId: this.itemId(item),
         rowId: item?.rowId,
+        ...(item?.rotated != null ? { rotated: item.rotated } : {}),
         x: 0,
         y: 0,
         width: orientation.width,
@@ -166,6 +174,7 @@ export const StorageZone = {
       const orientation = this.previewOrientation(item);
       return {
         'data-artifact-id': this.itemId(item),
+        'data-backpack-row-id': this.interaction ? this.itemRowId(item) : null,
         'data-artifact-row-id': item?.rowId || '',
         'data-artifact-width': orientation.width,
         'data-artifact-height': orientation.height
@@ -185,10 +194,13 @@ export const StorageZone = {
     itemClasses(item) {
       return {
         [this.itemPendingClass]: this.isPending(item),
+        'backpack-interaction-source': !!this.interaction,
+        'backpack-interaction-selected': this.interaction?.state.selectedId === this.itemRowId(item),
         [this.itemHighlightedClass]: !this.isPending(item) && this.isHighlighted(item)
       };
     },
     selectItem(item) {
+      if (this.interaction) { this.interaction.select(this.itemRowId(item)); return; }
       this.$emit('select-item', {
         item,
         artifactId: this.itemId(item),
@@ -213,6 +225,11 @@ export const StorageZone = {
           :key="itemKey(item, index)"
           :class="[itemClass, itemClasses(item)]"
           :title="itemTitle(item)"
+          :role="interaction ? 'button' : null"
+          :tabindex="interaction ? 0 : null"
+          :aria-pressed="interaction ? interaction.state.selectedId === itemRowId(item) : null"
+          @keydown.enter.prevent="selectItem(item)"
+          @keydown.space.prevent="selectItem(item)"
           :data-tutorial-anchor="item.family === bagFamily ? 'storage-bag' : 'storage-item'"
           v-bind="itemDataset(item)"
           @click="selectItem(item)"

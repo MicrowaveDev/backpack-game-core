@@ -50,7 +50,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     place_artifact: Object.freeze({
       title: 'Place your item',
-      body: 'Your purchase is waiting in Storage. Tap it to place it in the Backpack used for this round.'
+      body: 'Your purchase is waiting in Storage. Select it, then tap a Backpack cell to place it, or choose Auto-place.'
     }),
     automatic_artifacts: Object.freeze({
       title: 'Items fight automatically',
@@ -70,7 +70,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     place_bag: Object.freeze({
       title: 'Expand your field',
-      body: 'Your bag is waiting in Storage. Select it to add its cells to the Backpack.'
+      body: 'Your bag is waiting in Storage. Select it, then choose a position on the field or use Auto-place to add its cells to the Backpack.'
     }),
     lost_life: Object.freeze({
       title: 'You lost a life',
@@ -91,7 +91,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     place_artifact: Object.freeze({
       title: 'Размести предмет',
-      body: 'Покупка ждёт в «Хранилище». Нажми на неё, чтобы разместить предмет в «Рюкзаке» на этот раунд.'
+      body: 'Покупка ждёт в «Хранилище». Выбери предмет, затем нажми на клетку «Рюкзака» или используй «Авторазмещение».'
     }),
     automatic_artifacts: Object.freeze({
       title: 'Предметы сражаются сами',
@@ -111,7 +111,7 @@ export const DEFAULT_TUTORIAL_COPY = Object.freeze({
     }),
     place_bag: Object.freeze({
       title: 'Расширь поле',
-      body: 'Сумка ждёт в «Хранилище». Выбери её, чтобы добавить клетки в «Рюкзак».'
+      body: 'Сумка ждёт в «Хранилище». Выбери её, затем укажи место на поле или используй «Авторазмещение», чтобы добавить клетки в «Рюкзак».'
     }),
     lost_life: Object.freeze({
       title: 'Потеряна жизнь',

@@ -310,6 +310,14 @@
     "./client/tutorial": {
       "types": "./src/client/tutorial/index.d.ts",
       "import": "./src/client/tutorial/index.js"
+    },
+    "./tooling/social-preview": {
+      "types": "./src/tooling/social-preview.d.ts",
+      "import": "./src/tooling/social-preview.js"
+    },
+    "./tooling/social-metadata": {
+      "types": "./src/tooling/social-metadata.d.ts",
+      "import": "./src/tooling/social-metadata.js"
     }
   },
   "files": [
