@@ -293,7 +293,7 @@ export function createBackpackInteraction({
     }
   }
   function onClick(event) {
-    if (Date.now() < suppressClickUntil) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    if (Date.now() < suppressClickUntil && !event.target?.closest?.('.backpack-interaction-action, [data-backpack-context-action], .backpack-bag-context-label')) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (state.selectedId && !event.target?.closest?.('[data-backpack-interaction-board], [data-backpack-row-id], [data-backpack-context-action], .backpack-interaction-controls, [data-backpack-drop-zone], .artifact-container-zone, .sell-zone')) cancel();
   }
   function onOutsidePointerDown(event) {

@@ -480,3 +480,12 @@ test('bag noop returns without save or evacuating contents', async (t) => {
   assert.equal(f.calls.length, 0);
   assert.equal(f.getRows()[1].x, 0);
 });
+
+test('a deliberate context action after pointer cancellation is never suppressed', (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  f.root.emit('pointercancel');
+  const click = f.root.emit('click', { target: { closest: (selector) => selector.includes('.backpack-interaction-action') ? {} : null } });
+  assert.equal(click.stopped, false);
+});
