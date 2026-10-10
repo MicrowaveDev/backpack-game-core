@@ -48,7 +48,9 @@ export const BackpackInteractionControls = {
       buttons[next]?.focus();
     },
     menuBlur(event) {
-      if (!event.currentTarget.contains(event.relatedTarget)) this.menuOpen = false;
+      // Touch browsers may report null while focus transfers before the click.
+      // Outside taps cancel selection in the controller; keyboard focus has a target.
+      if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) this.menuOpen = false;
     }
   },
   template: `
