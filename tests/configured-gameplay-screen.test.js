@@ -182,47 +182,49 @@ test('[configured gameplay] localizes backend-shaped shop stat keys for display'
   assert.equal(rows[0].statRows[0].label, 'Stun chance');
 });
 
-test('[configured gameplay] excludes the selected storage row when auto-placing it', async () => {
-  let placementRows = null;
-  let savedRows = null;
-  const component = createConfiguredGameplayScreen(options({
-    getArtifactById: (id) => ({ id, family: 'bag' }),
-    findBagPlacement(rows) {
-      placementRows = rows;
-      return { x: 3, y: 0, width: 3, height: 2, rotated: 1, active: true };
-    }
-  }));
+test('[configured gameplay] uses the shared controller for selection and commits through product revision', async () => {
+  const artifact = { id: 'blade', family: 'combat', width: 1, height: 1 };
+  const bag = { id: 'starter_bag', family: 'bag', width: 2, height: 2 };
+  const component = createConfiguredGameplayScreen(options());
+  const saves = [];
+  const notifications = [];
   const context = {
-    run: {
-      loadoutItems: [
-        { id: 'starter', artifactId: 'starter', x: 0, y: 0, active: true },
-        { id: 'new-bag', artifactId: 'hook', x: 2, y: 4, active: false, rotated: 0 }
-      ]
-    },
-    getArtifact: (id) => ({ id, family: 'bag' }),
-    saveRows(rows) {
-      savedRows = rows;
-      return Promise.resolve(null);
-    },
-    controller: {}
+    interactionState: {},
+    run: { id: 'run-1', revision: 7, loadoutItems: [
+      { id: 'starter', artifactId: 'starter_bag', x: 0, y: 0, width: 2, height: 2, active: true },
+      { id: 'blade-instance', artifactId: 'blade', x: -1, y: -1, width: 1, height: 1 }
+    ] },
+    grid: { totalRows: 5 },
+    getArtifact: (id) => id === 'blade' ? artifact : bag,
+    async saveRows(rows) { saves.push(rows); this.run = { ...this.run, loadoutItems: rows, revision: 8 }; return { run: this.run }; },
+    onInteractionCommitted(change) { notifications.push(change); }
   };
+  component.created.call(context);
+  context.interaction.select('blade-instance');
+  assert.equal(saves.length, 0);
+  await context.interaction.placeAt({ x: 1, y: 1 });
+  assert.equal(saves.length, 1);
+  assert.equal(context.run.loadoutItems.find((row) => row.id === 'blade-instance').x, 1);
+  assert.equal(notifications[0].action, 'place');
+  assert.equal(notifications[0].item.id, 'blade-instance');
+  context.interaction.select('blade-instance');
+  assert.equal(saves.length, 1, 'selecting a placed item must not remove it');
+});
 
-  await component.methods.autoPlace.call(context, { id: 'new-bag' });
-
-  assert.deepEqual(placementRows.map((row) => row.id), ['starter']);
-  assert.deepEqual(
-    savedRows.find((row) => row.id === 'new-bag'),
-    {
-      id: 'new-bag',
-      artifactId: 'hook',
-      x: 3,
-      y: 0,
-      width: 3,
-      height: 2,
-      active: true,
-      rotated: 1
-    }
-  );
+test('[configured gameplay] refuses overlapping product mutations and reports save failures', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  let calls = 0;
+  const context = {
+    runIsActive: true, loading: true,
+    text: { saveLoadout: 'Save' }, run: { id: 'run-1', revision: 9 },
+    clientServices: { services: { run: { saveLoadout() { calls += 1; return null; } } } },
+    async mutate(_label, operation) { return operation(); }
+  };
+  assert.equal(await component.methods.saveRows.call(context, []), false);
+  assert.equal(calls, 0);
+  context.loading = false;
+  assert.equal(await component.methods.saveRows.call(context, []), false);
+  assert.equal(calls, 1);
 });
 
 test('[configured gameplay] returns home after closing a run summary', async () => {
@@ -306,10 +308,7 @@ test('[configured gameplay] rejects incomplete product configuration', () => {
     () => createConfiguredGameplayScreen(options({ gridColumns: 0 })),
     /positive integer options\.gridColumns/
   );
-  assert.throws(
-    () => createConfiguredGameplayScreen(options({ findPlacement: null })),
-    /options\.findPlacement/
-  );
+  assert.doesNotThrow(() => createConfiguredGameplayScreen(options({ findPlacement: null, findBagPlacement: null })));
   assert.throws(
     () => createConfiguredGameplayScreen(options({ artifactFigureComponent: null })),
     /options\.artifactFigureComponent/

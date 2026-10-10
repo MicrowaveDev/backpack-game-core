@@ -50,6 +50,7 @@ export const ArtifactGridBoard = {
     draggablePieces: { type: Boolean, default: false },
     bagRows: { type: Array, default: () => [] },
     placementPreviewForCell: { type: Function, default: null },
+    interaction: { type: Object, default: null },
     highlightedRowIds: { type: [Array, Object], default: () => new Set() },
     highlightedTitle: { type: String, default: '' }
   },
@@ -78,6 +79,7 @@ export const ArtifactGridBoard = {
       return this.gridColumns * this.gridRows;
     },
     placementPreview() {
+      if (this.interaction) return this.interaction.state.preview;
       if (!this.placementPreviewForCell || this.hoverCellIndex < 0) return null;
       const preview = this.placementPreviewForCell({
         x: this.cellX(this.hoverCellIndex),
@@ -99,7 +101,7 @@ export const ArtifactGridBoard = {
         inventoryVariant: this.isInventoryVariant,
         placementPreview: this.placementPreview,
         hoverCellIndex: this.hoverCellIndex,
-        interactiveCells: this.interactiveCells,
+        interactiveCells: this.interactiveCells || !!this.interaction,
         droppable: this.droppable
       });
     },
@@ -111,12 +113,14 @@ export const ArtifactGridBoard = {
     renderedCells() {
       return this.gridCells.map((cell) => ({
         ...cell,
-        as: this.interactiveCells ? 'button' : 'span',
+        as: this.interactiveCells || this.interaction ? 'button' : 'span',
         classNames: this.cellClass(cell),
         style: this.cellStyle(cell),
         attrs: {
           'data-cell-x': cell.x,
-          'data-cell-y': cell.y
+          'data-cell-y': cell.y,
+          'aria-label': `${cell.x + 1}, ${cell.y + 1}`,
+          type: this.interaction || this.interactiveCells ? 'button' : null
         }
       }));
     },
@@ -130,7 +134,8 @@ export const ArtifactGridBoard = {
           ...item,
           classNames: {
             'artifact-piece-wrap': true,
-            'artifact-piece-wrap--fusion-pending': this.isHighlighted(item)
+            'artifact-piece-wrap--fusion-pending': this.isHighlighted(item),
+            'backpack-interaction-selected': this.interaction?.state.selectedId === (item.id || item.rowId)
           },
           style: this.pieceStyle(item),
           title: this.isHighlighted(item) ? this.highlightedTitle : null,
@@ -186,7 +191,9 @@ export const ArtifactGridBoard = {
         'artifact-grid-board': true,
         'inventory-shell': this.isInventoryVariant,
         'artifact-grid-board--inventory': this.isInventoryVariant,
-        'artifact-grid-board--catalog': this.variant === 'catalog'
+        'artifact-grid-board--catalog': this.variant === 'catalog',
+        'backpack-interaction-board': !!this.interaction,
+        'backpack-interaction-bags': !!this.interaction?.state.bagMode
       };
     }
   },
@@ -269,6 +276,7 @@ export const ArtifactGridBoard = {
         'artifact-grid-cell--preview': cell.preview,
         'artifact-grid-cell--preview-valid': cell.previewValid,
         'artifact-grid-cell--preview-invalid': cell.previewInvalid,
+        'backpack-interaction-conflict': this.interaction?.state.preview?.conflictCells?.includes(`${cell.x}:${cell.y}`),
         [`artifact-grid-cell--preview-${cell.previewFamily || 'none'}`]: cell.preview
       };
     },
@@ -281,15 +289,18 @@ export const ArtifactGridBoard = {
       };
     },
     clickCell(cell) {
+      if (this.interaction) { this.interaction.clickCell(cell); return; }
       if (!this.interactiveCells) return;
       this.$emit('cell-click', { x: cell.x, y: cell.y });
     },
     clickPiece(item, event) {
+      if (this.interaction) { event?.stopPropagation?.(); this.interaction.select(item); return; }
       if (!this.clickablePieces) return;
       event.stopPropagation();
       this.$emit('piece-click', item);
     },
     rotatePiece(item, event) {
+      if (this.interaction) { event?.stopPropagation?.(); if (this.interaction.select(item)) void this.interaction.rotate(); return; }
       event.stopPropagation();
       this.$emit('piece-rotate', item);
     },
@@ -344,6 +355,7 @@ export const ArtifactGridBoard = {
       const dataset = item.dataset || {};
       return {
         'data-artifact-id': dataset.artifactId ?? item.artifactId,
+        'data-backpack-row-id': this.interaction ? item.id || item.rowId || '' : null,
         'data-artifact-row-id': dataset.rowId ?? item.id ?? item.rowId ?? '',
         'data-artifact-x': dataset.x ?? item.x,
         'data-artifact-y': dataset.y ?? item.y,
@@ -362,6 +374,7 @@ export const ArtifactGridBoard = {
   },
   template: `
     <backpack-grid
+      :data-backpack-interaction-board="interaction ? true : null"
       :cells="renderedCells"
       :pieces="renderedPieces"
       :overlays="renderedBagOverlays"
@@ -370,10 +383,10 @@ export const ArtifactGridBoard = {
       :background-class="backgroundClass()"
       :pieces-class="piecesClass()"
       :test-id="isInventoryVariant ? 'unified-grid' : ''"
-      :interactive-cells="interactiveCells"
-      :clickable-pieces="clickablePieces"
+      :interactive-cells="interactiveCells || !!interaction"
+      :clickable-pieces="clickablePieces || !!interaction"
       :rotatable-pieces="rotatablePieces"
-      :draggable-pieces="draggablePieces"
+      :draggable-pieces="draggablePieces && !interaction"
       :droppable="droppable"
       rotate-text="↻"
       @cell-click="clickCell"

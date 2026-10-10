@@ -47,3 +47,5 @@ export declare const ShopItemList: VueComponentOption;
 export declare const TutorialPopup: VueComponentOption;
 export declare const GachaPackCard: VueComponentOption;
 export declare const GachaPackCardList: VueComponentOption;
+
+export declare const BackpackInteractionControls: VueComponentOption;

@@ -5,6 +5,7 @@ function nonEmptyArray(value) {
 export const BackpackZone = {
   name: 'BackpackZone',
   props: {
+    interaction: { type: Object, default: null },
     items: {
       type: Array,
       default: () => []
@@ -130,6 +131,7 @@ export const BackpackZone = {
     containerDataset(container) {
       return {
         'data-bag-row-id': container?.id || '',
+        ...(this.interaction ? { 'data-backpack-row-id': container?.id ?? '' } : {}),
         'data-bag-locked': container?.locked ? 'true' : 'false'
       };
     },
@@ -166,6 +168,7 @@ export const BackpackZone = {
       this.$emit('item-drag-end');
     },
     rotateContainer(container) {
+      if (this.interaction) { if (this.interaction.select(container)) void this.interaction.rotate(); return; }
       this.$emit('rotate-container', {
         container,
         id: container?.id,
@@ -173,6 +176,7 @@ export const BackpackZone = {
       });
     },
     deactivateContainer(container) {
+      if (this.interaction) { if (this.interaction.select(container)) void this.interaction.unplace(); return; }
       this.$emit('deactivate-container', {
         container,
         id: container?.id,
@@ -206,7 +210,13 @@ export const BackpackZone = {
           :key="containerKey(container, index)"
           :class="[containerChipClass, containerClasses(container)]"
           :style="containerStyle(container)"
-          :draggable="container.draggable !== false"
+          :draggable="!interaction && container.draggable !== false"
+          :role="interaction ? 'button' : null"
+          :tabindex="interaction ? 0 : null"
+          :aria-pressed="interaction ? interaction.state.selectedId === container.id : null"
+          @click="interaction && interaction.select(container)"
+          @keydown.enter.prevent="interaction && interaction.select(container)"
+          @keydown.space.prevent="interaction && interaction.select(container)"
           :title="container.title || null"
           v-bind="containerDataset(container)"
           @dragstart="onContainerDragStart(container, $event)"
@@ -219,12 +229,12 @@ export const BackpackZone = {
             v-if="container.rotatable"
             :class="containerActionClass"
             type="button"
-            @click="rotateContainer(container)"
+            @click.stop="rotateContainer(container)"
           >{{ rotateActionLabel }}</button>
           <button
             :class="containerActionClass"
             type="button"
-            @click="deactivateContainer(container)"
+            @click.stop="deactivateContainer(container)"
           >{{ removeActionLabel }}</button>
         </span>
       </div>

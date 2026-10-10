@@ -10325,3 +10325,46 @@ select {
     display: none;
   }
 }
+
+/* Shared preparation interaction states; consumer themes supply colors. */
+.backpack-interaction-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-block: 8px;
+  max-width: 100%;
+}
+.backpack-interaction-action {
+  min-height: 44px;
+  padding: 8px 12px;
+  font: inherit;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: var(--panel-bg, #fffaf0);
+  color: inherit;
+}
+.backpack-interaction-action[aria-pressed="true"] { outline: 2px solid currentColor; }
+.backpack-interaction-hint,
+.backpack-interaction-reason { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
+.backpack-interaction-reason { min-height: 1.5em; font-weight: 600; }
+.backpack-interaction-source { touch-action: none; cursor: grab; }
+.backpack-interaction-selected { outline: 3px solid var(--accent, #446c40); outline-offset: 2px; }
+.backpack-interaction-board .artifact-grid-cell--bag-empty,
+.backpack-interaction-board .artifact-grid-cell--bag-disabled {
+  background: repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(70,70,70,.08) 5px, rgba(70,70,70,.08) 7px);
+  border-style: dashed;
+  opacity: .65;
+}
+.backpack-interaction-board .artifact-grid-cell--preview { opacity: 1; }
+.backpack-interaction-board .backpack-interaction-conflict {
+  opacity: 1;
+  outline: 3px solid #a83228;
+  background: repeating-linear-gradient(135deg, rgba(168,50,40,.12), rgba(168,50,40,.12) 5px, rgba(168,50,40,.3) 5px, rgba(168,50,40,.3) 8px);
+}
+.backpack-interaction-bags { touch-action: none; }
+.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
+.backpack-interaction-board .artifact-grid-pieces { pointer-events: none; }
+.backpack-interaction-board .artifact-piece-wrap[data-artifact-id] { pointer-events: auto; }
+.backpack-interaction-board.backpack-interaction-bags .artifact-piece-wrap[data-artifact-id] { pointer-events: none; }
+.backpack-interaction-board button.artifact-grid-cell { padding: 0; font: inherit; }

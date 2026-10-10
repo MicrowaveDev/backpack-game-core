@@ -990,3 +990,5 @@ export const GachaPackCardList = {
     </component>
   `
 };
+
+export { BackpackInteractionControls } from './components/BackpackInteractionControls.js';

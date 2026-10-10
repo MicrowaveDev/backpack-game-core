@@ -11,7 +11,7 @@ function bagIdSet(bagArtifactIds) {
   return bagArtifactIds instanceof Set ? bagArtifactIds : new Set(bagArtifactIds || []);
 }
 
-export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getArtifact = null) {
+export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getArtifact = null, { preserveOrientation = false } = {}) {
   const bagsSet = bagIdSet(bagArtifactIds);
   const builderItems = [];
   const containerItems = [];
@@ -20,6 +20,11 @@ export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getA
   const freshPurchases = [];
 
   for (const item of loadoutItems || []) {
+    const orientation = preserveOrientation ? {
+      ...(item.width != null ? { width: Number(item.width) } : {}),
+      ...(item.height != null ? { height: Number(item.height) } : {}),
+      ...(item.rotated != null ? { rotated: normalizeRotation(item.rotated) } : {})
+    } : {};
     const isBagRow = bagsSet.has(item.artifactId);
     if (isBagRow) {
       if (item.active) {
@@ -30,7 +35,7 @@ export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getA
           anchorY: Number(item.y ?? 0)
         });
       } else {
-        containerItems.push({ id: item.id, artifactId: item.artifactId });
+        containerItems.push({ id: item.id, artifactId: item.artifactId, ...orientation });
       }
       const rotation = normalizeRotation(item.rotated);
       if (rotation) rotatedBags.push({ id: item.id, artifactId: item.artifactId, rotation });
@@ -45,10 +50,11 @@ export function projectLoadoutItems(loadoutItems = [], bagArtifactIds = [], getA
         x: Number(item.x),
         y: Number(item.y),
         width: Number(item.width),
-        height: Number(item.height)
+        height: Number(item.height),
+        ...orientation
       });
     } else {
-      containerItems.push({ id: item.id, artifactId: item.artifactId });
+      containerItems.push({ id: item.id, artifactId: item.artifactId, ...orientation });
     }
     if (item.freshPurchase) freshPurchases.push(item.artifactId);
   }
