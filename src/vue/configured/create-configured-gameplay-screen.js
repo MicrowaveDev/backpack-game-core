@@ -119,6 +119,7 @@ export function createConfiguredGameplayScreen(options = {}) {
         interaction: null,
         showReplay: false,
         resolvingBattle: false,
+        gameplayDisposed: false,
         replayTimer: null,
         replayState: {
           lang: locale,
@@ -342,6 +343,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     }
   },
   beforeUnmount() {
+    this.gameplayDisposed = true;
     getTutorialController(this.controller)?.setSuspended?.(false);
     this.interaction?.detach();
     this.clearReplayTimer();
@@ -585,7 +587,7 @@ export function createConfiguredGameplayScreen(options = {}) {
         const result = await this.mutate(this.text.battle, () => (
           this.clientServices.services.run.battle(this.run.id)
         ));
-        if (result?.battle) this.beginReplay(result.battle, result);
+        if (result?.battle && !this.gameplayDisposed) this.beginReplay(result.battle, result);
         return result;
       } finally {
         this.resolvingBattle = false;
