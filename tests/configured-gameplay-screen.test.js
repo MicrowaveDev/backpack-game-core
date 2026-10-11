@@ -1,3 +1,4 @@
+import { reactive } from 'vue';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createConfiguredGameplayScreen } from '../src/vue/configured/index.js';
@@ -217,7 +218,7 @@ test('[configured gameplay] refuses overlapping product mutations and reports sa
   let calls = 0;
   const context = {
     runIsActive: true, loading: true,
-    text: { saveLoadout: 'Save' }, run: { id: 'run-1', revision: 9 },
+    text: { saveLoadout: 'Save' }, run: { id: 'run-1', revision: 9 }, controller: { state: {} },
     clientServices: { services: { run: { saveLoadout() { calls += 1; return null; } } } },
     async mutate(_label, operation) { return operation(); }
   };
@@ -252,7 +253,7 @@ test('[configured gameplay] serializes a loadout save against purchases and keep
   const purchase = await component.methods.buy.call(context, { artifactId: 'blade', canAfford: true });
   assert.equal(purchase, null);
   assert.deepEqual(writes, [{ id: 'run-1', rows: [{ id: 'item' }], revision: 7 }]);
-  finishSave({ run: { id: 'run-1', revision: 8 } });
+  finishSave({ run: { id: 'run-1', revision: 8, loadoutItems: [{ id: 'item' }] } });
   await saving;
   assert.equal(context.run.revision, 8);
   assert.equal(context.loading, false);
@@ -376,4 +377,117 @@ test('[configured gameplay] late battle response cannot restart a replay after d
   };
   await component.methods.resolveBattle.call(context);
   assert.deepEqual(values, [true, false]);
+});
+
+function deferredLoadoutContext() {
+  const previous = { id: 'run-1', revision: 7, loadoutItems: [{ id: 'item', x: 0, y: 0 }] };
+  let resolve, reject;
+  const calls = [];
+  const context = {
+    runIsActive: true, loading: false, activeRun: previous,
+    text: { saveLoadout: 'Save' },
+    controller: { state: { bootstrap: { activeRun: previous }, gameRun: previous },
+      async refreshBootstrap() { calls.push('bootstrap'); } },
+    clientServices: { services: { run: { saveLoadout(id, rows, revision) {
+      calls.push({ id, rows, revision });
+      return new Promise((yes, no) => { resolve = yes; reject = no; });
+    } } } }
+  };
+  Object.defineProperty(context, 'run', { get: () => context.activeRun });
+  return { context, previous, calls, resolve: (value) => resolve(value), reject: (error) => reject(error) };
+}
+
+test('[configured gameplay] loadout renders before confirmation and reconciles one response without bootstrap', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const f = deferredLoadoutContext();
+  const rows = [{ id: 'item', x: 1, y: 2 }];
+  const saving = component.methods.saveRows.call(f.context, rows);
+  assert.deepEqual(f.context.run.loadoutItems, rows);
+  assert.equal(f.context.run.revision, 7);
+  assert.equal(f.context.loading, true);
+  assert.equal(await component.methods.saveRows.call(f.context, []), false);
+  const confirmed = { ...f.previous, revision: 8, loadoutItems: [{ ...rows[0], active: true }] };
+  f.resolve(confirmed);
+  assert.equal(await saving, confirmed);
+  assert.equal(f.context.activeRun, confirmed);
+  assert.equal(f.context.controller.state.bootstrap.activeRun, confirmed);
+  assert.equal(f.context.controller.state.gameRun, confirmed);
+  assert.deepEqual(f.calls, [{ id: 'run-1', rows, revision: 7 }]);
+  assert.equal(f.context.loading, false);
+});
+
+test('[configured gameplay] failed loadout rolls back and only a conflict reloads bootstrap', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  for (const status of [503, 409]) {
+    const f = deferredLoadoutContext();
+    const server = { ...f.previous, revision: 9, loadoutItems: [] };
+    f.context.controller.refreshBootstrap = async () => {
+      f.calls.push('bootstrap');
+      f.context.controller.state.bootstrap.activeRun = server;
+    };
+    const saving = component.methods.saveRows.call(f.context, [{ id: 'item', x: 2, y: 2 }]);
+    f.reject(Object.assign(new Error('save rejected'), { status }));
+    assert.equal(await saving, false);
+    assert.equal(f.context.activeRun, status === 409 ? server : f.previous);
+    assert.equal(f.context.loading, false);
+    assert.match(f.context.controller.state.error, /save rejected/);
+    assert.equal(f.calls.filter(call => call === 'bootstrap').length, status === 409 ? 1 : 0);
+  }
+});
+
+test('[configured gameplay] loadout replies and rollback do not overwrite another run or a disposed screen', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  for (const disposed of [false, true]) for (const failed of [false, true]) {
+    const f = deferredLoadoutContext();
+    const saving = component.methods.saveRows.call(f.context, []);
+    const replacement = { id: 'other-run', revision: 4, loadoutItems: [] };
+    if (disposed) f.context.gameplayDisposed = true;
+    else f.context.activeRun = replacement;
+    if (failed) f.reject(Object.assign(new Error('late conflict'), { status: 409 }));
+    else f.resolve({ ...f.previous, revision: 8, loadoutItems: [] });
+    assert.equal(await saving, false);
+    if (!disposed) assert.equal(f.context.activeRun, replacement);
+    assert.equal(f.context.controller.state.bootstrap.activeRun, f.previous);
+    assert.equal(f.calls.length, 1);
+    assert.equal(f.context.controller.state.error, '');
+  }
+});
+
+test('[configured gameplay] conflict recovery cannot replace a run opened while bootstrap was pending', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const f = deferredLoadoutContext();
+  let recover;
+  f.context.controller.refreshBootstrap = () => new Promise(resolve => { recover = resolve; });
+  const saving = component.methods.saveRows.call(f.context, []);
+  f.reject(Object.assign(new Error('conflict'), { status: 409 }));
+  await Promise.resolve();
+  const replacement = { id: 'other-run' };
+  f.context.activeRun = replacement;
+  recover();
+  assert.equal(await saving, false);
+  assert.equal(f.context.activeRun, replacement);
+});
+
+
+test('[configured gameplay] optimistic save confirmation works through Vue reactive object wrapping', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const f = deferredLoadoutContext();
+  const context = reactive(f.context);
+  const saving = component.methods.saveRows.call(context, [{ id: 'item', x: 2, y: 1 }]);
+  assert.equal(context.run.loadoutItems[0].x, 2);
+  f.resolve({ ...f.previous, revision: 8, loadoutItems: [{ id: 'item', x: 2, y: 1 }] });
+  assert.ok(await saving);
+  assert.equal(context.run.revision, 8);
+  assert.equal(context.controller.state.bootstrap.activeRun, context.activeRun);
+  assert.equal(context.loading, false);
+});
+
+test('[configured gameplay] conflict recovery clears a run that ended elsewhere', async () => {
+  const component = createConfiguredGameplayScreen(options());
+  const f = deferredLoadoutContext();
+  f.context.controller.refreshBootstrap = async () => { f.context.controller.state.bootstrap.activeRun = null; };
+  const saving = component.methods.saveRows.call(f.context, []);
+  f.reject(Object.assign(new Error('conflict'), { status: 409 }));
+  assert.equal(await saving, false);
+  assert.equal(f.context.activeRun, null);
 });

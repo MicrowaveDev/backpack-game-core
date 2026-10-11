@@ -607,13 +607,44 @@ export function createConfiguredGameplayScreen(options = {}) {
     },
     async saveRows(rows) {
       if (!this.runIsActive || this.loading) return false;
-      return (await this.mutate(this.text.saveLoadout, () => (
-        this.clientServices.services.run.saveLoadout(
-          this.run.id,
-          rows,
-          this.run.revision
-        )
-      ))) || false;
+      const previousRun = this.run;
+      this.loading = true;
+      this.notice = '';
+      this.controller.state.error = '';
+      this.activeRun = { ...previousRun, loadoutItems: rows };
+      // Vue wraps assigned objects; retain the actual instance for stale-response guards.
+      const optimisticRun = this.activeRun;
+      const isCurrent = () => !this.gameplayDisposed && this.activeRun === optimisticRun;
+      try {
+        const result = await this.clientServices.services.run.saveLoadout(
+          previousRun.id, rows, previousRun.revision
+        );
+        if (!isCurrent()) return false;
+        const confirmedRun = result?.run || result;
+        if (confirmedRun?.id !== previousRun.id || !Array.isArray(confirmedRun.loadoutItems)) {
+          throw new Error('Invalid loadout save response');
+        }
+        this.activeRun = confirmedRun;
+        const state = this.controller.state;
+        if (state.bootstrap?.activeRun?.id === previousRun.id) state.bootstrap.activeRun = confirmedRun;
+        if (state.gameRun?.id === previousRun.id) state.gameRun = confirmedRun;
+        return result;
+      } catch (error) {
+        if (!isCurrent()) return false;
+        this.activeRun = previousRun;
+        this.controller.state.error = `${this.text.saveLoadout}: ${error.message}`;
+        if (Number(error.status) === 409) {
+          try {
+            await this.controller.refreshBootstrap();
+            if (!this.gameplayDisposed && this.activeRun === previousRun) {
+              this.activeRun = this.controller.state.bootstrap?.activeRun || null;
+            }
+          } catch { /* Preserve the rollback and original save error if recovery fails. */ }
+        }
+        return false;
+      } finally {
+        this.loading = false;
+      }
     },
     onInteractionCommitted(change) {
       const artifact = this.getArtifact(change?.item?.artifactId);
