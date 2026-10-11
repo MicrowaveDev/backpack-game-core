@@ -61,6 +61,10 @@ export declare function useTouch(
   }
 ): TouchAdapter;
 
+export interface BackpackShopOffer {
+  artifactId: string; price: number; canAfford?: boolean; unavailable?: boolean;
+  previewOrientation?: { width: number; height: number };
+}
 export interface BackpackInteractionState {
   selectedId: string;
   contextMenuOpen: boolean;
@@ -103,8 +107,8 @@ export declare function createBackpackInteraction(options: {
   onCommitted?: (change: { action: 'place' | 'rotate' | 'unplace'; item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow; rows: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow[]; previousRows: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow[] }) => unknown;
   isLockedBag?: (row: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => boolean;
   canInteract?: () => boolean;
-  getShopRows?: () => Array<{ artifactId: string; price: number; canAfford?: boolean; unavailable?: boolean; previewOrientation?: { width: number; height: number } }>;
-  onPurchase?: (offer: any, placement: { x: number; y: number; rotated: number }) => Promise<unknown> | unknown;
+  getShopRows?: () => BackpackShopOffer[];
+  onPurchase?: (offer: BackpackShopOffer, placement: { x: number; y: number; rotated: number }) => Promise<unknown> | unknown;
   onSell?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => Promise<unknown> | unknown;
   canSellItem?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => boolean;
   getSellPrice?: (item: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow) => number | null;

@@ -170,8 +170,7 @@ export function createBackpackInteraction({
       pointer.offsetY = Math.max(0, Math.min(rotated.height - 1, Math.floor(pointer.visual.grabY / pitch)));
       const { clientX, clientY } = state.dragVisual;
       state.dragVisual = { ...pointer.visual, clientX, clientY };
-      const cell = boardAt(clientX, clientY);
-      if (cell) previewAt({ x: cell.x - pointer.offsetX, y: cell.y - pointer.offsetY }, rotated);
+      onPointerMove({ pointerId: pointer.id, clientX, clientY, preventDefault() {} });
       return Promise.resolve(true);
     }
     if (!active(item)) {

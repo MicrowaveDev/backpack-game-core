@@ -246,6 +246,8 @@ export interface MushroomBattleServicePort {
 }
 
 export interface MushroomShopServicePortOptions {
+  bagColumns?: number;
+  bagRows?: number;
   withTransaction: <T>(fn: (client: unknown) => Promise<T>) => Promise<T>;
   withRunLock: <T>(gameRunId: string, fn: () => Promise<T>) => Promise<T>;
   bagBaseChance: number;

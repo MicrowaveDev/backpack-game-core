@@ -646,6 +646,21 @@ for (const outcome of ['valid', 'invalid', 'cancel', 'failure']) {
   });
 }
 
+test('shop drag rotation immediately updates purchase cost validity and anchor', async (t) => {
+  const f = fixture(t, { getShopRows: () => [{ artifactId: 'blade', price: 2, canAfford: true }], onPurchase: () => true });
+  const source = { dataset: { backpackShopId: 'blade' }, getBoundingClientRect: () => ({ left: 20, top: 20, width: 40, height: 80 }) };
+  source.closest = selector => selector === '[data-backpack-shop-id]' ? source : null;
+  f.root.emit('pointerdown', { target: source, clientX: 35, clientY: 85 });
+  f.root.emit('pointermove', f.point(3, 3));
+  assert.equal(f.interaction.state.purchasePreview.valid, true);
+  const previousY = f.interaction.state.purchasePreview.y;
+  await f.interaction.rotate();
+  assert.equal(f.interaction.state.preview.valid, false);
+  assert.equal(f.interaction.state.purchasePreview.valid, false);
+  assert.equal(f.interaction.state.purchasePreview.y, previousY + 40);
+  assert.equal(f.calls.length, 0);
+});
+
 test('edge autoscroll follows a held drag and stops immediately on release', (t) => {
   const f = fixture(t);
   let frame = null;
