@@ -474,8 +474,16 @@ Meat сохраняет числовую revision; Mushroom передаёт о�
 
 Runtime `f05461d`: core 480/480; Mushroom 665/665 units, 3/3 screen checks,
 2/2 focused browser checks; Meat 119/119 units. Both consumers use the same
-shared runtime. Final documentation pin changes no runtime code.
+shared runtime. Meat browser 9/9; both production builds, core package dry-run
+and hosted/local synthetic deploy configuration checks passed. Final
+documentation pin changes no runtime code.
 
 N1-N4 complete; N5 automatic acceptance AC16-AC22 complete. Physical Telegram
 iOS/Android acceptance AC9/AC23 remains PENDING_USER. Core PR #10 combines the
 previous plan and pointer-artwork PRs. No production deployment in this iteration.
+
+Desktop Mushroom also uses horizontal Storage cards and 36px board cells.
+The confirmed evacuation journey keeps Ready inside1280x800, with full art.
+Durable proofs: Meat `docs/qa/backpack-interaction/`; Mushroom
+`.agent/tasks/backpack-ux/raw/`; current consumer evidence supersedes historical
+mode-switch and occupied-bag-refusal acceptance.
