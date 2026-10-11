@@ -645,3 +645,22 @@ for (const outcome of ['valid', 'invalid', 'cancel', 'failure']) {
     assert.equal(f.root.emit('click', { target: source }).stopped, true);
   });
 }
+
+test('edge autoscroll follows a held drag and stops immediately on release', (t) => {
+  const f = fixture(t);
+  let frame = null;
+  let canceled = false;
+  f.win.innerHeight = 600; f.win.scrollY = 100;
+  f.win.requestAnimationFrame = callback => { frame = callback; return 1; };
+  f.win.cancelAnimationFrame = () => { frame = null; canceled = true; };
+  f.win.scrollBy = (_x, y) => { f.win.scrollY += y; };
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', { clientX: 120, clientY: 25 });
+  assert.ok(frame);
+  frame();
+  assert.ok(f.win.scrollY < 100);
+  f.doc.emit('pointerup', { clientX: 120, clientY: 25 });
+  assert.equal(frame, null);
+  assert.equal(canceled, true);
+  assert.equal(f.interaction.state.dragVisual, null);
+});

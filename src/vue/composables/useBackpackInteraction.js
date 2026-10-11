@@ -21,6 +21,7 @@ export function createBackpackInteraction({
   let pointer = null;
   let messageTimer = null;
   let suppressClickUntil = 0;
+  let scrollFrame = null;
   let disposed = false;
   let generation = 0;
   const rows = () => getRows() || [];
@@ -41,7 +42,26 @@ export function createBackpackInteraction({
     state.messageCode = code;
     if (code) messageTimer = setTimeout(() => { state.messageCode = ''; }, 2400);
   }
+  function scheduleAutoScroll() {
+    if (scrollFrame != null || !pointer?.moved || !win?.requestAnimationFrame || !win?.scrollBy) return;
+    const edge = 56;
+    const y = pointer.clientY;
+    const viewportHeight = win.innerHeight;
+    const speed = y < edge ? -Math.min(18, (edge - y) / 3)
+      : y > viewportHeight - edge ? Math.min(18, (y - viewportHeight + edge) / 3) : 0;
+    if (!speed || y < 0 || y > viewportHeight) return;
+    scrollFrame = win.requestAnimationFrame(() => {
+      scrollFrame = null;
+      if (!pointer?.moved || disposed) return;
+      const before = win.scrollY;
+      win.scrollBy(0, speed);
+      if (win.scrollY !== before) onPointerMove({ pointerId: pointer.id,
+        clientX: pointer.clientX, clientY: pointer.clientY, preventDefault() {} });
+    });
+  }
   function clearPointer() {
+    if (scrollFrame != null) win?.cancelAnimationFrame?.(scrollFrame);
+    scrollFrame = null;
     const current = pointer;
     pointer = null;
     state.dragVisual = null;
@@ -302,6 +322,9 @@ export function createBackpackInteraction({
       try { root.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older WebView. */ }
     }
     event.preventDefault();
+    pointer.clientX = event.clientX;
+    pointer.clientY = event.clientY;
+    scheduleAutoScroll();
     state.contextMenuOpen = false;
     state.dragVisual = { ...pointer.visual, clientX: event.clientX, clientY: event.clientY };
     const cell = boardAt(event.clientX, event.clientY);
