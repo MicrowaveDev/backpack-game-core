@@ -664,3 +664,16 @@ test('edge autoscroll follows a held drag and stops immediately on release', (t)
   assert.equal(canceled, true);
   assert.equal(f.interaction.state.dragVisual, null);
 });
+
+test('shop bag art and draft follow its shape rather than legacy catalog dimensions', (t) => {
+  catalog.shapeBag = { family: 'bag', width: 1, height: 2, shape: [[1, 1]] };
+  const f = fixture(t, { getShopRows: () => [{ artifactId: 'shapeBag', price: 2, canAfford: true, previewOrientation: { width: 2, height: 1 } }], onPurchase: () => true });
+  const source = { dataset: { backpackShopId: 'shapeBag' }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 80, height: 40 }) };
+  source.closest = selector => selector === '[data-backpack-shop-id]' ? source : null;
+  f.root.emit('pointerdown', { target: source, clientX: 10, clientY: 10 });
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.equal(f.interaction.getSelectedItem().rotated, 0);
+  assert.equal(f.interaction.state.dragVisual.width, 76);
+  assert.equal(f.interaction.state.dragVisual.height, 36);
+  assert.deepEqual(f.interaction.state.preview.cells, ['2:2', '3:2']);
+});

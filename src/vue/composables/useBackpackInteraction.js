@@ -274,9 +274,10 @@ export function createBackpackInteraction({
     if (offer) {
       const artifact = getArtifact(offer.artifactId);
       if (!artifact) return;
-      const orientation = offer.previewOrientation || artifact;
+      const natural = getBackpackItemDimensions({ rotated: 0 }, artifact);
+      const orientation = offer.previewOrientation || natural;
       item = { id: `shop:${offer.artifactId}`, artifactId: offer.artifactId, x: -1, y: -1,
-        width: orientation.width, height: orientation.height, rotated: orientation.width !== artifact.width && orientation.width === artifact.height ? 1 : 0, active: false };
+        width: orientation.width, height: orientation.height, rotated: orientation.width !== natural.width && orientation.width === natural.height ? 1 : 0, active: false };
     }
     if (!item) return;
     const dimensions = getBackpackItemDimensions(item, getArtifact(item.artifactId));
