@@ -53,8 +53,12 @@ export function createBackpackInteraction({
     scrollFrame = win.requestAnimationFrame(() => {
       scrollFrame = null;
       if (!pointer?.moved || disposed) return;
+      const currentY = pointer.clientY;
+      const currentSpeed = currentY < edge ? -Math.min(18, (edge - currentY) / 3)
+        : currentY > win.innerHeight - edge ? Math.min(18, (currentY - win.innerHeight + edge) / 3) : 0;
+      if (!currentSpeed || currentY < 0 || currentY > win.innerHeight) return;
       const before = win.scrollY;
-      win.scrollBy(0, speed);
+      win.scrollBy(0, currentSpeed);
       if (win.scrollY !== before) onPointerMove({ pointerId: pointer.id,
         clientX: pointer.clientX, clientY: pointer.clientY, preventDefault() {} });
     });

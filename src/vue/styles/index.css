@@ -10424,7 +10424,7 @@ select {
 
 .shop-item[data-artifact-draggable="true"] { touch-action: none; cursor: grab; }
 .backpack-purchase-cost {
-  position: fixed; z-index: 1210; pointer-events: none;
+  position: fixed; z-index: 10010; pointer-events: none;
   transform: translate(-100%, 2px); padding: 2px 5px;
   border-radius: 5px; background: #f4e8c8; color: #6a4826;
   font-size: 12px; font-weight: 700; white-space: nowrap;
