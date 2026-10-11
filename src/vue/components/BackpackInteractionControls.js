@@ -45,9 +45,11 @@ export const BackpackInteractionControls = {
       const anchor = this.state.contextAnchor || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
       const width = window.visualViewport?.width || window.innerWidth;
       const height = window.visualViewport?.height || window.innerHeight;
+      const topInset = Math.max(8, document.querySelector('.app-header')?.getBoundingClientRect?.().bottom || 0);
       this.position = {
+        maxHeight: Math.max(44, height - topInset - 8) + 'px',
         left: Math.max(8, Math.min(anchor.x + (anchor.scrollX || 0) - window.scrollX + 8, width - rect.width - 8)) + 'px',
-        top: Math.max(8, Math.min(anchor.y + (anchor.scrollY || 0) - window.scrollY + 8, height - rect.height - 8)) + 'px'
+        top: Math.max(topInset, Math.min(anchor.y + (anchor.scrollY || 0) - window.scrollY + 8, height - rect.height - 8)) + 'px'
       };
     },
     async action(name) {
