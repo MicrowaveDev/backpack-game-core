@@ -570,3 +570,32 @@ test('outside pointerdown dismisses the menu without placing its selected item',
   assert.equal(f.interaction.state.selectedId, '');
   assert.equal(f.calls.length, 0);
 });
+
+for (const scenario of ['valid', 'unchanged', 'invalid', 'save-failed']) {
+  test(`bag drop ${scenario} ends placement and ignores trailing label click`, async (t) => {
+    const small = { ...bag, artifactId: 'strip' };
+    const item = { ...stored, x: 0, y: 0, width: 1, height: 1 };
+    const f = fixture(t, { initialRows: [small, item], save: () => scenario !== 'save-failed' });
+    const before = structuredClone(f.getRows());
+    f.root.emit('pointerdown', f.point(1, 0));
+    f.root.emit('pointermove', f.point(2, 1));
+    const destination = scenario === 'unchanged' ? [1, 0] : scenario === 'invalid' ? [0, 1] : [3, 1];
+    f.root.emit('pointerup', f.point(...destination));
+    await settle();
+    assert.equal(f.interaction.state.selectedId, '');
+    assert.equal(f.interaction.state.contextMenuOpen, false);
+    assert.equal(f.interaction.state.preview, null);
+    assert.equal(f.interaction.state.dragVisual, null);
+    const label = { closest: (selector) => selector.includes('.backpack-bag-context-label') ? {} : null };
+    assert.equal(f.root.emit('click', { target: label }).stopped, true);
+    f.root.emit('pointermove', f.point(3, 3));
+    assert.equal(f.interaction.state.preview, null, 'hover after drop cannot keep placing the bag');
+    if (scenario !== 'valid') assert.deepEqual(f.getRows(), before);
+    if (scenario === 'invalid') assert.ok(f.interaction.state.messageCode);
+    if (scenario === 'save-failed') assert.equal(f.interaction.state.messageCode, 'save_failed');
+    if (scenario === 'valid') assert.equal(f.getRows()[1].x, -1);
+    f.root.emit('pointerdown', { target: label, ...f.point(1, 0) });
+    f.root.emit('pointerup', f.point(1, 0));
+    assert.equal(f.root.emit('click', { target: label }).stopped, false);
+  });
+}
