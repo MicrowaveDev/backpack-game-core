@@ -88,9 +88,19 @@ export function createBackpackInteraction({
     state.preview = preview;
     return preview;
   }
-  async function commit(result, action) {
+  async function commit(result, action, finishGesture = false) {
+    const reject = (code) => {
+      if (finishGesture) {
+        state.selectedId = '';
+        state.selectedLocked = false;
+        state.contextMenuOpen = false;
+        state.preview = null;
+      } else state.contextMenuOpen = true;
+      message(code);
+      return false;
+    };
     if (blocked() || disposed) return false;
-    if (!result.ok) { state.contextMenuOpen = true; state.preview = { ...result, valid: false }; message(result.reason); return false; }
+    if (!result.ok) { state.preview = { ...result, valid: false }; return reject(result.reason); }
     if (result.noOp) { cancel(); return true; }
     const previousRows = rows();
     const commitGeneration = generation;
@@ -101,9 +111,11 @@ export function createBackpackInteraction({
     catch { saved = false; }
     finally { state.busy = false; }
     if (disposed || generation !== commitGeneration) return false;
-    if (saved === false || saved === null) { state.contextMenuOpen = true; message('save_failed'); return false; }
+    if (saved === false || saved === null) return reject('save_failed');
     state.preview = null;
     state.selectedId = '';
+    state.contextMenuOpen = false;
+    state.selectedLocked = false;
     try { await onCommitted({ action, item: result.item, rows: result.rows, previousRows }); }
     catch { /* Optional feedback must not undo an already confirmed save. */ }
     return true;
@@ -300,7 +312,7 @@ export function createBackpackInteraction({
     clearPointer();
     if (!current.moved) { lastTap = { x: event.clientX, y: event.clientY, time: Date.now() }; return; }
     event.preventDefault();
-    if (cell) void commit(evaluate(current.item, cell.x - current.offsetX, cell.y - current.offsetY), 'place');
+    if (cell) void commit(evaluate(current.item, cell.x - current.offsetX, cell.y - current.offsetY), 'place', true);
     else {
       state.preview = null;
       const destination = dropTargetAt(event.clientX, event.clientY);
@@ -315,7 +327,7 @@ export function createBackpackInteraction({
     }
   }
   function onClick(event) {
-    if (Date.now() < suppressClickUntil && !event.target?.closest?.('.backpack-interaction-action, [data-backpack-context-action], .backpack-bag-context-label')) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    if (Date.now() < suppressClickUntil && !event.target?.closest?.('.backpack-interaction-action, [data-backpack-context-action]')) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (state.selectedId && !event.target?.closest?.('[data-backpack-interaction-board], [data-backpack-row-id], [data-backpack-context-action], .backpack-interaction-controls, [data-backpack-drop-zone], .artifact-container-zone, .sell-zone')) cancel();
   }
   function onOutsidePointerDown(event) {

@@ -120,3 +120,7 @@ changing seen-step preferences. Configured gameplay suspends before sending the
 battle request, emits no prep events during resolution, and resumes on failure,
 replay completion or disposal. A late response after navigation cannot suspend
 guidance again. Preparation guidance is never rendered over replay.
+
+### Drag release follow-up
+
+Board drops end pointer placement on success, unchanged position, geometry rejection, or save failure. Rejected drops preserve the previous loadout and briefly show the reason without keeping a preview or opening a menu. Click-to-place retains its retry selection. A trailing click on a bag label is suppressed like a board click; a fresh pointerdown permits deliberate selection again. Regression tracking: #13.
