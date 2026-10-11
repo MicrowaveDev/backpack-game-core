@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { reactive, computed } from 'vue';
 import { createBackpackInteraction } from '@microwavedev/backpack-game-core/vue/composables';
 
 const catalog = {
@@ -28,7 +29,7 @@ function surface() {
   };
 }
 
-function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell } = {}) {
+function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false } = {}) {
   let rows = structuredClone(initialRows);
   const calls = [];
   const committed = [];
@@ -45,7 +46,8 @@ function fixture(t, { initialRows = [bag, stored], save, origin = 100, canIntera
     return { getBoundingClientRect: () => ({ left: origin + x * 40, top: origin + y * 40, width: 36, height: 36 }) };
   } };
   root.querySelectorAll = () => [board];
-  const interaction = createBackpackInteraction({ getRows: () => rows,
+  const interaction = createBackpackInteraction({
+    ...(reactiveState ? { state: reactive({ selectedId: '', preview: null, dragVisual: null, dropTarget: null, messageCode: '', busy: false }) } : {}), getRows: () => rows,
     getArtifact: (id) => catalog[id], columns: 4, getHeight: () => 4,
     commitRows: async (next) => {
       calls.push(next);
@@ -497,4 +499,18 @@ test('spacing between bag cells does not start a bag drag', (t) => {
   f.root.emit('pointermove', f.point(2, 2));
   assert.equal(f.interaction.state.dragVisual, null);
   assert.equal(f.calls.length, 0);
+});
+
+test('Vue selection invalidates after drag cancellation and successful save', async (t) => {
+  for (const action of ['cancel', 'save']) {
+    const f = fixture(t, { reactiveState: true });
+    const selected = computed(() => f.interaction.getSelectedItem());
+    f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+    f.root.emit('pointermove', f.point(1, 1));
+    assert.equal(selected.value.id, stored.id);
+    if (action === 'cancel') f.interaction.cancel();
+    else { f.root.emit('pointerup', f.point(1, 1)); await settle(); }
+    assert.equal(f.interaction.state.selectedId, '');
+    assert.equal(selected.value, null);
+  }
 });

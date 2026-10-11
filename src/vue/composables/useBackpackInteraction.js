@@ -23,7 +23,13 @@ export function createBackpackInteraction({
   let generation = 0;
   const rows = () => getRows() || [];
   const sameId = (a, b) => a != null && b != null && String(a) === String(b);
-  const selected = () => pointer?.moved ? pointer.item : rows().find((row) => sameId(row.id, state.selectedId)) || null;
+  const selected = () => {
+    // Always track reactive selection and draft lifecycle, even when the row
+    // comes from a non-reactive pointer record. Vue must invalidate on release.
+    const selectedId = state.selectedId;
+    const visual = state.dragVisual;
+    return visual && pointer?.moved ? pointer.item : rows().find((row) => sameId(row.id, selectedId)) || null;
+  };
   const blocked = () => state.busy || !canInteract();
   const bag = (row) => getArtifact(row?.artifactId)?.family === 'bag';
   const active = (row) => row && Number(row.x) >= 0 && Number(row.y) >= 0;
