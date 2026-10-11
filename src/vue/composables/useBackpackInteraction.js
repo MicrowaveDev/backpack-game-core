@@ -131,6 +131,8 @@ export function createBackpackInteraction({
     const previousRows = rows();
     const commitGeneration = generation;
     state.busy = true;
+    state.preview = null;
+    state.contextMenuOpen = false;
     message('');
     let saved;
     try { saved = await commitRows(result.rows); }
