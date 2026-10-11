@@ -345,3 +345,19 @@ test('[configured gameplay] rejects incomplete product configuration', () => {
     /options\.artifactFigureComponent/
   );
 });
+
+
+test('[configured gameplay] suspends guidance before battle response and restores it on failure', async () => {
+  const values = [];
+  const component = createConfiguredGameplayScreen(options({ getTutorialController: () => ({ setSuspended: (value) => values.push(value) }) }));
+  const context = {
+    runIsActive: true, loading: false, showReplay: false, controller: {},
+    text: { battle: 'Battle' }, run: { id: 'run-1' },
+    clientServices: { services: { run: { battle: async () => null } } },
+    async mutate(action, operation) { assert.deepEqual(values, [true]); return operation(); },
+    emitPrepTutorial() { values.push('prep'); }
+  };
+  await component.methods.resolveBattle.call(context);
+  assert.deepEqual(values, [true, false, 'prep']);
+  assert.equal(context.resolvingBattle, false);
+});

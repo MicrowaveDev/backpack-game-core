@@ -1,8 +1,9 @@
 import type { TutorialPreferences, TutorialSession } from '../../modules/tutorial/index.js';
 
 export interface TutorialController {
-  state: TutorialSession;
+  state: TutorialSession & { suspended?: boolean };
   readonly activeStep: Record<string, unknown> | null;
+  setSuspended(value: boolean): void;
   emit(event: Record<string, unknown>): Promise<TutorialSession>;
   dismissCurrent(): Promise<TutorialSession>;
   skipAll(): Promise<TutorialSession>;

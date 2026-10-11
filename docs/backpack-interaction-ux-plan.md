@@ -487,3 +487,12 @@ The confirmed evacuation journey keeps Ready inside1280x800, with full art.
 Durable proofs: Meat `docs/qa/backpack-interaction/`; Mushroom
 `.agent/tasks/backpack-ux/raw/`; current consumer evidence supersedes historical
 mode-switch and occupied-bag-refusal acceptance.
+
+
+## Preparation regression follow-up (2026-10-11, issue #11)
+
+User requirements: eliminate desktop Storage/Backpack gap; hide preparation guidance during battle; move coins left with adjacent Sell for selection and drag.
+
+Implementation: desktop configured controls move into the topbar through one responsive Teleport; reason text overlays rather than reserving empty height. Shared HUD puts currency first and exposes a currency-action slot. BackpackSaleAction supplies the priced button/drop target to both consumers; Sell is removed from More. Tutorial suspension starts before battle resolution, covers replay, and restores on failure, replay completion or unmount without acknowledging pending steps. Preparation events do not fire while resolving a battle.
+
+Verification: controller suspension/progress and failed-request restoration tests; desktop gap and currency/Sell adjacency assertions; mobile sale and drag flows; battle tutorial absence and resume; fresh preparation/replay screenshots. Physical Telegram device acceptance remains user-owned as above.

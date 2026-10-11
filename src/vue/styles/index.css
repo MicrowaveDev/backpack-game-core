@@ -7497,7 +7497,7 @@ select {
   white-space: nowrap;
 }
 .run-hud-coins {
-  margin-left: auto;
+  margin-left: 0;
   color: var(--telegram-accent, #7b5b3b);
 }
 
@@ -10372,23 +10372,18 @@ select {
 .backpack-interaction-menu .backpack-interaction-action { text-align: left; padding: 4px 8px; font-size: .9rem; line-height: 1.2; }
 .backpack-interaction-menu .backpack-interaction-action:hover { background: rgba(70,70,70,.08); }
 .backpack-interaction-reason {
-  height: 2.5em;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 51;
+  max-width: min(320px, 85vw);
+  padding: 4px 8px;
+  background: var(--surface-strong, #fffaf0);
   line-height: 1.25;
   overflow-wrap: anywhere;
   margin: 0;
   font-size: .85em;
   font-weight: 600;
-}
-.backpack-interaction-sell-target {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-self: stretch;
-  min-width: 100px;
-  max-width: calc(100% - 100px);
-  padding-inline: 12px;
-  border: 1px dashed currentColor;
-  color: var(--danger, #a83228);
 }
 .backpack-interaction-drop-active { outline: 3px solid currentColor; outline-offset: -3px; }
 .backpack-interaction-source { touch-action: none; cursor: grab; }
@@ -10437,3 +10432,20 @@ select {
 /* Pointer gestures own only the grid cells and pieces; surrounding page stays scrollable. */
 .backpack-interaction-board button.artifact-grid-cell,
 .backpack-interaction-board .artifact-piece-wrap { touch-action: none; }
+
+.backpack-interaction-reason:empty { display: none; }
+[data-backpack-context-host] { min-width: 0; margin-left: auto; }
+@media (min-width: 680px) {
+  .prep-topbar .backpack-interaction-controls { margin-block: 0; width: 220px; }
+  .prep-topbar .backpack-interaction-menu { bottom: auto; top: 100%; width: 288px; max-width: min(288px, 90vw); }
+  .prep-topbar .backpack-interaction-reason { bottom: auto; top: 100%; width: 288px; }
+}
+
+.prep-topbar .run-hud-wrap { flex: 1; min-width: 0; }
+.run-hud-progress { margin-left: auto; }
+.backpack-sale-slot { min-width: 0; }
+.backpack-sale-action { border: 1px dashed currentColor; border-radius: 7px; white-space: nowrap; color: var(--danger, #a83228); }
+.backpack-sale-action:hover { background: rgba(168, 50, 40, .08); }
+@media (max-width: 640px) {
+  .prep-screen .backpack-sale-action { min-height: 36px; padding: 4px 6px; font-size: .8rem; }
+}

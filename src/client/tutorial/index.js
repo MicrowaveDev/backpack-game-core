@@ -14,7 +14,7 @@ export function createTutorialController({
   copy = {},
   persistPreferences = null
 } = {}) {
-  Object.assign(state, createTutorialSession({ preferences }));
+  Object.assign(state, createTutorialSession({ preferences }), { suspended: false });
 
   async function persist() {
     if (typeof persistPreferences === 'function') {
@@ -34,6 +34,7 @@ export function createTutorialController({
   return {
     state,
     get activeStep() {
+      if (state.suspended) return null;
       const step = tutorialStepView({
         stepId: state.activeStepId,
         payload: state.activePayload || {},
@@ -42,6 +43,7 @@ export function createTutorialController({
       });
       return typeof getScreen === 'function' && step?.screen !== getScreen() ? null : step;
     },
+    setSuspended(value) { state.suspended = Boolean(value); },
     async emit(event) {
       const beforeReplay = state.replay;
       const beforePreferences = JSON.stringify(state.preferences);
@@ -66,7 +68,7 @@ export function createTutorialController({
       return state;
     },
     reset(nextPreferences = {}) {
-      return replace(createTutorialSession({ preferences: nextPreferences }));
+      return replace({ ...createTutorialSession({ preferences: nextPreferences }), suspended: false });
     }
   };
 }

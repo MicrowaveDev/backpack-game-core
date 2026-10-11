@@ -6,6 +6,7 @@ import {
   BackpackZone,
   BackpackInteractionControls,
   StorageZone,
+  BackpackSaleAction,
   PrepActions,
   PrepScreen,
   RunCompleteScreen,
@@ -90,6 +91,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       BackpackZone,
       BackpackInteractionControls,
       StorageZone,
+      BackpackSaleAction,
       PrepActions,
       PrepScreen,
       ReplayDetailScreen,
@@ -116,6 +118,9 @@ export function createConfiguredGameplayScreen(options = {}) {
         interactionState: createBackpackInteractionState(),
         interaction: null,
         showReplay: false,
+        resolvingBattle: false,
+        desktopControls: false,
+        contextHost: null,
         replayTimer: null,
         replayState: {
           lang: locale,
@@ -319,13 +324,22 @@ export function createConfiguredGameplayScreen(options = {}) {
   },
   mounted() {
     this.interaction.attach(this.$el);
+    this.controlsMedia = globalThis.matchMedia?.('(min-width: 680px)');
+    this.syncControlsViewport = () => {
+      this.desktopControls = Boolean(this.controlsMedia?.matches);
+      this.contextHost = this.$el.querySelector('[data-backpack-context-host]');
+    };
+    this.syncControlsViewport();
+    this.controlsMedia?.addEventListener('change', this.syncControlsViewport);
     this.emitPrepTutorial();
   },
   watch: {
     showReplay(value) {
+      this.$nextTick(() => this.syncControlsViewport?.());
       if (value) this.interaction?.cancel();
     },
     runIsActive(value) {
+      this.$nextTick(() => this.syncControlsViewport?.());
       if (!value) this.interaction?.cancel();
     },
     'run.id'(value, previous) {
@@ -339,13 +353,15 @@ export function createConfiguredGameplayScreen(options = {}) {
     }
   },
   beforeUnmount() {
+    this.controlsMedia?.removeEventListener('change', this.syncControlsViewport);
+    getTutorialController(this.controller)?.setSuspended?.(false);
     this.interaction?.detach();
     this.clearReplayTimer();
   },
   methods: {
     emitPrepTutorial() {
       const tutorial = getTutorialController(this.controller);
-      if (!tutorial || !this.runIsActive || this.showReplay) return;
+      if (!tutorial || !this.runIsActive || this.showReplay || this.resolvingBattle) return;
       const events = createPrepTutorialEvents({
         shopItems: this.run?.shopItems || [],
         storageItems: this.storageItems,
@@ -447,6 +463,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       }, delay);
     },
     beginReplay(battle, result = null) {
+      getTutorialController(this.controller)?.setSuspended?.(true);
       this.battle = battle;
       this.replayState.lang = this.locale;
       this.replayState.currentBattle = battle;
@@ -467,6 +484,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     finishReplay() {
       this.clearReplayTimer();
       this.showReplay = false;
+      getTutorialController(this.controller)?.setSuspended?.(false);
       const tutorial = getTutorialController(this.controller);
       if (tutorial && this.battle) {
         tutorial.emit(createRoundTutorialEvent({
@@ -570,14 +588,24 @@ export function createConfiguredGameplayScreen(options = {}) {
         this.clientServices.services.run.refreshShop(this.run.id)
       ));
     },
-    resolveBattle() {
-      if (!this.runIsActive) return;
-      return this.mutate(this.text.battle, () => (
-        this.clientServices.services.run.battle(this.run.id)
-      )).then((result) => {
+    async resolveBattle() {
+      if (!this.runIsActive || this.loading) return;
+      this.resolvingBattle = true;
+      const tutorial = getTutorialController(this.controller);
+      tutorial?.setSuspended?.(true);
+      try {
+        const result = await this.mutate(this.text.battle, () => (
+          this.clientServices.services.run.battle(this.run.id)
+        ));
         if (result?.battle) this.beginReplay(result.battle, result);
         return result;
-      });
+      } finally {
+        this.resolvingBattle = false;
+        if (!this.showReplay) {
+          tutorial?.setSuspended?.(false);
+          this.emitPrepTutorial();
+        }
+      }
     },
     abandonRun() {
       if (!this.runIsActive) return;
@@ -672,7 +700,10 @@ export function createConfiguredGameplayScreen(options = {}) {
             :player="run.player"
             :labels="{ wins: text.wins, lives: text.lives }"
             :run-currency="{ amount: run.player?.coins || 0, icon: '◉' }"
-          />
+          >
+            <template #currency-action><BackpackSaleAction :interaction="interaction" :labels="interactionLabels" /></template>
+          </RunHud>
+          <div data-backpack-context-host></div>
         </template>
 
         <template #loadout>
@@ -699,7 +730,9 @@ export function createConfiguredGameplayScreen(options = {}) {
             </template>
           </StorageZone>
 
-          <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels" />
+          <Teleport :to="contextHost || 'body'" :disabled="!desktopControls || !contextHost">
+            <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels" />
+          </Teleport>
 
           <BackpackZone
             :interaction="interaction"
