@@ -493,7 +493,7 @@ mode-switch and occupied-bag-refusal acceptance.
 
 ### Source of truth and scope
 
-Latest user request supersedes the reserved rail and More button: tap/click an item or bag in Storage or Backpack opens a polished contextual menu near that object, with rotation included. Remove all persistent buttons and empty space between panels. Coins move left; the adjacent priced Sell drop target appears during dragging. Tap sale lives in the contextual menu. Preparation tutorial is hidden during battle requests and replay and resumes after return.
+Latest user request supersedes the reserved rail and More button: tap/click an item or bag in Storage or Backpack opens a polished contextual menu near that object, with rotation included. Outside input and Escape dismiss it; there is no Cancel button. Remove all persistent buttons and empty space between panels. The compact status panel stays on the right, with coins before wins/lives; the priced Sell drop target appears immediately to its left during dragging. Tap sale lives in the contextual menu. Preparation tutorial is hidden during battle requests and replay and resumes after return.
 
 ### Workstreams and acceptance
 
@@ -506,3 +506,11 @@ Dependency order: core -> consumer adapters and pins -> verification -> core PR 
 Latest HUD clarification: keep the compact status panel on the right, reorder its contents to coins -> wins -> lives, and place the drag sale target outside and immediately to its left. Do not stretch the panel across the topbar.
 
 Latest menu clarification: remove Cancel entirely. Use a compact single-column action list with consistent SVG line icons, subdued separators and a separate sale row. Outside pointerdown dismisses selection before board hit testing, preventing accidental placement; Escape also dismisses.
+
+### Completion and verification
+
+All three follow-up workstreams are complete. Runtime `5ed7d359de04ba4172bbeed88906b2163a9250b8` passed the cross-consumer gate: core 486/486 and package dry-run; Mushroom 665/665 units, production build, 3/3 screen checks and 3/3 focused browser journeys; Meat 119/119 units, 9/9 browser scenarios, production build and both synthetic deployment configuration checks. The final documentation pin changes no runtime code.
+
+Fresh menu evidence covers 375x667 and 1280x800 in both products, with menu bounds and no global rail asserted. Desktop drag-sale evidence confirms the target immediately left of the compact right-aligned HUD. Preparation has a <=14px Storage/Backpack gap. Battle guidance absence/resumption and late-response disposal are verified. Menu headings do not start board gestures, long labels remain readable, and outside pointerdown cannot place the prior selection. The touch locked-bag fixture explicitly centers and hit-tests its cell before raw input, so sticky HUD occlusion cannot masquerade as a lock regression.
+
+Earlier full Mushroom browser exploration yielded 52 passes, two obsolete rail/input assertions and one existing opt-in skip; those assertions were repaired and the affected journeys passed in the final focused gate. Do not read this as a new full-suite run. Durable proofs live in Meat `docs/qa/backpack-interaction/contextual-menu/` and Mushroom `.agent/tasks/backpack-ux/`. Physical Telegram iOS/Android acceptance remains PENDING_USER (AC9/AC23). Delivery: core PR #12 -> Meat PR; Mushroom direct main and then hub pointer. No deployment in this follow-up.

@@ -39,10 +39,12 @@ after a successful save and cannot undo it. Disposal prevents late UI feedback.
   highlights affected items and announces their count. Same-position/same-rotation
   drops do not evacuate or save. Rotation/removal retain coverage validation.
 - No persistent action rail or More button reserves preparation space. The menu
-  contains Move, Rotate, Storage, auto-place, priced sale and cancel, stays within
+  contains Move, Rotate, Storage, auto-place and priced sale, stays within
   the viewport, and supports Arrow keys/Home/End/Escape. Locked starter bags show
-  an explanation and Cancel only. Coins precede Wins/Lives. During drag the menu
-  hides and a priced sale destination appears beside coins in the sticky HUD. `R` rotates
+  an explanation without mutation buttons. Outside input and Escape dismiss the
+  menu; there is no Cancel button. The compact desktop HUD stays on the right
+  with coins before Wins/Lives. During drag the menu
+  hides and a priced sale destination appears immediately left of that panel in the sticky HUD. `R` rotates
   a draft under the pointer without saving; Escape cancels. Storage and sale
   destinations use `data-backpack-drop-zone` with `storage` / `sell` values.
 - Escape cancels selection. Capture loss, pointer cancellation, blur, release
