@@ -219,7 +219,7 @@ export function createBackpackInteraction({
   function onPointerDown(event) {
     suppressClickUntil = 0;
     if (blocked() || pointer || event.isPrimary === false || (event.button != null && event.button !== 0)) return;
-    if (event.target?.closest?.('button.backpack-interaction-action, .artifact-piece-rotate, .active-bag-action, [data-backpack-context-action]')) return;
+    if (event.target?.closest?.('button.backpack-interaction-action, .backpack-interaction-menu, .artifact-piece-rotate, .active-bag-action, [data-backpack-context-action]')) return;
     const zone = boardAt(event.clientX, event.clientY);
     if (zone && (event.clientX - zone.rect.left - zone.x * zone.pitchX >= zone.rect.width
       || event.clientY - zone.rect.top - zone.y * zone.pitchY >= zone.rect.height)) return;
@@ -262,7 +262,7 @@ export function createBackpackInteraction({
   }
   function onPointerMove(event) {
     if (!pointer) {
-      if (state.selectedId && !blocked()) {
+      if (state.selectedId && !blocked() && !state.contextMenuOpen) {
         const cell = boardAt(event.clientX, event.clientY);
         if (cell) previewAt(cell);
       }

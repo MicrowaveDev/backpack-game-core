@@ -544,3 +544,19 @@ test('locked bag context clears earlier rejection and exposes no mutation path',
   assert.equal(sales, 0);
   assert.equal(f.calls.length, 0);
 });
+
+
+test('context menu hover and heading cannot preview or drag the board underneath', (t) => {
+  const f = fixture(t);
+  f.interaction.select(stored.id);
+  f.root.emit('pointermove', f.point(1, 1));
+  assert.equal(f.interaction.state.preview, null);
+  const menuHeading = { closest: (selector) => selector.includes('.backpack-interaction-menu') ? {} : null };
+  f.root.emit('pointerdown', { ...f.point(1, 1), target: menuHeading });
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.equal(f.interaction.state.dragVisual, null);
+  assert.equal(f.calls.length, 0);
+  f.interaction.state.contextMenuOpen = false;
+  f.root.emit('pointermove', f.point(1, 1));
+  assert.ok(f.interaction.state.preview, 'Move enables the placement preview');
+});
