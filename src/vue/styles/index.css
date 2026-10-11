@@ -10330,7 +10330,7 @@ select {
 .backpack-interaction-controls { display: contents; }
 .backpack-interaction-menu {
   position: fixed; z-index: 100; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
-  width: min(260px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
+  width: min(320px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
   overflow-y: auto; box-sizing: border-box; padding: 8px;
   border: 1px solid var(--border, #d5cbb9); border-radius: 16px;
   background: var(--surface-strong, #fffaf0); color: var(--ink, #242221);
@@ -10338,12 +10338,13 @@ select {
 }
 .backpack-context-heading { grid-column: 1 / -1; padding: 8px 10px 10px; font-weight: 700; line-height: 1.25; border-bottom: 1px solid var(--border, #d5cbb9); margin-bottom: 4px; }
 .backpack-interaction-action {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 8px;
   min-height: 44px; width: 100%; padding: 8px 10px;
   border: 0; border-radius: 9px; background: transparent;
   font: inherit; font-size: .9rem; color: inherit; text-align: left; cursor: pointer;
 }
-.backpack-interaction-action span { width: 20px; text-align: center; font-size: 1.15em; }
+.backpack-interaction-action span[aria-hidden] { flex: 0 0 20px; text-align: center; font-size: 1.15em; }
+.backpack-context-label { min-width: 0; overflow-wrap: anywhere; }
 .backpack-interaction-action:hover { background: color-mix(in srgb, var(--accent-soft, #cfe0c7) 28%, transparent); }
 .backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
 .backpack-interaction-action:focus-visible, .backpack-bag-context-label:focus-visible { outline: 2px solid var(--accent, #446c40); outline-offset: -2px; }

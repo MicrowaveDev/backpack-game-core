@@ -75,15 +75,15 @@ export const BackpackInteractionControls = {
         :style="position" data-testid="backpack-context-menu" :aria-label="nameForItem(selected)" @keydown="menuKey">
         <div class="backpack-context-heading">{{ nameForItem(selected) }}</div>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-move"
-          :disabled="interaction.isBusy()" @click="move"><span aria-hidden="true">✥</span>{{ labels.move }}</button>
+          :disabled="interaction.isBusy()" @click="move"><span aria-hidden="true">✥</span><span class="backpack-context-label">{{ labels.move }}</span></button>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-rotate"
-          :disabled="interaction.isBusy()" @click="action('rotate')"><span aria-hidden="true">↻</span>{{ labels.rotate }}</button>
+          :disabled="interaction.isBusy()" @click="action('rotate')"><span aria-hidden="true">↻</span><span class="backpack-context-label">{{ labels.rotate }}</span></button>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-storage"
-          :disabled="interaction.isBusy()" @click="action('unplace')"><span aria-hidden="true">▣</span>{{ labels.storage }}</button>
+          :disabled="interaction.isBusy()" @click="action('unplace')"><span aria-hidden="true">▣</span><span class="backpack-context-label">{{ labels.storage }}</span></button>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-auto-place"
-          :disabled="interaction.isBusy()" @click="action('autoPlace')"><span aria-hidden="true">⌖</span>{{ labels.autoPlace }}</button>
+          :disabled="interaction.isBusy()" @click="action('autoPlace')"><span aria-hidden="true">⌖</span><span class="backpack-context-label">{{ labels.autoPlace }}</span></button>
         <button v-if="interaction.canSell() && sellPrice != null" class="backpack-interaction-action backpack-context-sell" type="button" role="menuitem" data-testid="backpack-sell"
-          :disabled="interaction.isBusy()" @click="action('sell')"><span aria-hidden="true">◉</span>{{ labels.sell }} · {{ sellPrice }}</button>
+          :disabled="interaction.isBusy()" @click="action('sell')"><span aria-hidden="true">◉</span><span class="backpack-context-label">{{ labels.sell }} · {{ sellPrice }}</span></button>
         <button class="backpack-interaction-action backpack-context-cancel" type="button" role="menuitem" data-testid="backpack-cancel"
           :disabled="interaction.isBusy()" @click="action('cancel')">{{ labels.cancel }}</button>
         <p v-if="reason" class="backpack-context-reason">{{ reason }}</p>
