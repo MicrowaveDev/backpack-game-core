@@ -346,3 +346,16 @@ test('home guidance respects dismissal and skipping', async () => {
   await controller.emit({ type: 'home_ready' });
   assert.equal(controller.activeStep, null);
 });
+
+
+test('suspending gameplay guidance hides pending steps without acknowledging them', async () => {
+  const controller = createTutorialController({ getScreen: () => 'prep' });
+  await controller.emit({ type: 'prep_ready' });
+  const step = controller.activeStep.id;
+  const preferences = JSON.stringify(controller.state.preferences);
+  controller.setSuspended(true);
+  assert.equal(controller.activeStep, null);
+  assert.equal(JSON.stringify(controller.state.preferences), preferences);
+  controller.setSuspended(false);
+  assert.equal(controller.activeStep.id, step);
+});

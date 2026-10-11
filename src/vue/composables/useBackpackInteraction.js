@@ -5,7 +5,7 @@ import {
 } from '../../modules/loadout/interaction-placement.js';
 
 export function createBackpackInteractionState() {
-  return { selectedId: '', preview: null, dragVisual: null, dropTarget: null, messageCode: '', busy: false };
+  return { selectedId: '', contextMenuOpen: false, contextAnchor: null, selectedLocked: false, preview: null, dragVisual: null, dropTarget: null, messageCode: '', busy: false };
 }
 
 /** One input owner for both configured and adapter-based preparation screens. */
@@ -16,6 +16,7 @@ export function createBackpackInteraction({
   win = globalThis.window
 }) {
   let root = null;
+  let lastTap = null;
   let pointer = null;
   let messageTimer = null;
   let suppressClickUntil = 0;
@@ -51,6 +52,8 @@ export function createBackpackInteraction({
     if (state.busy) return;
     clearPointer();
     state.selectedId = '';
+    state.contextMenuOpen = false;
+    state.selectedLocked = false;
     state.preview = null;
     message('');
   }
@@ -59,9 +62,17 @@ export function createBackpackInteraction({
     const id = typeof value === 'object' ? value?.rowId ?? value?.id : value;
     const item = rows().find((row) => sameId(row.id, id));
     if (!item) return false;
-    if (bag(item) && active(item) && isLockedBag(item)) { message('locked'); return false; }
     state.selectedId = String(item.id);
+    state.selectedLocked = Boolean(bag(item) && active(item) && isLockedBag(item));
+    const source = [...root?.querySelectorAll?.('[data-backpack-row-id]') || []]
+      .find((element) => sameId(element.dataset?.backpackRowId, item.id));
+    const rect = source?.getBoundingClientRect?.();
+    state.contextAnchor = lastTap && Date.now() - lastTap.time < 500 ? lastTap
+      : rect ? { x: rect.right, y: rect.top } : null;
+    if (state.contextAnchor) state.contextAnchor = { ...state.contextAnchor, scrollX: win?.scrollX || 0, scrollY: win?.scrollY || 0 };
+    state.contextMenuOpen = true;
     state.preview = null;
+    if (state.selectedLocked) { message('locked'); return false; }
     message('');
     return true;
   }
@@ -79,7 +90,7 @@ export function createBackpackInteraction({
   }
   async function commit(result, action) {
     if (blocked() || disposed) return false;
-    if (!result.ok) { state.preview = { ...result, valid: false }; message(result.reason); return false; }
+    if (!result.ok) { state.contextMenuOpen = true; state.preview = { ...result, valid: false }; message(result.reason); return false; }
     if (result.noOp) { cancel(); return true; }
     const previousRows = rows();
     const commitGeneration = generation;
@@ -90,7 +101,7 @@ export function createBackpackInteraction({
     catch { saved = false; }
     finally { state.busy = false; }
     if (disposed || generation !== commitGeneration) return false;
-    if (saved === false || saved === null) { message('save_failed'); return false; }
+    if (saved === false || saved === null) { state.contextMenuOpen = true; message('save_failed'); return false; }
     state.preview = null;
     state.selectedId = '';
     try { await onCommitted({ action, item: result.item, rows: result.rows, previousRows }); }
@@ -105,6 +116,7 @@ export function createBackpackInteraction({
   function rotate() {
     const item = selected();
     if (!item || blocked()) return Promise.resolve(false);
+    if (bag(item) && isLockedBag(item)) { message('locked'); return Promise.resolve(false); }
     const dimensions = getBackpackItemDimensions(item, getArtifact(item.artifactId));
     const rotated = {
       ...item, width: dimensions.height, height: dimensions.width,
@@ -162,15 +174,17 @@ export function createBackpackInteraction({
   }
   async function sell() {
     const item = selected();
-    if (!item || blocked() || typeof onSell !== 'function' || !canSellItem(item)) return false;
+    if (!item || blocked() || typeof onSell !== 'function' || !canSellItem(item) || (bag(item) && isLockedBag(item))) return false;
     const commitGeneration = generation;
     state.busy = true;
     let saved;
     try { saved = await onSell(item); } catch { saved = false; }
     finally { state.busy = false; }
     if (disposed || generation !== commitGeneration) return false;
-    if (saved === false || saved === null) { message('save_failed'); return false; }
+    if (saved === false || saved === null) { state.contextMenuOpen = true; message('save_failed'); return false; }
     state.selectedId = '';
+    state.contextMenuOpen = false;
+    state.selectedLocked = false;
     state.preview = null;
     message('');
     return true;
@@ -205,7 +219,8 @@ export function createBackpackInteraction({
   function onPointerDown(event) {
     suppressClickUntil = 0;
     if (blocked() || pointer || event.isPrimary === false || (event.button != null && event.button !== 0)) return;
-    if (event.target?.closest?.('button.backpack-interaction-action, .artifact-piece-rotate, .active-bag-action, [data-backpack-context-action]')) return;
+    if (state.contextMenuOpen && !event.target?.closest?.('.backpack-interaction-menu')) cancel();
+    if (event.target?.closest?.('button.backpack-interaction-action, .backpack-interaction-menu, .artifact-piece-rotate, .active-bag-action, [data-backpack-context-action]')) return;
     const zone = boardAt(event.clientX, event.clientY);
     if (zone && (event.clientX - zone.rect.left - zone.x * zone.pitchX >= zone.rect.width
       || event.clientY - zone.rect.top - zone.y * zone.pitchY >= zone.rect.height)) return;
@@ -248,7 +263,7 @@ export function createBackpackInteraction({
   }
   function onPointerMove(event) {
     if (!pointer) {
-      if (state.selectedId && !blocked()) {
+      if (state.selectedId && !blocked() && !state.contextMenuOpen) {
         const cell = boardAt(event.clientX, event.clientY);
         if (cell) previewAt(cell);
       }
@@ -262,6 +277,7 @@ export function createBackpackInteraction({
       try { root.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older WebView. */ }
     }
     event.preventDefault();
+    state.contextMenuOpen = false;
     state.dragVisual = { ...pointer.visual, clientX: event.clientX, clientY: event.clientY };
     const cell = boardAt(event.clientX, event.clientY);
     state.dropTarget = cell ? null : dropTargetAt(event.clientX, event.clientY);
@@ -282,7 +298,7 @@ export function createBackpackInteraction({
     const current = pointer;
     const cell = boardAt(event.clientX, event.clientY);
     clearPointer();
-    if (!current.moved) return;
+    if (!current.moved) { lastTap = { x: event.clientX, y: event.clientY, time: Date.now() }; return; }
     event.preventDefault();
     if (cell) void commit(evaluate(current.item, cell.x - current.offsetX, cell.y - current.offsetY), 'place');
     else {
@@ -338,11 +354,12 @@ export function createBackpackInteraction({
     win?.addEventListener?.('blur', onPointerCancel);
   }
   function clickCell(cell) {
-    if (state.selectedId) void placeAt(cell);
+    if (state.selectedId && !state.selectedLocked) void placeAt(cell);
+    else { const item = bagAt(cell); if (item) select(item); }
   }
   return {
     state, select, previewAt, placeAt, rotate, unplace, autoPlace, cancel, sell,
-    canSell: () => typeof onSell === 'function' && !!selected() && canSellItem(selected()), isBusy: blocked,
+    canSell: () => typeof onSell === 'function' && !!selected() && canSellItem(selected()) && !(bag(selected()) && isLockedBag(selected())), isBusy: blocked,
     getSellPrice: () => { const item = selected(); return item ? getSellPrice(item) : null; },
     attach, detach, clickCell, getRows: rows, getSelectedItem: selected
   };

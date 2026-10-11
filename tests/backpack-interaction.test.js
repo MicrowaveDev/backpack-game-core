@@ -429,14 +429,15 @@ for (const cancelEvent of ['pointercancel', 'lostpointercapture', 'blur', 'Escap
   });
 }
 
-test('free usable cell grabs bag after threshold, occupied cell prefers item, tap does not select bag', async (t) => {
+test('free usable cell grabs bag after threshold, occupied cell prefers item, tap opens bag context without mutation', async (t) => {
   const small = { ...bag, artifactId: 'strip' };
   const item = { ...stored, x: 0, y: 0, width: 1, height: 1 };
   const f = fixture(t, { initialRows: [small, item] });
   f.root.emit('pointerdown', f.point(1, 0));
   f.root.emit('pointerup', f.point(1, 0));
   f.interaction.clickCell({ x: 1, y: 0 });
-  assert.equal(f.interaction.state.selectedId, '');
+  assert.equal(f.interaction.state.selectedId, small.id);
+  assert.equal(f.interaction.state.contextMenuOpen, true);
   assert.equal(f.calls.length, 0);
   f.root.emit('pointerdown', f.point(1, 0));
   f.root.emit('pointermove', f.point(3, 1));
@@ -523,5 +524,49 @@ test('fixed bag drag explains policy after threshold and suppresses trailing pla
   assert.equal(f.interaction.state.messageCode, 'locked');
   assert.equal(f.interaction.state.dragVisual, null);
   assert.equal(f.root.emit('click').stopped, true);
+  assert.equal(f.calls.length, 0);
+});
+
+
+test('locked bag context clears earlier rejection and exposes no mutation path', async (t) => {
+  let sales = 0;
+  const f = fixture(t, { isLockedBag: () => true, onSell: () => { sales += 1; return true; } });
+  f.interaction.select(stored.id);
+  f.interaction.previewAt({ x: 5, y: 5 });
+  assert.ok(f.interaction.state.preview);
+  assert.equal(f.interaction.select(bag.id), false);
+  assert.equal(f.interaction.state.contextMenuOpen, true);
+  assert.equal(f.interaction.state.preview, null);
+  assert.equal(f.interaction.state.selectedLocked, true);
+  assert.equal(f.interaction.canSell(), false);
+  assert.equal(await f.interaction.rotate(), false);
+  assert.equal(await f.interaction.sell(), false);
+  assert.equal(sales, 0);
+  assert.equal(f.calls.length, 0);
+});
+
+
+test('context menu hover and heading cannot preview or drag the board underneath', (t) => {
+  const f = fixture(t);
+  f.interaction.select(stored.id);
+  f.root.emit('pointermove', f.point(1, 1));
+  assert.equal(f.interaction.state.preview, null);
+  const menuHeading = { closest: (selector) => selector.includes('.backpack-interaction-menu') ? {} : null };
+  f.root.emit('pointerdown', { ...f.point(1, 1), target: menuHeading });
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.equal(f.interaction.state.dragVisual, null);
+  assert.equal(f.calls.length, 0);
+  f.interaction.state.contextMenuOpen = false;
+  f.root.emit('pointermove', f.point(1, 1));
+  assert.ok(f.interaction.state.preview, 'Move enables the placement preview');
+});
+
+
+test('outside pointerdown dismisses the menu without placing its selected item', async (t) => {
+  const f = fixture(t);
+  f.interaction.select(stored);
+  f.root.emit('pointerdown', { clientX: 10, clientY: 10, target: { closest() { return null; } } });
+  assert.equal(f.interaction.state.contextMenuOpen, false);
+  assert.equal(f.interaction.state.selectedId, '');
   assert.equal(f.calls.length, 0);
 });

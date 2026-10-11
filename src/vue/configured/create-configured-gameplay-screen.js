@@ -6,6 +6,7 @@ import {
   BackpackZone,
   BackpackInteractionControls,
   StorageZone,
+  BackpackSaleAction,
   PrepActions,
   PrepScreen,
   RunCompleteScreen,
@@ -90,6 +91,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       BackpackZone,
       BackpackInteractionControls,
       StorageZone,
+      BackpackSaleAction,
       PrepActions,
       PrepScreen,
       ReplayDetailScreen,
@@ -116,6 +118,8 @@ export function createConfiguredGameplayScreen(options = {}) {
         interactionState: createBackpackInteractionState(),
         interaction: null,
         showReplay: false,
+        resolvingBattle: false,
+        gameplayDisposed: false,
         replayTimer: null,
         replayState: {
           lang: locale,
@@ -339,13 +343,15 @@ export function createConfiguredGameplayScreen(options = {}) {
     }
   },
   beforeUnmount() {
+    this.gameplayDisposed = true;
+    getTutorialController(this.controller)?.setSuspended?.(false);
     this.interaction?.detach();
     this.clearReplayTimer();
   },
   methods: {
     emitPrepTutorial() {
       const tutorial = getTutorialController(this.controller);
-      if (!tutorial || !this.runIsActive || this.showReplay) return;
+      if (!tutorial || !this.runIsActive || this.showReplay || this.resolvingBattle || this.gameplayDisposed) return;
       const events = createPrepTutorialEvents({
         shopItems: this.run?.shopItems || [],
         storageItems: this.storageItems,
@@ -447,6 +453,7 @@ export function createConfiguredGameplayScreen(options = {}) {
       }, delay);
     },
     beginReplay(battle, result = null) {
+      getTutorialController(this.controller)?.setSuspended?.(true);
       this.battle = battle;
       this.replayState.lang = this.locale;
       this.replayState.currentBattle = battle;
@@ -467,6 +474,7 @@ export function createConfiguredGameplayScreen(options = {}) {
     finishReplay() {
       this.clearReplayTimer();
       this.showReplay = false;
+      getTutorialController(this.controller)?.setSuspended?.(false);
       const tutorial = getTutorialController(this.controller);
       if (tutorial && this.battle) {
         tutorial.emit(createRoundTutorialEvent({
@@ -570,14 +578,24 @@ export function createConfiguredGameplayScreen(options = {}) {
         this.clientServices.services.run.refreshShop(this.run.id)
       ));
     },
-    resolveBattle() {
-      if (!this.runIsActive) return;
-      return this.mutate(this.text.battle, () => (
-        this.clientServices.services.run.battle(this.run.id)
-      )).then((result) => {
-        if (result?.battle) this.beginReplay(result.battle, result);
+    async resolveBattle() {
+      if (!this.runIsActive || this.loading) return;
+      this.resolvingBattle = true;
+      const tutorial = getTutorialController(this.controller);
+      tutorial?.setSuspended?.(true);
+      try {
+        const result = await this.mutate(this.text.battle, () => (
+          this.clientServices.services.run.battle(this.run.id)
+        ));
+        if (result?.battle && !this.gameplayDisposed) this.beginReplay(result.battle, result);
         return result;
-      });
+      } finally {
+        this.resolvingBattle = false;
+        if (!this.showReplay) {
+          tutorial?.setSuspended?.(false);
+          this.emitPrepTutorial();
+        }
+      }
     },
     abandonRun() {
       if (!this.runIsActive) return;
@@ -672,7 +690,9 @@ export function createConfiguredGameplayScreen(options = {}) {
             :player="run.player"
             :labels="{ wins: text.wins, lives: text.lives }"
             :run-currency="{ amount: run.player?.coins || 0, icon: '◉' }"
-          />
+          >
+            <template #currency-action><BackpackSaleAction :interaction="interaction" :labels="interactionLabels" /></template>
+          </RunHud>
         </template>
 
         <template #loadout>
@@ -699,7 +719,8 @@ export function createConfiguredGameplayScreen(options = {}) {
             </template>
           </StorageZone>
 
-          <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels" />
+          <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels"
+            :name-for-item="(item) => artifactName(getArtifact(item.artifactId))" />
 
           <BackpackZone
             :interaction="interaction"

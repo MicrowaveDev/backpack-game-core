@@ -2,15 +2,17 @@ export const BackpackInteractionControls = {
   name: 'BackpackInteractionControls',
   props: {
     interaction: { type: Object, required: true },
-    labels: { type: Object, required: true }
+    labels: { type: Object, required: true },
+    nameForItem: { type: Function, default: (item) => item?.artifact?.name || item?.artifactId || '' }
   },
-  data() { return { menuOpen: false }; },
+  data() { return { position: { left: '8px', top: '8px' } }; },
   computed: {
     state() { return this.interaction.state; },
     selected() { return this.interaction.getSelectedItem(); },
+    menuOpen() { return this.selected && this.state.contextMenuOpen && !this.state.dragVisual; },
     sellPrice() { return this.interaction.getSellPrice?.() ?? null; },
     reason() {
-      const code = this.state.messageCode || (this.state.preview?.valid === false ? this.state.preview.reason : '');
+      const code = this.state.messageCode || (this.state.preview?.valid === false ? this.state.preview.reason : this.state.selectedLocked ? 'locked' : '');
       return this.labels.reasons?.[code] || '';
     },
     bagContentsHint() {
@@ -21,68 +23,70 @@ export const BackpackInteractionControls = {
     }
   },
   watch: {
-    'state.selectedId'() { this.menuOpen = false; },
-    'state.dragVisual'(value) { if (value) this.menuOpen = false; }
+    menuOpen(value) { if (value) this.$nextTick(() => {
+      this.positionMenu();
+      this.$refs.menu?.querySelector('button:not(:disabled)')?.focus({ preventScroll: true });
+    }); },
+    'state.contextAnchor'() { this.$nextTick(this.positionMenu); }
+  },
+  mounted() {
+    window.addEventListener('resize', this.positionMenu);
+    window.addEventListener('scroll', this.positionMenu, true);
+    this.$nextTick(this.positionMenu);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.positionMenu);
+    window.removeEventListener('scroll', this.positionMenu, true);
   },
   methods: {
+    positionMenu() {
+      if (!this.menuOpen || !this.$refs.menu) return;
+      const rect = this.$refs.menu.getBoundingClientRect();
+      const anchor = this.state.contextAnchor || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      const width = window.visualViewport?.width || window.innerWidth;
+      const height = window.visualViewport?.height || window.innerHeight;
+      const topInset = Math.max(8, document.querySelector('.app-header')?.getBoundingClientRect?.().bottom || 0);
+      this.position = {
+        maxHeight: Math.max(44, height - topInset - 8) + 'px',
+        left: Math.max(8, Math.min(anchor.x + (anchor.scrollX || 0) - window.scrollX + 8, width - rect.width - 8)) + 'px',
+        top: Math.max(topInset, Math.min(anchor.y + (anchor.scrollY || 0) - window.scrollY + 8, height - rect.height - 8)) + 'px'
+      };
+    },
     async action(name) {
-      this.menuOpen = false;
+      this.state.contextMenuOpen = false;
       await this.interaction[name]();
+      if (this.selected) this.state.contextMenuOpen = true;
     },
-    async toggleMenu() {
-      this.menuOpen = !this.menuOpen;
-      if (this.menuOpen) {
-        await this.$nextTick();
-        this.$refs.menu?.querySelector('button:not(:disabled)')?.focus();
-      }
-    },
-    closeMenu() { this.menuOpen = false; this.$refs.more?.focus(); },
+    move() { this.state.contextMenuOpen = false; },
     menuKey(event) {
-      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.closeMenu(); return; }
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.interaction.cancel(); return; }
       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
       const buttons = Array.from(this.$refs.menu?.querySelectorAll('button:not(:disabled)') || []);
       const index = buttons.indexOf(event.target);
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
         (index + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length;
-      buttons[next]?.focus();
-    },
-    menuBlur(event) {
-      // Touch browsers may report null while focus transfers before the click.
-      // Outside taps cancel selection in the controller; keyboard focus has a target.
-      if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) this.menuOpen = false;
+      buttons[next]?.focus({ preventScroll: true });
     }
   },
   template: `
     <div class="backpack-interaction-controls" data-testid="backpack-interaction-controls">
-      <div class="backpack-interaction-rail">
-        <div v-if="state.dragVisual && interaction.canSell() && sellPrice != null"
-          class="backpack-interaction-sell-target" :class="{ 'backpack-interaction-drop-active': state.dropTarget === 'sell' }"
-          data-backpack-drop-zone="sell" data-testid="backpack-sell-drop-zone">
-          {{ labels.sell }} · {{ sellPrice }}
-        </div>
-        <div class="backpack-interaction-item-actions" :class="{ 'backpack-interaction-item-actions--hidden': !selected }"
-          :inert="!selected ? true : null" :aria-hidden="!selected">
-          <button class="backpack-interaction-action backpack-interaction-icon" type="button" data-testid="backpack-rotate"
-            :aria-label="labels.rotate" :title="labels.rotate" :disabled="!selected || interaction.isBusy()"
-            @click="action('rotate')">↻</button>
-          <button ref="more" class="backpack-interaction-action backpack-interaction-icon" type="button" data-testid="backpack-more"
-            aria-haspopup="menu" :aria-expanded="menuOpen" :aria-label="labels.more || '…'"
-            :disabled="!selected || interaction.isBusy()" @click="toggleMenu()">⋯</button>
-        </div>
-        <div v-if="menuOpen && selected" ref="menu" class="backpack-interaction-menu" role="menu"
-          data-testid="backpack-context-menu" :aria-label="labels.more || '…'" @keydown="menuKey" @focusout="menuBlur">
-          <button class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-storage"
-            :disabled="interaction.isBusy()" @click="action('unplace')">{{ labels.storage }}</button>
-          <button class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-auto-place"
-            :disabled="interaction.isBusy()" @click="action('autoPlace')">{{ labels.autoPlace }}</button>
-          <button v-if="interaction.canSell()" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-sell"
-            :disabled="interaction.isBusy()" @click="action('sell')">{{ labels.sell }}<template v-if="sellPrice != null"> · {{ sellPrice }}</template></button>
-          <button class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-cancel"
-            :disabled="interaction.isBusy()" @click="action('cancel')">{{ labels.cancel }}</button>
-        </div>
+      <div v-if="menuOpen" ref="menu" class="backpack-interaction-menu" role="menu"
+        :style="position" data-testid="backpack-context-menu" :aria-label="nameForItem(selected)" @keydown="menuKey">
+        <div class="backpack-context-heading">{{ nameForItem(selected) }}</div>
+        <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-move"
+          :disabled="interaction.isBusy()" @click="move"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l4-3 4 3M12 1v22M4 8l-3 4 3 4M1 12h22M16 20l-4 3-4-3M20 8l3 4-3 4" /></svg><span class="backpack-context-label">{{ labels.move }}</span></button>
+        <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-rotate"
+          :disabled="interaction.isBusy()" @click="action('rotate')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6" /></svg><span class="backpack-context-label">{{ labels.rotate }}</span></button>
+        <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-storage"
+          :disabled="interaction.isBusy()" @click="action('unplace')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v14H4zM2 3h20v4H2zM9 11h6" /></svg><span class="backpack-context-label">{{ labels.storage }}</span></button>
+        <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-auto-place"
+          :disabled="interaction.isBusy()" @click="action('autoPlace')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 14h7v7h-7zM14 3h7v7h-7zM3 14h7v7H3z" /></svg><span class="backpack-context-label">{{ labels.autoPlace }}</span></button>
+        <button v-if="interaction.canSell() && sellPrice != null" class="backpack-interaction-action backpack-context-sell" type="button" role="menuitem" data-testid="backpack-sell"
+          :disabled="interaction.isBusy()" @click="action('sell')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13l-7 7-10-10V3h7zM7 7h.01" /></svg><span class="backpack-context-label">{{ labels.sell }} · {{ sellPrice }}</span></button>
+        <p v-if="reason" class="backpack-context-reason">{{ reason }}</p>
       </div>
-      <p class="backpack-interaction-reason" role="status" aria-live="polite" aria-atomic="true"
+      <p v-if="reason || bagContentsHint" class="backpack-interaction-reason" role="status" aria-live="polite" aria-atomic="true"
         data-testid="backpack-placement-reason">{{ reason || bagContentsHint }}</p>
     </div>
   `

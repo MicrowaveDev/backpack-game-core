@@ -23,7 +23,9 @@ after a successful save and cannot undo it. Disposal prevents late UI feedback.
 
 ## Inputs and actions
 
-- A click/tap selects an item; a cell click/tap places it. It does not unplace it.
+- A click/tap on a Storage or Backpack item/bag selects it and opens its floating
+  context menu without mutation. Move dismisses the menu and retains selection
+  for a cell click/tap placement. Bag labels provide access when all cells are full.
 - Pointer drag starts after a movement threshold and preserves the grabbed cell.
   Preview and commit use the same origin. Native drag is disabled on this path.
 - `BackpackInteractionControls` offers rotate, Storage, auto-place, cancel, and
@@ -36,9 +38,13 @@ after a successful save and cannot undo it. Disposal prevents late UI feedback.
   usable mask to Storage. A seam item moves whole, once by instance ID. Preview
   highlights affected items and announces their count. Same-position/same-rotation
   drops do not evacuate or save. Rotation/removal retain coverage validation.
-- Idle controls are hidden in a stable compact rail. Selection reveals ↻/⋯;
-  Storage, auto-place, sale and cancel live in the context menu. During drag a
-  distinct sale zone displays the injected refund before release. `R` rotates
+- No persistent action rail or More button reserves preparation space. The menu
+  contains Move, Rotate, Storage, auto-place and priced sale, stays within
+  the viewport, and supports Arrow keys/Home/End/Escape. Locked starter bags show
+  an explanation without mutation buttons. Outside input and Escape dismiss the
+  menu; there is no Cancel button. The compact desktop HUD stays on the right
+  with coins before Wins/Lives. During drag the menu
+  hides and a priced sale destination appears immediately left of that panel in the sticky HUD. `R` rotates
   a draft under the pointer without saving; Escape cancels. Storage and sale
   destinations use `data-backpack-drop-zone` with `storage` / `sell` values.
 - Escape cancels selection. Capture loss, pointer cancellation, blur, release
@@ -71,8 +77,8 @@ shaped bag masks and bitmaps aligned with placement geometry.
 Automated pointer/touch and layout checks do not establish real Telegram WebView
 coverage. The user has agreed to perform iOS/Android device verification:
 
-1. Buy an item; tap it in Storage, then tap a free Backpack cell. Tap the placed
-   item again: it should select and remain in place.
+1. Buy an item; tap it in Storage, choose Move, then tap a free Backpack cell.
+   Tap the placed item again: its menu should open and it must remain in place.
 2. Drag a multi-cell item by its far cell. The footprint must follow that grabbed
    cell and match the final position, including across adjacent bag boundaries.
 3. Drop over occupied/uncovered cells. Check the exact conflicting cells and
@@ -106,3 +112,11 @@ clients which omit evacuation. IDs, dimensions and rotations survive Storage.
 Mushroom supplies `getBackpackLoadoutRevision` as `loadoutRevision`; the server
 checks it inside the run lock and reloads are required after a 409. Meat retains
 its integer snapshot revision. A failed write never exposes a partial evacuation.
+
+## Tutorial visibility during battle
+
+The shared tutorial controller supports transient `setSuspended(boolean)` without
+changing seen-step preferences. Configured gameplay suspends before sending the
+battle request, emits no prep events during resolution, and resumes on failure,
+replay completion or disposal. A late response after navigation cannot suspend
+guidance again. Preparation guidance is never rendered over replay.

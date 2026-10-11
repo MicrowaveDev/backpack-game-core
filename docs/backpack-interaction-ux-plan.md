@@ -487,3 +487,30 @@ The confirmed evacuation journey keeps Ready inside1280x800, with full art.
 Durable proofs: Meat `docs/qa/backpack-interaction/`; Mushroom
 `.agent/tasks/backpack-ux/raw/`; current consumer evidence supersedes historical
 mode-switch and occupied-bag-refusal acceptance.
+
+
+## Context menu and replay follow-up (2026-10-11, issue #11)
+
+### Source of truth and scope
+
+Latest user request supersedes the reserved rail and More button: tap/click an item or bag in Storage or Backpack opens a polished contextual menu near that object, with rotation included. Outside input and Escape dismiss it; there is no Cancel button. Remove all persistent buttons and empty space between panels. The compact status panel stays on the right, with coins before wins/lives; the priced Sell drop target appears immediately to its left during dragging. Tap sale lives in the contextual menu. Preparation tutorial is hidden during battle requests and replay and resumes after return.
+
+### Workstreams and acceptance
+
+1. Core owns selection/menu state, source anchoring, viewport clamping, keyboard dismissal/navigation, named actions, shared HUD and drag-sale target. Selecting must not mutate; Move dismisses the menu while retaining placement selection. Drag hides the menu. Locked starter bags show an explanation without mutation actions. All menu targets are at least 44px, remain on-screen on mobile/desktop, and overlay without shifting the grid. No global More/rotation rail remains.
+2. Core tutorial suspension starts before battle response, preserves preferences and pending steps, restores on failure/replay completion/unmount, and suppresses prep events during resolution.
+3. Both consumers integrate the same core pin and product-local labels. Existing interaction/browser tests are updated to the new flow; capture fresh menu, sale-drag, compact prep and replay evidence. Core tests and both consumer tests/builds must pass before handoff.
+
+Dependency order: core -> consumer adapters and pins -> verification -> core PR and Meat PR / Mushroom main -> hub Mushroom pointer. Do not deploy before user merges. Physical Telegram device acceptance remains user-owned.
+
+Latest HUD clarification: keep the compact status panel on the right, reorder its contents to coins -> wins -> lives, and place the drag sale target outside and immediately to its left. Do not stretch the panel across the topbar.
+
+Latest menu clarification: remove Cancel entirely. Use a compact single-column action list with consistent SVG line icons, subdued separators and a separate sale row. Outside pointerdown dismisses selection before board hit testing, preventing accidental placement; Escape also dismisses.
+
+### Completion and verification
+
+All three follow-up workstreams are complete. Runtime `5ed7d359de04ba4172bbeed88906b2163a9250b8` passed the cross-consumer gate: core 486/486 and package dry-run; Mushroom 665/665 units, production build, 3/3 screen checks and 3/3 focused browser journeys; Meat 119/119 units, 9/9 browser scenarios, production build and both synthetic deployment configuration checks. The final documentation pin changes no runtime code.
+
+Fresh menu evidence covers 375x667 and 1280x800 in both products, with menu bounds and no global rail asserted. Desktop drag-sale evidence confirms the target immediately left of the compact right-aligned HUD. Preparation has a <=14px Storage/Backpack gap. Battle guidance absence/resumption and late-response disposal are verified. Menu headings do not start board gestures, long labels remain readable, and outside pointerdown cannot place the prior selection. The touch locked-bag fixture explicitly centers and hit-tests its cell before raw input, so sticky HUD occlusion cannot masquerade as a lock regression.
+
+Earlier full Mushroom browser exploration yielded 52 passes, two obsolete rail/input assertions and one existing opt-in skip; those assertions were repaired and the affected journeys passed in the final focused gate. Do not read this as a new full-suite run. Durable proofs live in Meat `docs/qa/backpack-interaction/contextual-menu/` and Mushroom `.agent/tasks/backpack-ux/`. Physical Telegram iOS/Android acceptance remains PENDING_USER (AC9/AC23). Delivery: core PR #12 -> Meat PR; Mushroom direct main and then hub pointer. No deployment in this follow-up.

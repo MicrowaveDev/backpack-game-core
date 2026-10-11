@@ -63,6 +63,9 @@ export declare function useTouch(
 
 export interface BackpackInteractionState {
   selectedId: string;
+  contextMenuOpen: boolean;
+  contextAnchor: { x: number; y: number; scrollX?: number; scrollY?: number } | null;
+  selectedLocked: boolean;
   dropTarget: 'storage' | 'sell' | null;
   preview: (import('../modules/loadout/interaction-placement.js').BackpackPlacementResult & { valid: boolean; x?: number; y?: number }) | null;
   dragVisual: { clientX: number; clientY: number; width: number; height: number; cellWidth: number; gap: number; grabX: number; grabY: number } | null;
