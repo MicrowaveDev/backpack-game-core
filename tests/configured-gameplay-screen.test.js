@@ -361,3 +361,19 @@ test('[configured gameplay] suspends guidance before battle response and restore
   assert.deepEqual(values, [true, false, 'prep']);
   assert.equal(context.resolvingBattle, false);
 });
+
+
+test('[configured gameplay] late battle response cannot restart a replay after disposal', async () => {
+  const values = [];
+  const component = createConfiguredGameplayScreen(options({ getTutorialController: () => ({ setSuspended: (value) => values.push(value) }) }));
+  const context = {
+    runIsActive: true, loading: false, showReplay: false, controller: {},
+    text: { battle: 'Battle' }, run: { id: 'run-1' },
+    clientServices: { services: { run: { battle: async () => ({ battle: { id: 'battle-1' } }) } } },
+    async mutate(action, operation) { this.gameplayDisposed = true; return operation(); },
+    beginReplay() { throw new Error('Disposed gameplay must not resume replay'); },
+    emitPrepTutorial() {}
+  };
+  await component.methods.resolveBattle.call(context);
+  assert.deepEqual(values, [true, false]);
+});

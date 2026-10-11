@@ -351,7 +351,7 @@ export function createConfiguredGameplayScreen(options = {}) {
   methods: {
     emitPrepTutorial() {
       const tutorial = getTutorialController(this.controller);
-      if (!tutorial || !this.runIsActive || this.showReplay || this.resolvingBattle) return;
+      if (!tutorial || !this.runIsActive || this.showReplay || this.resolvingBattle || this.gameplayDisposed) return;
       const events = createPrepTutorialEvents({
         shopItems: this.run?.shopItems || [],
         storageItems: this.storageItems,
