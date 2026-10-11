@@ -429,14 +429,15 @@ for (const cancelEvent of ['pointercancel', 'lostpointercapture', 'blur', 'Escap
   });
 }
 
-test('free usable cell grabs bag after threshold, occupied cell prefers item, tap does not select bag', async (t) => {
+test('free usable cell grabs bag after threshold, occupied cell prefers item, tap opens bag context without mutation', async (t) => {
   const small = { ...bag, artifactId: 'strip' };
   const item = { ...stored, x: 0, y: 0, width: 1, height: 1 };
   const f = fixture(t, { initialRows: [small, item] });
   f.root.emit('pointerdown', f.point(1, 0));
   f.root.emit('pointerup', f.point(1, 0));
   f.interaction.clickCell({ x: 1, y: 0 });
-  assert.equal(f.interaction.state.selectedId, '');
+  assert.equal(f.interaction.state.selectedId, small.id);
+  assert.equal(f.interaction.state.contextMenuOpen, true);
   assert.equal(f.calls.length, 0);
   f.root.emit('pointerdown', f.point(1, 0));
   f.root.emit('pointermove', f.point(3, 1));

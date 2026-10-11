@@ -119,8 +119,6 @@ export function createConfiguredGameplayScreen(options = {}) {
         interaction: null,
         showReplay: false,
         resolvingBattle: false,
-        desktopControls: false,
-        contextHost: null,
         replayTimer: null,
         replayState: {
           lang: locale,
@@ -324,22 +322,13 @@ export function createConfiguredGameplayScreen(options = {}) {
   },
   mounted() {
     this.interaction.attach(this.$el);
-    this.controlsMedia = globalThis.matchMedia?.('(min-width: 680px)');
-    this.syncControlsViewport = () => {
-      this.desktopControls = Boolean(this.controlsMedia?.matches);
-      this.contextHost = this.$el.querySelector('[data-backpack-context-host]');
-    };
-    this.syncControlsViewport();
-    this.controlsMedia?.addEventListener('change', this.syncControlsViewport);
     this.emitPrepTutorial();
   },
   watch: {
     showReplay(value) {
-      this.$nextTick(() => this.syncControlsViewport?.());
       if (value) this.interaction?.cancel();
     },
     runIsActive(value) {
-      this.$nextTick(() => this.syncControlsViewport?.());
       if (!value) this.interaction?.cancel();
     },
     'run.id'(value, previous) {
@@ -353,7 +342,6 @@ export function createConfiguredGameplayScreen(options = {}) {
     }
   },
   beforeUnmount() {
-    this.controlsMedia?.removeEventListener('change', this.syncControlsViewport);
     getTutorialController(this.controller)?.setSuspended?.(false);
     this.interaction?.detach();
     this.clearReplayTimer();
@@ -703,7 +691,6 @@ export function createConfiguredGameplayScreen(options = {}) {
           >
             <template #currency-action><BackpackSaleAction :interaction="interaction" :labels="interactionLabels" /></template>
           </RunHud>
-          <div data-backpack-context-host></div>
         </template>
 
         <template #loadout>
@@ -730,9 +717,8 @@ export function createConfiguredGameplayScreen(options = {}) {
             </template>
           </StorageZone>
 
-          <Teleport :to="contextHost || 'body'" :disabled="!desktopControls || !contextHost">
-            <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels" />
-          </Teleport>
+          <BackpackInteractionControls :interaction="interaction" :labels="interactionLabels"
+            :name-for-item="(item) => artifactName(getArtifact(item.artifactId))" />
 
           <BackpackZone
             :interaction="interaction"

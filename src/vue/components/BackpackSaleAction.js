@@ -8,7 +8,7 @@ export const BackpackSaleAction = {
     state() { return this.interaction.state; },
     selected() { return this.interaction.getSelectedItem(); },
     sellPrice() { return this.interaction.getSellPrice?.() ?? null; },
-    visible() { return this.selected && this.interaction.canSell() && this.sellPrice != null; }
+    visible() { return this.state.dragVisual && this.selected && this.interaction.canSell() && this.sellPrice != null; }
   },
   template: `
     <div class="backpack-sale-slot">

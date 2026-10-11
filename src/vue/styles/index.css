@@ -10326,64 +10326,37 @@ select {
   }
 }
 
-/* Context actions use a compact reserved rail outside the board. Selection,
-   preview and sale targets never change the grid's origin. */
-.backpack-interaction-controls {
-  position: relative;
-  display: block;
-  margin-block: 4px;
-  max-width: 100%;
-}
-.backpack-interaction-rail {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  height: 44px;
-}
-.backpack-interaction-action {
-  min-height: 44px;
-  padding: 8px 12px;
-  font: inherit;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-.backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
-.backpack-interaction-action:focus-visible,
-.backpack-bag-context-label:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.backpack-interaction-icon { min-width: 44px; font-size: 1.3em; }
-.backpack-interaction-item-actions { display: flex; gap: 4px; margin-left: auto; }
-.backpack-interaction-item-actions--hidden { visibility: hidden; pointer-events: none; }
+/* Context menus float beside their selected source without reserving a row. */
+.backpack-interaction-controls { display: contents; }
 .backpack-interaction-menu {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  z-index: 50;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-width: min(288px, 100%);
-  max-width: 100%;
-  background: var(--panel-bg, #fffaf0);
-  outline: 1px solid currentColor;
+  position: fixed; z-index: 100; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
+  width: min(260px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
+  overflow-y: auto; box-sizing: border-box; padding: 8px;
+  border: 1px solid var(--border, #d5cbb9); border-radius: 16px;
+  background: var(--surface-strong, #fffaf0); color: var(--ink, #242221);
+  box-shadow: 0 12px 36px rgba(45, 32, 20, .18), 0 2px 6px rgba(45, 32, 20, .08);
 }
-.backpack-interaction-menu .backpack-interaction-action { text-align: left; padding: 4px 8px; font-size: .9rem; line-height: 1.2; }
-.backpack-interaction-menu .backpack-interaction-action:hover { background: rgba(70,70,70,.08); }
+.backpack-context-heading { grid-column: 1 / -1; padding: 8px 10px 10px; font-weight: 700; line-height: 1.25; border-bottom: 1px solid var(--border, #d5cbb9); margin-bottom: 4px; }
+.backpack-interaction-action {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 44px; width: 100%; padding: 8px 10px;
+  border: 0; border-radius: 9px; background: transparent;
+  font: inherit; font-size: .9rem; color: inherit; text-align: left; cursor: pointer;
+}
+.backpack-interaction-action span { width: 20px; text-align: center; font-size: 1.15em; }
+.backpack-interaction-action:hover { background: color-mix(in srgb, var(--accent-soft, #cfe0c7) 28%, transparent); }
+.backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
+.backpack-interaction-action:focus-visible, .backpack-bag-context-label:focus-visible { outline: 2px solid var(--accent, #446c40); outline-offset: -2px; }
+.backpack-context-sell { color: var(--danger, #a83228); }
+.backpack-context-cancel { grid-column: 1 / -1; border-top: 1px solid var(--border, #d5cbb9); border-radius: 0 0 9px 9px; margin-top: 4px; justify-content: center; opacity: .75; }
+.backpack-context-reason { grid-column: 1 / -1; font-size: .8rem; padding: 4px 10px; }
 .backpack-interaction-reason {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  z-index: 51;
-  max-width: min(320px, 85vw);
-  padding: 4px 8px;
-  background: var(--surface-strong, #fffaf0);
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-  margin: 0;
-  font-size: .85em;
-  font-weight: 600;
+  position: fixed; z-index: 101; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%;
+  transform: translateX(-50%); max-width: min(360px, calc(100vw - 32px));
+  padding: 10px 14px; margin: 0; border-radius: 12px;
+  background: var(--surface-strong, #fffaf0); border: 1px solid var(--border, #d5cbb9);
+  box-shadow: 0 4px 18px rgba(45,32,20,.14); font-size: .85rem; line-height: 1.3;
+  pointer-events: none;
 }
 .backpack-interaction-drop-active { outline: 3px solid currentColor; outline-offset: -3px; }
 .backpack-interaction-source { touch-action: none; cursor: grab; }
@@ -10434,13 +10407,6 @@ select {
 .backpack-interaction-board .artifact-piece-wrap { touch-action: none; }
 
 .backpack-interaction-reason:empty { display: none; }
-[data-backpack-context-host] { min-width: 0; margin-left: auto; }
-@media (min-width: 680px) {
-  .prep-topbar .backpack-interaction-controls { margin-block: 0; width: 220px; }
-  .prep-topbar .backpack-interaction-menu { bottom: auto; top: 100%; width: 288px; max-width: min(288px, 90vw); }
-  .prep-topbar .backpack-interaction-reason { bottom: auto; top: 100%; width: 288px; }
-}
-
 .prep-topbar .run-hud-wrap { flex: 1; min-width: 0; }
 .run-hud-progress { margin-left: auto; }
 .backpack-sale-slot { min-width: 0; }

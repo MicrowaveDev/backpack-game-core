@@ -489,10 +489,16 @@ Durable proofs: Meat `docs/qa/backpack-interaction/`; Mushroom
 mode-switch and occupied-bag-refusal acceptance.
 
 
-## Preparation regression follow-up (2026-10-11, issue #11)
+## Context menu and replay follow-up (2026-10-11, issue #11)
 
-User requirements: eliminate desktop Storage/Backpack gap; hide preparation guidance during battle; move coins left with adjacent Sell for selection and drag.
+### Source of truth and scope
 
-Implementation: desktop configured controls move into the topbar through one responsive Teleport; reason text overlays rather than reserving empty height. Shared HUD puts currency first and exposes a currency-action slot. BackpackSaleAction supplies the priced button/drop target to both consumers; Sell is removed from More. Tutorial suspension starts before battle resolution, covers replay, and restores on failure, replay completion or unmount without acknowledging pending steps. Preparation events do not fire while resolving a battle.
+Latest user request supersedes the reserved rail and More button: tap/click an item or bag in Storage or Backpack opens a polished contextual menu near that object, with rotation included. Remove all persistent buttons and empty space between panels. Coins move left; the adjacent priced Sell drop target appears during dragging. Tap sale lives in the contextual menu. Preparation tutorial is hidden during battle requests and replay and resumes after return.
 
-Verification: controller suspension/progress and failed-request restoration tests; desktop gap and currency/Sell adjacency assertions; mobile sale and drag flows; battle tutorial absence and resume; fresh preparation/replay screenshots. Physical Telegram device acceptance remains user-owned as above.
+### Workstreams and acceptance
+
+1. Core owns selection/menu state, source anchoring, viewport clamping, keyboard dismissal/navigation, named actions, shared HUD and drag-sale target. Selecting must not mutate; Move dismisses the menu while retaining placement selection. Drag hides the menu. Locked starter bags show an explanation without mutation actions. All menu targets are at least 44px, remain on-screen on mobile/desktop, and overlay without shifting the grid. No global More/rotation rail remains.
+2. Core tutorial suspension starts before battle response, preserves preferences and pending steps, restores on failure/replay completion/unmount, and suppresses prep events during resolution.
+3. Both consumers integrate the same core pin and product-local labels. Existing interaction/browser tests are updated to the new flow; capture fresh menu, sale-drag, compact prep and replay evidence. Core tests and both consumer tests/builds must pass before handoff.
+
+Dependency order: core -> consumer adapters and pins -> verification -> core PR and Meat PR / Mushroom main -> hub Mushroom pointer. Do not deploy before user merges. Physical Telegram device acceptance remains user-owned.
