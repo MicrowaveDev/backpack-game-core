@@ -100,6 +100,15 @@ When moving or adding an exported implementation:
 
 ## Product Boundary
 
+Run start and restoration coordination is exported from `modules/run`:
+`startOrResumeRun` executes injected active lookup/creation inside a caller-owned
+atomic transaction, `runWithPendingStart` holds the UI pending gate through
+product completion callbacks, and `resolveRequestedActiveRun` restores a
+requested active identity through an injected loader. Consumers retain URL
+parsing, snapshot assignment, ownership/active-run scope, unavailable-error
+policy, and concrete persistence. Restoration never mutates the supplied run
+or snapshot; callers discard obsolete navigation results before applying them.
+
 Core owns deterministic mechanics, DTO shaping, validation engines, and
 adapter-driven orchestration. Mushroom and Meat own catalogs, copy, routes,
 credentials, environment policy, persistence implementations, migrations,
