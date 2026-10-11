@@ -11,8 +11,8 @@ export const BackpackSaleAction = {
     visible() { return this.state.dragVisual && this.selected && this.interaction.canSell() && this.sellPrice != null; }
   },
   template: `
-    <div class="backpack-sale-slot">
-      <button v-if="visible" type="button" class="backpack-interaction-action backpack-sale-action"
+    <div v-if="visible" class="backpack-sale-slot">
+      <button type="button" class="backpack-interaction-action backpack-sale-action"
         data-backpack-context-action="sell"
         :data-backpack-drop-zone="state.dragVisual ? 'sell' : null"
         :data-testid="state.dragVisual ? 'backpack-sell-drop-zone' : 'backpack-sell'"

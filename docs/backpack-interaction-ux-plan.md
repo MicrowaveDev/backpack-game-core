@@ -502,3 +502,5 @@ Latest user request supersedes the reserved rail and More button: tap/click an i
 3. Both consumers integrate the same core pin and product-local labels. Existing interaction/browser tests are updated to the new flow; capture fresh menu, sale-drag, compact prep and replay evidence. Core tests and both consumer tests/builds must pass before handoff.
 
 Dependency order: core -> consumer adapters and pins -> verification -> core PR and Meat PR / Mushroom main -> hub Mushroom pointer. Do not deploy before user merges. Physical Telegram device acceptance remains user-owned.
+
+Latest HUD clarification: keep the compact status panel on the right, reorder its contents to coins -> wins -> lives, and place the drag sale target outside and immediately to its left. Do not stretch the panel across the topbar.

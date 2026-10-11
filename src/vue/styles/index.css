@@ -7470,7 +7470,10 @@ select {
 
 /* --- Run HUD --- */
 .run-hud-wrap {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 12px;
 }
@@ -9256,7 +9259,7 @@ select {
   }
 
   .prep-screen .run-hud {
-    flex: 1;
+    flex: 0 0 auto;
     justify-content: flex-end;
     gap: 4px;
     padding: 4px;
@@ -10408,8 +10411,7 @@ select {
 .backpack-interaction-board .artifact-piece-wrap { touch-action: none; }
 
 .backpack-interaction-reason:empty { display: none; }
-.prep-topbar .run-hud-wrap { flex: 1; min-width: 0; }
-.run-hud-progress { margin-left: auto; }
+.prep-topbar .run-hud-wrap { flex: 0 1 auto; min-width: 0; margin-left: auto; justify-self: end; gap: 8px; }
 .backpack-sale-slot { min-width: 0; }
 .backpack-sale-action { border: 1px dashed currentColor; border-radius: 7px; white-space: nowrap; color: var(--danger, #a83228); }
 .backpack-sale-action:hover { background: rgba(168, 50, 40, .08); }
