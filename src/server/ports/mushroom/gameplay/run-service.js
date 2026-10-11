@@ -1,3 +1,4 @@
+import { getBackpackLoadoutRevision } from '../../../../modules/loadout/index.js';
 import crypto from 'crypto';
 import {
   createRunGhostBudgetPlan,
@@ -1381,6 +1382,16 @@ async function resolveRound(playerId, gameRunId) {
   });
 }
 
+async function assertCurrentLoadoutRevision(client, gameRunId, playerId, roundNumber, expectedRevision) {
+  if (expectedRevision == null) return;
+  const currentRows = await readCurrentRoundItems(client, gameRunId, playerId, roundNumber);
+  if (expectedRevision === getBackpackLoadoutRevision(currentRows)) return;
+  const error = new Error('Stale loadout revision');
+  error.status = 409;
+  error.code = 'run_revision_conflict';
+  throw error;
+}
+
 /**
  * Service entrypoint for `PUT /api/artifact-loadout`. Deliberately thin:
  * its only job is to enforce the run-membership guard and hand off to the
@@ -1402,7 +1413,8 @@ async function resolveRound(playerId, gameRunId) {
  * endpoint shape as the permanent contract, not a transitional one.
  */
 async function applyRunLoadoutPlacements(playerId, gameRunId, items, {
-  expectedRound = null
+  expectedRound = null,
+  expectedLoadoutRevision = null
 } = {}) {
   return withRunLock(gameRunId, () => withTransaction(async (client) => {
     const runResult = await client.query(
@@ -1425,6 +1437,7 @@ async function applyRunLoadoutPlacements(playerId, gameRunId, items, {
       throw new Error('Player is not part of this active game run');
     }
 
+    await assertCurrentLoadoutRevision(client, gameRunId, playerId, currentRound, expectedLoadoutRevision);
     await applyRunPlacements(client, gameRunId, playerId, currentRound, items);
     return { ok: true, roundNumber: currentRound };
   }));

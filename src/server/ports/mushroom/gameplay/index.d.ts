@@ -174,7 +174,7 @@ export interface MushroomRunServicePort {
     playerId: string,
     gameRunId: string,
     items: unknown[],
-    options?: { expectedRound?: number | null }
+    options?: { expectedRound?: number | null; expectedLoadoutRevision?: string | null }
   ): Promise<unknown>;
   createChallengeRun(challengerPlayerId: string, inviteePlayerId: string, challengeId: string): Promise<unknown>;
   getActiveGameRun(playerId: string, characterId?: string | null): Promise<unknown>;

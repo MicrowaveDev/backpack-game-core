@@ -2,6 +2,7 @@ import {
   shapeGridBoardCells,
   shapeGridBoardPieces
 } from '../../client/view-model.js';
+import { getBackpackItemDimensions } from '../../modules/loadout/interaction-placement.js';
 import { BackpackGrid } from './BackpackGrid.js';
 
 const DEFAULT_GRID_COLUMNS = 6;
@@ -17,6 +18,7 @@ function defaultArtifactImage(artifact) {
 
 export const ArtifactGridBoard = {
   name: 'ArtifactGridBoard',
+  inheritAttrs: false,
   components: { BackpackGrid },
   props: {
     // For non-inventory variants (catalog, fighter card) the legacy
@@ -59,6 +61,19 @@ export const ArtifactGridBoard = {
     return { hoverCellIndex: -1 };
   },
   computed: {
+    draggedItem() {
+      return this.isInventoryVariant && this.interaction?.state.dragVisual ? this.interaction.getSelectedItem() : null;
+    },
+    draggedDimensions() {
+      return this.draggedItem ? getBackpackItemDimensions(this.draggedItem, this.getArtifact(this.draggedItem.artifactId)) : null;
+    },
+    dragVisualStyle() {
+      const visual = this.interaction?.state.dragVisual;
+      if (!visual) return {};
+      return { width: `${visual.width}px`, height: `${visual.height}px`,
+        transform: `translate3d(${visual.clientX - visual.grabX}px, ${visual.clientY - visual.grabY}px, 0)`,
+        '--artifact-cell-size': `${visual.cellWidth}px`, '--board-gap': `${visual.gap}px` };
+    },
     isInventoryVariant() {
       return this.variant === 'inventory';
     },
@@ -135,7 +150,8 @@ export const ArtifactGridBoard = {
           classNames: {
             'artifact-piece-wrap': true,
             'artifact-piece-wrap--fusion-pending': this.isHighlighted(item),
-            'backpack-interaction-selected': this.interaction?.state.selectedId === (item.id || item.rowId)
+            'backpack-interaction-selected': this.interaction?.state.selectedId === (item.id || item.rowId),
+            'backpack-interaction-evacuating': this.interaction?.state.preview?.affectedIds?.includes(item.id || item.rowId)
           },
           style: this.pieceStyle(item),
           title: this.isHighlighted(item) ? this.highlightedTitle : null,
@@ -192,8 +208,7 @@ export const ArtifactGridBoard = {
         'inventory-shell': this.isInventoryVariant,
         'artifact-grid-board--inventory': this.isInventoryVariant,
         'artifact-grid-board--catalog': this.variant === 'catalog',
-        'backpack-interaction-board': !!this.interaction,
-        'backpack-interaction-bags': !!this.interaction?.state.bagMode
+        'backpack-interaction-board': !!this.interaction
       };
     }
   },
@@ -373,7 +388,7 @@ export const ArtifactGridBoard = {
     }
   },
   template: `
-    <backpack-grid
+    <backpack-grid v-bind="$attrs"
       :data-backpack-interaction-board="interaction ? true : null"
       :cells="renderedCells"
       :pieces="renderedPieces"
@@ -385,7 +400,7 @@ export const ArtifactGridBoard = {
       :test-id="isInventoryVariant ? 'unified-grid' : ''"
       :interactive-cells="interactiveCells || !!interaction"
       :clickable-pieces="clickablePieces || !!interaction"
-      :rotatable-pieces="rotatablePieces"
+      :rotatable-pieces="rotatablePieces && !interaction"
       :draggable-pieces="draggablePieces && !interaction"
       :droppable="droppable"
       rotate-text="↻"
@@ -416,5 +431,14 @@ export const ArtifactGridBoard = {
         />
       </template>
     </backpack-grid>
+    <teleport to="body">
+      <div v-if="draggedItem" class="backpack-drag-visual" data-testid="backpack-drag-visual"
+        :data-dragged-row-id="draggedItem.id" :style="dragVisualStyle" aria-hidden="true">
+        <component v-if="artifactFigureComponent" :is="artifactFigureComponent"
+          :artifact="getArtifact(draggedItem.artifactId)" :display-width="draggedDimensions.width"
+          :display-height="draggedDimensions.height" :rotation="draggedItem.rotated || 0" />
+        <img v-else class="artifact-grid-piece-image" :src="artifactImageFor(getArtifact(draggedItem.artifactId), draggedItem)" alt="" />
+      </div>
+    </teleport>
   `
 };

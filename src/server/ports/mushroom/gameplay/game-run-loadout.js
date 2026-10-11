@@ -1,3 +1,4 @@
+import { normalizeBackpackBagMoves } from '../../../../modules/loadout/index.js';
 // Quarantined gameplay port for game_run_loadout_items — the run-scoped,
 // round-scoped loadout table introduced by the loadout refactor.
 //
@@ -307,8 +308,13 @@ async function applyRunPlacements(client, gameRunId, playerId, roundNumber, item
   // sort-order fallback doesn't double-claim them for a later entry that
   // only carries an artifactId.
   const consumedRowIds = new Set();
-  const updates = [];
   for (const entry of items) {
+    if (entry.id && (!projectedById.has(entry.id) || consumedRowIds.has(entry.id))) {
+      throw new Error('Loadout row must be owned and appear only once');
+    }
+    if (entry.id && entry.artifactId && projectedById.get(entry.id).artifactId !== entry.artifactId) {
+      throw new Error('Loadout row artifact cannot change');
+    }
     let row = null;
     if (entry.id && projectedById.has(entry.id) && !consumedRowIds.has(entry.id)) {
       row = projectedById.get(entry.id);
@@ -341,29 +347,39 @@ async function applyRunPlacements(client, gameRunId, playerId, roundNumber, item
     proposed.y = Number(entry.y ?? -1);
     proposed.width = Number(entry.width ?? row.width);
     proposed.height = Number(entry.height ?? row.height);
-    // Bag activation and rotation: missing fields preserve existing bag
-    // state, explicit fields update it. Non-bag rows ignore both fields.
+    // Activation applies to bags. Every row preserves its orientation when
+    // omitted and normalizes an explicitly requested orientation.
     const rowArtifact = getArtifactById(proposed.artifactId);
     const bagRow = isBag(rowArtifact);
     proposed.active = bagRow ? (entry.active == null ? row.active : (entry.active ? 1 : 0)) : 0;
-    proposed.rotated = bagRow ? (entry.rotated == null ? row.rotated : normalizeRotation(entry.rotated)) : 0;
+    proposed.rotated = entry.rotated == null ? row.rotated : normalizeRotation(entry.rotated);
     if (bagRow && !proposed.active) {
       proposed.x = -1;
       proposed.y = -1;
     }
-    updates.push(proposed);
   }
 
   // Validate the full projected layout: bags provide cells, items occupy
   // absolute cells, and every placed item cell must be covered by a bag.
-  const projected = Array.from(projectedById.values());
+  const relocation = normalizeBackpackBagMoves({
+    rows: currentRows,
+    proposedRows: Array.from(projectedById.values()),
+    columns: bagColumns,
+    height: effectiveGridHeight(Array.from(projectedById.values())),
+    getArtifact: getArtifactById,
+    isLockedBag: (row) => getArtifactById(row.artifactId)?.starterOnly === true || row.artifactId === 'starter_bag'
+  });
+  if (!relocation.ok) throw new Error(`Invalid bag placement: ${relocation.reason}`);
+  const projected = relocation.rows;
   assignMissingBagAnchors(projected);
   validateBagPlacement(projected);
   validateGridItems(projected, bagColumns, effectiveGridHeight(projected));
   validateItemCoverage(projected);
 
   // Second pass: persist the validated updates.
-  for (const proposed of updates) {
+  for (const proposed of projected) {
+    const previous = currentRows.find((row) => row.id === proposed.id);
+    if (previous && ['x', 'y', 'width', 'height', 'active', 'rotated'].every((key) => Number(previous[key] || 0) === Number(proposed[key] || 0))) continue;
     await q(client,
       `UPDATE game_run_loadout_items
        SET x = $1, y = $2, width = $3, height = $4, active = $5, rotated = $6
