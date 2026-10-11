@@ -5,7 +5,7 @@ import {
 } from '../../modules/loadout/interaction-placement.js';
 
 export function createBackpackInteractionState() {
-  return { selectedId: '', contextMenuOpen: false, contextAnchor: null, selectedLocked: false, preview: null, dragVisual: null, dropTarget: null, messageCode: '', busy: false };
+  return { selectedId: '', contextMenuOpen: false, contextAnchor: null, selectedLocked: false, preview: null, dragVisual: null, dropTarget: null, purchasePreview: null, messageCode: '', busy: false };
 }
 
 /** One input owner for both configured and adapter-based preparation screens. */
@@ -13,6 +13,7 @@ export function createBackpackInteraction({
   state = createBackpackInteractionState(), getRows, getArtifact,
   columns = 6, getHeight = () => 6, commitRows, onCommitted = () => {},
   isLockedBag = () => false, canInteract = () => true, onSell = null, canSellItem = () => true, getSellPrice = () => null, document: doc = globalThis.document,
+  getShopRows = () => [], onPurchase = null,
   win = globalThis.window
 }) {
   let root = null;
@@ -20,6 +21,7 @@ export function createBackpackInteraction({
   let pointer = null;
   let messageTimer = null;
   let suppressClickUntil = 0;
+  let scrollFrame = null;
   let disposed = false;
   let generation = 0;
   const rows = () => getRows() || [];
@@ -40,11 +42,35 @@ export function createBackpackInteraction({
     state.messageCode = code;
     if (code) messageTimer = setTimeout(() => { state.messageCode = ''; }, 2400);
   }
+  function scheduleAutoScroll() {
+    if (scrollFrame != null || !pointer?.moved || !win?.requestAnimationFrame || !win?.scrollBy) return;
+    const edge = 56;
+    const y = pointer.clientY;
+    const viewportHeight = win.innerHeight;
+    const speed = y < edge ? -Math.min(18, (edge - y) / 3)
+      : y > viewportHeight - edge ? Math.min(18, (y - viewportHeight + edge) / 3) : 0;
+    if (!speed || y < 0 || y > viewportHeight) return;
+    scrollFrame = win.requestAnimationFrame(() => {
+      scrollFrame = null;
+      if (!pointer?.moved || disposed) return;
+      const currentY = pointer.clientY;
+      const currentSpeed = currentY < edge ? -Math.min(18, (edge - currentY) / 3)
+        : currentY > win.innerHeight - edge ? Math.min(18, (currentY - win.innerHeight + edge) / 3) : 0;
+      if (!currentSpeed || currentY < 0 || currentY > win.innerHeight) return;
+      const before = win.scrollY;
+      win.scrollBy(0, currentSpeed);
+      if (win.scrollY !== before) onPointerMove({ pointerId: pointer.id,
+        clientX: pointer.clientX, clientY: pointer.clientY, preventDefault() {} });
+    });
+  }
   function clearPointer() {
+    if (scrollFrame != null) win?.cancelAnimationFrame?.(scrollFrame);
+    scrollFrame = null;
     const current = pointer;
     pointer = null;
     state.dragVisual = null;
     state.dropTarget = null;
+    state.purchasePreview = null;
     if (current?.moved) suppressClickUntil = Date.now() + 400;
     try { current?.target?.releasePointerCapture?.(current.id); } catch { /* Already released. */ }
   }
@@ -144,8 +170,7 @@ export function createBackpackInteraction({
       pointer.offsetY = Math.max(0, Math.min(rotated.height - 1, Math.floor(pointer.visual.grabY / pitch)));
       const { clientX, clientY } = state.dragVisual;
       state.dragVisual = { ...pointer.visual, clientX, clientY };
-      const cell = boardAt(clientX, clientY);
-      if (cell) previewAt({ x: cell.x - pointer.offsetX, y: cell.y - pointer.offsetY }, rotated);
+      onPointerMove({ pointerId: pointer.id, clientX, clientY, preventDefault() {} });
       return Promise.resolve(true);
     }
     if (!active(item)) {
@@ -237,14 +262,25 @@ export function createBackpackInteraction({
     if (zone && (event.clientX - zone.rect.left - zone.x * zone.pitchX >= zone.rect.width
       || event.clientY - zone.rect.top - zone.y * zone.pitchY >= zone.rect.height)) return;
     const target = event.target?.closest?.('[data-backpack-row-id]');
+    const shopTarget = event.target?.closest?.('[data-backpack-shop-id]');
+    const offer = shopTarget && getShopRows().find((row) => String(row.artifactId) === shopTarget.dataset.backpackShopId);
+    if (offer && (offer.unavailable || offer.canAfford === false || typeof onPurchase !== 'function')) return;
     // The usable cell under the pointer owns the hit test, never transparent
     // watermark pixels or rectangular piece gaps. Occupied cells prefer items.
     let item = zone ? rows().find((row) => !bag(row) && active(row)
       && getBackpackItemCells(row, getArtifact(row.artifactId)).includes(`${zone.x}:${zone.y}`)) || bagAt(zone)
       : rows().find((row) => sameId(row.id, target?.dataset?.backpackRowId));
+    if (offer) {
+      const artifact = getArtifact(offer.artifactId);
+      if (!artifact) return;
+      const natural = getBackpackItemDimensions({ rotated: 0 }, artifact);
+      const orientation = offer.previewOrientation || natural;
+      item = { id: `shop:${offer.artifactId}`, artifactId: offer.artifactId, x: -1, y: -1,
+        width: orientation.width, height: orientation.height, rotated: orientation.width !== natural.width && orientation.width === natural.height ? 1 : 0, active: false };
+    }
     if (!item) return;
     const dimensions = getBackpackItemDimensions(item, getArtifact(item.artifactId));
-    const rect = target?.getBoundingClientRect?.();
+    const rect = (offer ? shopTarget?.querySelector?.('.artifact-grid-board, .artifact-preview, .shop-item-visual') || shopTarget : target)?.getBoundingClientRect?.();
     const offsetX = active(item) && zone ? zone.x - Number(item.x)
       : Math.floor(((event.clientX - (rect?.left ?? event.clientX)) / (rect?.width || 1)) * dimensions.width);
     const offsetY = active(item) && zone ? zone.y - Number(item.y)
@@ -266,7 +302,7 @@ export function createBackpackInteraction({
       : ((event.clientY - (rect?.top ?? event.clientY)) / (rect?.height || 1)) * height;
     pointer = {
       id: event.pointerId, startX: event.clientX, startY: event.clientY,
-      item, moved: false, target: root,
+      item, offer, moved: false, target: root,
       visual: { width, height, cellWidth, gap: pitchX - cellWidth,
         grabX: Math.max(0, Math.min(width, grabX)), grabY: Math.max(0, Math.min(height, grabY)) },
       offsetX: Math.max(0, Math.min(dimensions.width - 1, offsetX)),
@@ -284,17 +320,25 @@ export function createBackpackInteraction({
     if (event.pointerId !== pointer.id) return;
     if (!pointer.moved && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 8) return;
     if (!pointer.moved) {
-      if (!select(pointer.item)) { pointer.moved = true; clearPointer(); return; }
+      if (pointer.offer) { state.selectedId = String(pointer.item.id); state.preview = null; }
+      else if (!select(pointer.item)) { pointer.moved = true; clearPointer(); return; }
       pointer.moved = true;
       try { root.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older WebView. */ }
     }
     event.preventDefault();
+    pointer.clientX = event.clientX;
+    pointer.clientY = event.clientY;
+    scheduleAutoScroll();
     state.contextMenuOpen = false;
     state.dragVisual = { ...pointer.visual, clientX: event.clientX, clientY: event.clientY };
     const cell = boardAt(event.clientX, event.clientY);
     state.dropTarget = cell ? null : dropTargetAt(event.clientX, event.clientY);
-    if (cell) previewAt({ x: cell.x - pointer.offsetX, y: cell.y - pointer.offsetY });
-    else state.preview = null;
+    if (cell) {
+      const preview = previewAt({ x: cell.x - pointer.offsetX, y: cell.y - pointer.offsetY });
+      state.purchasePreview = pointer.offer ? { price: pointer.offer.price, valid: preview.valid,
+        x: cell.rect.left + preview.x * cell.pitchX + cell.rect.width,
+        y: cell.rect.top + preview.y * cell.pitchY + cell.rect.height } : null;
+    } else { state.preview = null; state.purchasePreview = null; }
   }
   function dropTargetAt(x, y) {
     const target = doc?.elementFromPoint?.(x, y);
@@ -312,6 +356,19 @@ export function createBackpackInteraction({
     clearPointer();
     if (!current.moved) { lastTap = { x: event.clientX, y: event.clientY, time: Date.now() }; return; }
     event.preventDefault();
+    if (current.offer) {
+      if (!cell) { cancel(); return; }
+      const result = evaluate(current.item, cell.x - current.offsetX, cell.y - current.offsetY);
+      state.selectedId = ''; state.preview = null; state.contextMenuOpen = false;
+      if (!result.ok) { message(result.reason); return; }
+      const purchaseGeneration = generation;
+      state.busy = true;
+      Promise.resolve().then(() => onPurchase(current.offer, { x: result.item.x, y: result.item.y, rotated: result.item.rotated || 0 }))
+        .then((saved) => { if (!disposed && generation === purchaseGeneration) message(saved === false || saved === null ? 'save_failed' : ''); })
+        .catch(() => { if (!disposed && generation === purchaseGeneration) message('save_failed'); })
+        .finally(() => { state.busy = false; });
+      return;
+    }
     if (cell) void commit(evaluate(current.item, cell.x - current.offsetX, cell.y - current.offsetY), 'place', true);
     else {
       state.preview = null;
@@ -321,6 +378,12 @@ export function createBackpackInteraction({
       else cancel();
     }
   }
+  function onLostPointerCapture(event) {
+    // Touch implicit capture on a child is released while capture transfers to root.
+    if (event.target && event.target !== root) return;
+    onPointerCancel(event);
+  }
+  function onGlobalPointerUp(event) { onPointerUp(event); }
   function onPointerCancel(event) {
     if (pointer && (event.pointerId == null || pointer.id === event.pointerId)) {
       cancel();
@@ -339,15 +402,18 @@ export function createBackpackInteraction({
       && !event.target?.closest?.('input, textarea, select, [contenteditable=true]')) { event.preventDefault(); void rotate(); }
   }
   const listeners = [
+    ['dragstart', (event) => { if (event.target?.closest?.('[data-backpack-row-id], [data-backpack-shop-id], [data-backpack-interaction-board]')) event.preventDefault(); }, true],
     ['pointerdown', onPointerDown, true], ['pointermove', onPointerMove, { passive: false }],
     ['pointerup', onPointerUp, { passive: false }], ['pointercancel', onPointerCancel, true],
-    ['lostpointercapture', onPointerCancel, true], ['click', onClick, true]
+    ['lostpointercapture', onLostPointerCapture, true], ['click', onClick, true]
   ];
   function detach() {
     generation += 1;
     for (const [name, listener, options] of listeners) root?.removeEventListener?.(name, listener, options);
     doc?.removeEventListener?.('keydown', onKey);
     doc?.removeEventListener?.('pointerdown', onOutsidePointerDown);
+    doc?.removeEventListener?.('pointerup', onGlobalPointerUp);
+    doc?.removeEventListener?.('pointercancel', onPointerCancel);
     win?.removeEventListener?.('blur', onPointerCancel);
     clearPointer();
     clearTimeout(messageTimer);
@@ -363,6 +429,8 @@ export function createBackpackInteraction({
     for (const [name, listener, options] of listeners) root?.addEventListener?.(name, listener, options);
     doc?.addEventListener?.('keydown', onKey);
     doc?.addEventListener?.('pointerdown', onOutsidePointerDown);
+    doc?.addEventListener?.('pointerup', onGlobalPointerUp);
+    doc?.addEventListener?.('pointercancel', onPointerCancel);
     win?.addEventListener?.('blur', onPointerCancel);
   }
   function clickCell(cell) {
@@ -371,7 +439,7 @@ export function createBackpackInteraction({
   }
   return {
     state, select, previewAt, placeAt, rotate, unplace, autoPlace, cancel, sell,
-    canSell: () => typeof onSell === 'function' && !!selected() && canSellItem(selected()) && !(bag(selected()) && isLockedBag(selected())), isBusy: blocked,
+    canSell: () => !pointer?.offer && typeof onSell === 'function' && !!selected() && canSellItem(selected()) && !(bag(selected()) && isLockedBag(selected())), isBusy: blocked,
     getSellPrice: () => { const item = selected(); return item ? getSellPrice(item) : null; },
     attach, detach, clickCell, getRows: rows, getSelectedItem: selected
   };

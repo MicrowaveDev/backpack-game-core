@@ -246,6 +246,8 @@ export interface MushroomBattleServicePort {
 }
 
 export interface MushroomShopServicePortOptions {
+  bagColumns?: number;
+  bagRows?: number;
   withTransaction: <T>(fn: (client: unknown) => Promise<T>) => Promise<T>;
   withRunLock: <T>(gameRunId: string, fn: () => Promise<T>) => Promise<T>;
   bagBaseChance: number;
@@ -282,7 +284,7 @@ export interface MushroomShopServicePortOptions {
 export interface MushroomShopServicePort {
   lookupEligibleCharacterItems(client: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, playerId: string, mode: string, gameRunId: string): Promise<unknown[]>;
   generateShopOffer(rng: () => number, count?: number, roundsSinceBag?: number, eligibleCharacterItems?: unknown[]): unknown;
-  buyRunShopItem(playerId: string, gameRunId: string, artifactId: string): Promise<unknown>;
+  buyRunShopItem(playerId: string, gameRunId: string, artifactId: string, input?: { placement?: { x: number; y: number; rotated?: number }; expectedLoadoutRevision?: string }): Promise<unknown>;
   refreshRunShop(playerId: string, gameRunId: string): Promise<unknown>;
   forceRunShopForTest(playerId: string, gameRunId: string, artifactIds: string[]): Promise<unknown>;
   sellRunItem(playerId: string, gameRunId: string, target: string | Record<string, unknown>): Promise<unknown>;

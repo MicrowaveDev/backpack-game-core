@@ -29,7 +29,7 @@ function surface() {
   };
 }
 
-function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false, isLockedBag } = {}) {
+function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false, isLockedBag, getShopRows, onPurchase } = {}) {
   let rows = structuredClone(initialRows);
   const calls = [];
   const committed = [];
@@ -54,7 +54,7 @@ function fixture(t, { initialRows = [bag, stored], save, origin = 100, canIntera
       const result = save ? await save(next) : true;
       if (result !== false && result !== null) rows = next;
       return result;
-    }, onCommitted: (event) => committed.push(event), canInteract, onSell, isLockedBag, getSellPrice: () => 1, document: doc, win });
+    }, onCommitted: (event) => committed.push(event), canInteract, onSell, isLockedBag, getShopRows, onPurchase, getSellPrice: () => 1, document: doc, win });
   interaction.attach(root);
   t.after(() => interaction.detach());
   const target = (id, rect = { left: 20, top: 20, width: 40, height: 80 }) => {
@@ -599,3 +599,96 @@ for (const scenario of ['valid', 'unchanged', 'invalid', 'save-failed']) {
     assert.equal(f.root.emit('click', { target: label }).stopped, false);
   });
 }
+
+test('child capture transfer does not cancel the first drag; root capture loss does', (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  f.root.emit('lostpointercapture', { target: f.target(stored.id) });
+  assert.ok(f.interaction.state.dragVisual);
+  f.root.emit('pointermove', f.point(2, 1));
+  assert.ok(f.interaction.state.dragVisual);
+  f.root.emit('lostpointercapture', { target: f.root });
+  assert.equal(f.interaction.state.dragVisual, null);
+});
+test('outside release before threshold cannot swallow the next drag', async (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.doc.emit('pointerup', { clientX: 800, clientY: 700 });
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  assert.ok(f.interaction.state.dragVisual);
+  f.doc.emit('pointerup', f.point(1, 1));
+  await settle();
+  assert.equal(f.calls.length, 1);
+});
+for (const outcome of ['valid', 'invalid', 'cancel', 'failure']) {
+  test(`shop drag ${outcome} previews cost and purchases only on valid drop`, async (t) => {
+    const purchases = [];
+    const f = fixture(t, { getShopRows: () => [{ artifactId: 'blade', price: 2, canAfford: true }],
+      onPurchase: (offer, placement) => { purchases.push({ offer, placement }); return outcome !== 'failure'; } });
+    const source = { dataset: { backpackShopId: 'blade' }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 40, height: 80 }) };
+    source.closest = selector => selector === '[data-backpack-shop-id]' ? source : null;
+    f.root.emit('pointerdown', { target: source, clientX: 10, clientY: 10 });
+    const destination = outcome === 'invalid' ? [3, 3] : [1, 1];
+    f.root.emit('pointermove', f.point(...destination));
+    assert.ok(f.interaction.state.dragVisual);
+    assert.equal(f.interaction.state.purchasePreview.price, 2);
+    assert.equal(f.interaction.canSell(), false);
+    if (outcome === 'cancel') f.doc.emit('keydown', { key: 'Escape' });
+    else f.root.emit('pointerup', f.point(...destination));
+    await settle();
+    assert.equal(purchases.length, ['valid', 'failure'].includes(outcome) ? 1 : 0);
+    assert.equal(f.calls.length, 0, 'purchase is a single injected operation, never a placement save');
+    assert.equal(f.interaction.state.purchasePreview, null);
+    assert.equal(f.interaction.state.selectedId, '');
+    assert.equal(f.root.emit('click', { target: source }).stopped, true);
+  });
+}
+
+test('shop drag rotation immediately updates purchase cost validity and anchor', async (t) => {
+  const f = fixture(t, { getShopRows: () => [{ artifactId: 'blade', price: 2, canAfford: true }], onPurchase: () => true });
+  const source = { dataset: { backpackShopId: 'blade' }, getBoundingClientRect: () => ({ left: 20, top: 20, width: 40, height: 80 }) };
+  source.closest = selector => selector === '[data-backpack-shop-id]' ? source : null;
+  f.root.emit('pointerdown', { target: source, clientX: 35, clientY: 85 });
+  f.root.emit('pointermove', f.point(3, 3));
+  assert.equal(f.interaction.state.purchasePreview.valid, true);
+  const previousY = f.interaction.state.purchasePreview.y;
+  await f.interaction.rotate();
+  assert.equal(f.interaction.state.preview.valid, false);
+  assert.equal(f.interaction.state.purchasePreview.valid, false);
+  assert.equal(f.interaction.state.purchasePreview.y, previousY + 40);
+  assert.equal(f.calls.length, 0);
+});
+
+test('edge autoscroll follows a held drag and stops immediately on release', (t) => {
+  const f = fixture(t);
+  let frame = null;
+  let canceled = false;
+  f.win.innerHeight = 600; f.win.scrollY = 100;
+  f.win.requestAnimationFrame = callback => { frame = callback; return 1; };
+  f.win.cancelAnimationFrame = () => { frame = null; canceled = true; };
+  f.win.scrollBy = (_x, y) => { f.win.scrollY += y; };
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', { clientX: 120, clientY: 25 });
+  assert.ok(frame);
+  frame();
+  assert.ok(f.win.scrollY < 100);
+  f.doc.emit('pointerup', { clientX: 120, clientY: 25 });
+  assert.equal(frame, null);
+  assert.equal(canceled, true);
+  assert.equal(f.interaction.state.dragVisual, null);
+});
+
+test('shop bag art and draft follow its shape rather than legacy catalog dimensions', (t) => {
+  catalog.shapeBag = { family: 'bag', width: 1, height: 2, shape: [[1, 1]] };
+  const f = fixture(t, { getShopRows: () => [{ artifactId: 'shapeBag', price: 2, canAfford: true, previewOrientation: { width: 2, height: 1 } }], onPurchase: () => true });
+  const source = { dataset: { backpackShopId: 'shapeBag' }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 80, height: 40 }) };
+  source.closest = selector => selector === '[data-backpack-shop-id]' ? source : null;
+  f.root.emit('pointerdown', { target: source, clientX: 10, clientY: 10 });
+  f.root.emit('pointermove', f.point(2, 2));
+  assert.equal(f.interaction.getSelectedItem().rotated, 0);
+  assert.equal(f.interaction.state.dragVisual.width, 76);
+  assert.equal(f.interaction.state.dragVisual.height, 36);
+  assert.deepEqual(f.interaction.state.preview.cells, ['2:2', '3:2']);
+});

@@ -228,6 +228,9 @@ export const ShopZone = {
           :class="classFor(row)"
           :data-artifact-draggable="row.canAfford ? 'true' : 'false'"
           :data-artifact-id="row.artifactId || null"
+          :data-backpack-shop-id="row.artifactId || null"
+          draggable="false"
+          @dragstart.prevent
           :data-artifact-family="row.artifact?.family || null"
           :data-tutorial-anchor="row.artifact?.family === 'bag' || row.isBag ? 'shop-bag' : (row.canAfford === false ? 'shop-artifact' : 'shop-affordable-artifact')"
           :data-artifact-width="previewWidth(row)"

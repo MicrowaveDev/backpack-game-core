@@ -432,6 +432,12 @@ export const ArtifactGridBoard = {
       </template>
     </backpack-grid>
     <teleport to="body">
+      <div v-if="isInventoryVariant && interaction?.state.purchasePreview" class="backpack-purchase-cost"
+        :class="{ 'backpack-purchase-cost--invalid': !interaction.state.purchasePreview.valid }"
+        data-testid="backpack-purchase-cost" aria-hidden="true"
+        :style="{ left: interaction.state.purchasePreview.x + 'px', top: interaction.state.purchasePreview.y + 'px' }">
+        <span>◉</span> −{{ interaction.state.purchasePreview.price }}
+      </div>
       <div v-if="draggedItem" class="backpack-drag-visual" data-testid="backpack-drag-visual"
         :data-dragged-row-id="draggedItem.id" :style="dragVisualStyle" aria-hidden="true">
         <component v-if="artifactFigureComponent" :is="artifactFigureComponent"
