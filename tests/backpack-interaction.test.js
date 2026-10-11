@@ -234,27 +234,32 @@ test('explicit bag selection cannot unplace contents through Storage', async (t)
   assert.equal(f.calls.length, 0);
 });
 
-test('rotating a placed item into another item is rejected before API call', async (t) => {
+test('blocked rotation becomes a draft without saving or displacing another item', async (t) => {
   const placed = { ...stored, x: 0, y: 0 };
   const other = { ...stored, id: 'blade-two', x: 1, y: 0 };
   const f = fixture(t, { initialRows: [bag, placed, other] });
   f.interaction.select(placed.id);
-  assert.equal(await f.interaction.rotate(), false);
-  assert.equal(f.interaction.state.messageCode, 'occupied');
+  assert.equal(await f.interaction.rotate(), true);
+  assert.equal(f.interaction.state.messageCode, '');
+  assert.equal(f.interaction.getSelectedItem().rotated, 1);
   assert.deepEqual(f.interaction.state.preview.conflictCells, ['1:0']);
   assert.equal(f.calls.length, 0);
   assert.equal(f.getRows()[1].height, 2);
 });
 
-test('bag rotation preserves contents and reports coverage lost by shape rotation', async (t) => {
+test('blocked bag rotation keeps contents confirmed until a rotated move is placed', async (t) => {
   const smallBag = { ...bag, artifactId: 'strip' };
   const placed = { ...stored, width: 2, height: 1, rotated: 1, x: 0, y: 0 };
   const f = fixture(t, { initialRows: [smallBag, placed] });
   f.interaction.select(smallBag.id);
-  assert.equal(await f.interaction.rotate(), false);
-  assert.equal(f.interaction.state.messageCode, 'bag_contents');
+  assert.equal(await f.interaction.rotate(), true);
+  assert.equal(f.interaction.state.preview.reason, 'bag_contents');
   assert.deepEqual(f.interaction.state.preview.conflictCells, ['1:0']);
   assert.equal(f.calls.length, 0);
+  assert.equal(await f.interaction.placeAt({ x: 2, y: 1 }), true);
+  assert.equal(f.getRows()[0].rotated, 1);
+  assert.equal(f.getRows()[1].x, -1);
+  assert.equal(f.interaction.state.rotationDraft, null);
 });
 
 test('auto-place reports no_space and retains selection when all covered cells are occupied', async (t) => {
@@ -691,4 +696,53 @@ test('shop bag art and draft follow its shape rather than legacy catalog dimensi
   assert.equal(f.interaction.state.dragVisual.width, 76);
   assert.equal(f.interaction.state.dragVisual.height, 36);
   assert.deepEqual(f.interaction.state.preview.cells, ['2:2', '3:2']);
+});
+
+for (const end of ['place', 'cancel', 'detach', 'reselect', 'failure', 'drag']) {
+  test(`rotation blocked at board edge supports ${end} without an intermediate save`, async (t) => {
+    const strip = { id: 'edge-bag', artifactId: 'strip', x: 2, y: 3, active: true };
+    const f = fixture(t, { initialRows: [strip], reactiveState: true,
+      save: end === 'failure' ? () => false : undefined });
+    const selected = computed(() => f.interaction.getSelectedItem());
+    f.interaction.select(strip.id);
+    assert.equal(await f.interaction.rotate(), true);
+    assert.equal(selected.value.rotated, 1);
+    assert.equal(f.calls.length, 0);
+    assert.equal(f.getRows()[0].rotated, undefined);
+    if (end === 'cancel') f.interaction.cancel();
+    else if (end === 'detach') f.interaction.detach();
+    else if (end === 'reselect') f.interaction.select(strip.id);
+    else if (end === 'drag') {
+      f.root.emit('pointerdown', { target: f.target(strip.id), ...f.point(2, 3) });
+      f.root.emit('pointermove', f.point(0, 0));
+      assert.equal(selected.value.rotated, 1);
+      f.root.emit('pointerup', f.point(0, 0));
+      await settle();
+    } else {
+      assert.equal(await f.interaction.placeAt({ x: 0, y: 0 }), end !== 'failure');
+    }
+    if (end === 'place' || end === 'drag') {
+      assert.equal(f.calls.length, 1);
+      assert.equal(f.getRows()[0].rotated, 1);
+      assert.equal(f.interaction.state.rotationDraft, null);
+    } else {
+      assert.equal(f.getRows()[0].rotated, undefined);
+      if (end === 'failure') assert.equal(selected.value.rotated, 1);
+      else assert.equal(f.interaction.state.rotationDraft, null);
+    }
+  });
+}
+
+test('repeated rotation advances from the draft orientation and commits when it fits', async (t) => {
+  const strip = { id: 'edge-bag', artifactId: 'strip', x: 2, y: 3, active: true };
+  const f = fixture(t, { initialRows: [strip] });
+  f.interaction.select(strip.id);
+  // Odd turns extend beyond the board; even turns fit and can commit.
+  await f.interaction.rotate();
+  await f.interaction.rotate();
+  assert.equal(f.getRows()[0].rotated, 2);
+  f.interaction.select(strip.id);
+  await f.interaction.rotate();
+  await f.interaction.rotate();
+  assert.equal(f.getRows()[0].rotated, 0);
 });

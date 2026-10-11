@@ -5,7 +5,7 @@ import {
 } from '../../modules/loadout/interaction-placement.js';
 
 export function createBackpackInteractionState() {
-  return { selectedId: '', contextMenuOpen: false, contextAnchor: null, selectedLocked: false, preview: null, dragVisual: null, dropTarget: null, purchasePreview: null, messageCode: '', busy: false };
+  return { selectedId: '', contextMenuOpen: false, contextAnchor: null, selectedLocked: false, rotationDraft: null, preview: null, dragVisual: null, dropTarget: null, purchasePreview: null, messageCode: '', busy: false };
 }
 
 /** One input owner for both configured and adapter-based preparation screens. */
@@ -31,7 +31,8 @@ export function createBackpackInteraction({
     // comes from a non-reactive pointer record. Vue must invalidate on release.
     const selectedId = state.selectedId;
     const visual = state.dragVisual;
-    return visual && pointer?.moved ? pointer.item : rows().find((row) => sameId(row.id, selectedId)) || null;
+    const draft = state.rotationDraft;
+    return visual && pointer?.moved ? pointer.item : draft && sameId(draft.id, selectedId) ? draft : rows().find((row) => sameId(row.id, selectedId)) || null;
   };
   const blocked = () => state.busy || !canInteract();
   const bag = (row) => getArtifact(row?.artifactId)?.family === 'bag';
@@ -77,7 +78,7 @@ export function createBackpackInteraction({
   function cancel() {
     if (state.busy) return;
     clearPointer();
-    state.selectedId = '';
+    state.selectedId = ''; state.rotationDraft = null;
     state.contextMenuOpen = false;
     state.selectedLocked = false;
     state.preview = null;
@@ -89,6 +90,7 @@ export function createBackpackInteraction({
     const item = rows().find((row) => sameId(row.id, id));
     if (!item) return false;
     state.selectedId = String(item.id);
+    state.rotationDraft = null;
     state.selectedLocked = Boolean(bag(item) && active(item) && isLockedBag(item));
     const source = [...root?.querySelectorAll?.('[data-backpack-row-id]') || []]
       .find((element) => sameId(element.dataset?.backpackRowId, item.id));
@@ -117,7 +119,7 @@ export function createBackpackInteraction({
   async function commit(result, action, finishGesture = false) {
     const reject = (code) => {
       if (finishGesture) {
-        state.selectedId = '';
+        state.selectedId = ''; state.rotationDraft = null;
         state.selectedLocked = false;
         state.contextMenuOpen = false;
         state.preview = null;
@@ -133,7 +135,7 @@ export function createBackpackInteraction({
     state.busy = true;
     state.preview = null;
     state.contextMenuOpen = false;
-    if (finishGesture) { state.selectedId = ''; state.selectedLocked = false; }
+    if (finishGesture) { state.selectedId = ''; state.rotationDraft = null; state.selectedLocked = false; }
     message('');
     let saved;
     try { saved = await commitRows(result.rows); }
@@ -142,7 +144,7 @@ export function createBackpackInteraction({
     if (disposed || generation !== commitGeneration) return false;
     if (saved === false || saved === null) return reject('save_failed');
     state.preview = null;
-    state.selectedId = '';
+    state.selectedId = ''; state.rotationDraft = null;
     state.contextMenuOpen = false;
     state.selectedLocked = false;
     try { await onCommitted({ action, item: result.item, rows: result.rows, previousRows }); }
@@ -179,7 +181,14 @@ export function createBackpackInteraction({
     if (!active(item)) {
       return commit({ ok: true, item: rotated, rows: rows().map((row) => sameId(row.id, item.id) ? rotated : row) }, 'rotate');
     }
-    return commit(evaluate(rotated, item.x, item.y, rows(), false), 'rotate');
+    const result = evaluate(rotated, item.x, item.y, rows(), false);
+    if (result.ok) return commit(result, 'rotate');
+    // Rotation does not need clearance at the source. Keep confirmed rows
+    // intact and let the player choose a valid destination for this orientation.
+    state.rotationDraft = rotated;
+    state.preview = { ...result, valid: false, x: item.x, y: item.y };
+    message('');
+    return Promise.resolve(true);
   }
   function unplace(item = selected()) {
     if (!item || blocked()) return Promise.resolve(false);
@@ -222,7 +231,7 @@ export function createBackpackInteraction({
     finally { state.busy = false; }
     if (disposed || generation !== commitGeneration) return false;
     if (saved === false || saved === null) { state.contextMenuOpen = true; message('save_failed'); return false; }
-    state.selectedId = '';
+    state.selectedId = ''; state.rotationDraft = null;
     state.contextMenuOpen = false;
     state.selectedLocked = false;
     state.preview = null;
@@ -259,6 +268,7 @@ export function createBackpackInteraction({
   function onPointerDown(event) {
     suppressClickUntil = 0;
     if (blocked() || pointer || event.isPrimary === false || (event.button != null && event.button !== 0)) return;
+    const pendingDraft = state.rotationDraft;
     if (state.contextMenuOpen && !event.target?.closest?.('.backpack-interaction-menu')) cancel();
     if (event.target?.closest?.('button.backpack-interaction-action, .backpack-interaction-menu, .artifact-piece-rotate, .active-bag-action, [data-backpack-context-action]')) return;
     const zone = boardAt(event.clientX, event.clientY);
@@ -282,6 +292,7 @@ export function createBackpackInteraction({
         width: orientation.width, height: orientation.height, rotated: orientation.width !== natural.width && orientation.width === natural.height ? 1 : 0, active: false };
     }
     if (!item) return;
+    if (sameId(item.id, pendingDraft?.id)) { item = pendingDraft; state.rotationDraft = pendingDraft; }
     const dimensions = getBackpackItemDimensions(item, getArtifact(item.artifactId));
     const rect = (offer ? shopTarget?.querySelector?.('.artifact-grid-board, .artifact-preview, .shop-item-visual') || shopTarget : target)?.getBoundingClientRect?.();
     const offsetX = active(item) && zone ? zone.x - Number(item.x)
@@ -324,7 +335,11 @@ export function createBackpackInteraction({
     if (!pointer.moved && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 8) return;
     if (!pointer.moved) {
       if (pointer.offer) { state.selectedId = String(pointer.item.id); state.preview = null; }
-      else if (!select(pointer.item)) { pointer.moved = true; clearPointer(); return; }
+      else {
+        const draft = state.rotationDraft;
+        if (!select(pointer.item)) { pointer.moved = true; clearPointer(); return; }
+        if (sameId(draft?.id, pointer.item.id)) state.rotationDraft = draft;
+      }
       pointer.moved = true;
       try { root.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older WebView. */ }
     }
@@ -362,7 +377,7 @@ export function createBackpackInteraction({
     if (current.offer) {
       if (!cell) { cancel(); return; }
       const result = evaluate(current.item, cell.x - current.offsetX, cell.y - current.offsetY);
-      state.selectedId = ''; state.preview = null; state.contextMenuOpen = false;
+      state.selectedId = ''; state.rotationDraft = null; state.preview = null; state.contextMenuOpen = false;
       if (!result.ok) { message(result.reason); return; }
       const purchaseGeneration = generation;
       state.busy = true;
@@ -421,6 +436,7 @@ export function createBackpackInteraction({
     clearPointer();
     clearTimeout(messageTimer);
     state.preview = null;
+    state.rotationDraft = null;
     root = null;
     disposed = true;
   }

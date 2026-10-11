@@ -67,6 +67,8 @@ export interface BackpackShopOffer {
 }
 export interface BackpackInteractionState {
   selectedId: string;
+  /** Unsaved orientation used when rotation cannot fit at the current anchor. */
+  rotationDraft?: import('../modules/loadout/interaction-placement.js').BackpackInteractionRow | null;
   contextMenuOpen: boolean;
   contextAnchor: { x: number; y: number; scrollX?: number; scrollY?: number } | null;
   selectedLocked: boolean;
