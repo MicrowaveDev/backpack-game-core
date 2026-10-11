@@ -199,6 +199,7 @@ test('pointer cancellation, capture loss, Escape and blur clear drag without sav
     else if (cancellation === 'blur') f.win.emit('blur', { pointerId: undefined });
     else f.root.emit(cancellation);
     assert.equal(f.interaction.state.preview, null);
+    assert.equal(f.interaction.state.selectedId, '');
     f.root.emit('pointerup', f.point(1, 1));
     await settle();
     assert.equal(f.calls.length, 0);

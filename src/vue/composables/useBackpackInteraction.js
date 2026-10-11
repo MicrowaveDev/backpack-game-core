@@ -290,8 +290,7 @@ export function createBackpackInteraction({
   }
   function onPointerCancel(event) {
     if (pointer && (event.pointerId == null || pointer.id === event.pointerId)) {
-      clearPointer();
-      state.preview = null;
+      cancel();
     }
   }
   function onClick(event) {
