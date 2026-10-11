@@ -10362,14 +10362,14 @@ select {
   bottom: 100%;
   right: 0;
   z-index: 50;
-  display: flex;
-  flex-direction: column;
-  min-width: 160px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: min(288px, 100%);
   max-width: 100%;
   background: var(--panel-bg, #fffaf0);
   outline: 1px solid currentColor;
 }
-.backpack-interaction-menu .backpack-interaction-action { text-align: left; }
+.backpack-interaction-menu .backpack-interaction-action { text-align: left; padding: 4px 8px; font-size: .9rem; line-height: 1.2; }
 .backpack-interaction-menu .backpack-interaction-action:hover { background: rgba(70,70,70,.08); }
 .backpack-interaction-reason {
   height: 2.5em;
