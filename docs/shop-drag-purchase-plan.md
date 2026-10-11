@@ -21,4 +21,12 @@ Implementation choices: shared pointer owner, transient shop draft without owned
 
 ## Evidence
 
-Initial analysis reproduced descendant lostpointercapture clearing an active draft; pending outside release can retain pointer and reject the next pointerdown. Browser confirmation pending. Pointer lifecycle, shop draft/presentation and atomic adapters implemented. Core regression suite: 497 passed. Meat product API suite:120 passed. Browser multi-move touch bag release and immediate second drag passed. Mobile shop drag requires edge autoscroll: implemented in the shared owner, with stationary-finger preview updates and cleanup on release. Price badge is rendered above dragged art to retain readable cost. Final two-consumer gate and artifact review pending.
+Analysis identified descendant `lostpointercapture` cancelling the first touch drag and a pending pointer surviving release outside the root. Both now have regressions; descendant transfer is ignored while genuine root loss still cancels. Native image dragging is suppressed for these pointer-owned sources.
+
+Implemented shared shop drafts, art, target coin badge, stationary-finger edge autoscroll, and atomic placement adapters. Bag orientation derives from the actual shape rather than legacy catalog dimensions. Rotation immediately refreshes both placement and price validity. Mushroom applies the returned placed loadout immediately, avoiding a temporary Storage row.
+
+Verification completed: core 499 tests and package dry-run; Mushroom 666 game tests, production build, three screen checks, focused real-API desktop/mobile shop drag plus existing Backpack journey (3/3); Meat 120 product tests, 11 browser journeys, build, and hosted/local deployment configuration checks with synthetic values. The initial combined gate found a mobile test coordinate race during ongoing autoscroll; final focused checks stop scrolling with the held finger and reacquire the target, retaining the geometry assertions. No production data or device tests were used.
+
+Visual evidence: Mushroom `.agent/tasks/backpack-ux/raw/shop-price-preview-{desktop,mobile}.png` with JSON metadata; Meat `docs/qa/backpack-interaction/shop-drag-purchase/`. Both viewport captures reviewed: art follows the drag, price remains readable above it near the target corner, no horizontal overflow. Mobile uses actual touch edge scrolling, and release persists placement. Meat also repeats a bag touch drag immediately after the first drop.
+
+Delivery: shared core feature PR, Meat feature PR, Mushroom main integration, then hub Mushroom pointer. Merge order is core before Meat. Deployment follows the user's merge/update request; physical iOS/Android Telegram WebView verification remains with the user.
