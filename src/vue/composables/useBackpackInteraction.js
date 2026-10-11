@@ -71,8 +71,8 @@ export function createBackpackInteraction({
       : rect ? { x: rect.right, y: rect.top } : null;
     if (state.contextAnchor) state.contextAnchor = { ...state.contextAnchor, scrollX: win?.scrollX || 0, scrollY: win?.scrollY || 0 };
     state.contextMenuOpen = true;
-    if (state.selectedLocked) { message('locked'); return false; }
     state.preview = null;
+    if (state.selectedLocked) { message('locked'); return false; }
     message('');
     return true;
   }
