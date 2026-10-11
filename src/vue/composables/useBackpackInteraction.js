@@ -216,7 +216,6 @@ export function createBackpackInteraction({
       && getBackpackItemCells(row, getArtifact(row.artifactId)).includes(`${zone.x}:${zone.y}`)) || bagAt(zone)
       : rows().find((row) => sameId(row.id, target?.dataset?.backpackRowId));
     if (!item) return;
-    if (bag(item) && active(item) && isLockedBag(item)) return;
     const dimensions = getBackpackItemDimensions(item, getArtifact(item.artifactId));
     const rect = target?.getBoundingClientRect?.();
     const offsetX = active(item) && zone ? zone.x - Number(item.x)
@@ -258,7 +257,7 @@ export function createBackpackInteraction({
     if (event.pointerId !== pointer.id) return;
     if (!pointer.moved && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 8) return;
     if (!pointer.moved) {
-      if (!select(pointer.item)) { clearPointer(); return; }
+      if (!select(pointer.item)) { pointer.moved = true; clearPointer(); return; }
       pointer.moved = true;
       try { root.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older WebView. */ }
     }

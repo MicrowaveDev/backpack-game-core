@@ -29,7 +29,7 @@ function surface() {
   };
 }
 
-function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false } = {}) {
+function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false, isLockedBag } = {}) {
   let rows = structuredClone(initialRows);
   const calls = [];
   const committed = [];
@@ -54,7 +54,7 @@ function fixture(t, { initialRows = [bag, stored], save, origin = 100, canIntera
       const result = save ? await save(next) : true;
       if (result !== false && result !== null) rows = next;
       return result;
-    }, onCommitted: (event) => committed.push(event), canInteract, onSell, getSellPrice: () => 1, document: doc, win });
+    }, onCommitted: (event) => committed.push(event), canInteract, onSell, isLockedBag, getSellPrice: () => 1, document: doc, win });
   interaction.attach(root);
   t.after(() => interaction.detach());
   const target = (id, rect = { left: 20, top: 20, width: 40, height: 80 }) => {
@@ -513,4 +513,15 @@ test('Vue selection invalidates after drag cancellation and successful save', as
     assert.equal(f.interaction.state.selectedId, '');
     assert.equal(selected.value, null);
   }
+});
+
+test('fixed bag drag explains policy after threshold and suppresses trailing placement', (t) => {
+  const f = fixture(t, { isLockedBag: () => true });
+  f.root.emit('pointerdown', f.point(2, 2));
+  assert.equal(f.interaction.state.messageCode, '');
+  f.root.emit('pointermove', f.point(3, 3));
+  assert.equal(f.interaction.state.messageCode, 'locked');
+  assert.equal(f.interaction.state.dragVisual, null);
+  assert.equal(f.root.emit('click').stopped, true);
+  assert.equal(f.calls.length, 0);
 });
