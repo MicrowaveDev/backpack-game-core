@@ -12,6 +12,7 @@ export const BackpackInteractionControls = {
     menuOpen() { return this.selected && this.state.contextMenuOpen && !this.state.dragVisual; },
     sellPrice() { return this.interaction.getSellPrice?.() ?? null; },
     reason() {
+      if (this.state.rotationDraft && !this.state.messageCode) return this.labels.reasons?.rotation_placement || this.labels.move || '';
       const code = this.state.messageCode || (this.state.preview?.valid === false ? this.state.preview.reason : this.state.selectedLocked ? 'locked' : '');
       return this.labels.reasons?.[code] || '';
     },
