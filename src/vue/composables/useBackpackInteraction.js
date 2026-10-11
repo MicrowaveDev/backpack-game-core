@@ -133,6 +133,7 @@ export function createBackpackInteraction({
     state.busy = true;
     state.preview = null;
     state.contextMenuOpen = false;
+    if (finishGesture) { state.selectedId = ''; state.selectedLocked = false; }
     message('');
     let saved;
     try { saved = await commitRows(result.rows); }
