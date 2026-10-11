@@ -560,3 +560,13 @@ test('context menu hover and heading cannot preview or drag the board underneath
   f.root.emit('pointermove', f.point(1, 1));
   assert.ok(f.interaction.state.preview, 'Move enables the placement preview');
 });
+
+
+test('outside pointerdown dismisses the menu without placing its selected item', async (t) => {
+  const f = fixture(t);
+  f.interaction.select(stored);
+  f.root.emit('pointerdown', { clientX: 10, clientY: 10, target: { closest() { return null; } } });
+  assert.equal(f.interaction.state.contextMenuOpen, false);
+  assert.equal(f.interaction.state.selectedId, '');
+  assert.equal(f.calls.length, 0);
+});

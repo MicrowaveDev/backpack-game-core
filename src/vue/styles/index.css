@@ -10332,27 +10332,26 @@ select {
 /* Context menus float beside their selected source without reserving a row. */
 .backpack-interaction-controls { display: contents; }
 .backpack-interaction-menu {
-  position: fixed; z-index: 100; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
-  width: min(320px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
+  position: fixed; z-index: 100; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px;
+  width: min(248px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
   overflow-y: auto; box-sizing: border-box; padding: 8px;
-  border: 1px solid var(--border, #d5cbb9); border-radius: 16px;
+  border: 1px solid var(--border, #d5cbb9); border-radius: 12px;
   background: var(--surface-strong, #fffaf0); color: var(--ink, #242221);
   box-shadow: 0 12px 36px rgba(45, 32, 20, .18), 0 2px 6px rgba(45, 32, 20, .08);
 }
-.backpack-context-heading { grid-column: 1 / -1; padding: 8px 10px 10px; font-weight: 700; line-height: 1.25; border-bottom: 1px solid var(--border, #d5cbb9); margin-bottom: 4px; }
+.backpack-context-heading { grid-column: 1 / -1; padding: 8px 10px 12px; font-weight: 600; font-size: .9rem; line-height: 1.35; overflow-wrap: anywhere; border-bottom: 1px solid var(--border, #d5cbb9); margin-bottom: 4px; }
 .backpack-interaction-action {
   display: flex; align-items: center; gap: 8px;
   min-height: 44px; width: 100%; padding: 8px 10px;
   border: 0; border-radius: 9px; background: transparent;
   font: inherit; font-size: .9rem; color: inherit; text-align: left; cursor: pointer;
 }
-.backpack-interaction-action span[aria-hidden] { flex: 0 0 20px; text-align: center; font-size: 1.15em; }
+.backpack-context-icon { flex: 0 0 18px; width: 18px; height: 18px; opacity: .7; }
 .backpack-context-label { min-width: 0; overflow-wrap: anywhere; }
 .backpack-interaction-action:hover { background: color-mix(in srgb, var(--accent-soft, #cfe0c7) 28%, transparent); }
 .backpack-interaction-action:disabled { opacity: .4; cursor: not-allowed; }
 .backpack-interaction-action:focus-visible, .backpack-bag-context-label:focus-visible { outline: 2px solid var(--accent, #446c40); outline-offset: -2px; }
-.backpack-context-sell { color: var(--danger, #a83228); }
-.backpack-context-cancel { grid-column: 1 / -1; border-top: 1px solid var(--border, #d5cbb9); border-radius: 0 0 9px 9px; margin-top: 4px; justify-content: center; opacity: .75; }
+.backpack-context-sell { color: var(--danger, #a83228); border-top: 1px solid var(--border, #d5cbb9); border-radius: 0 0 8px 8px; margin-top: 6px; }
 .backpack-context-reason { grid-column: 1 / -1; font-size: .8rem; padding: 4px 10px; }
 .backpack-interaction-reason {
   position: fixed; z-index: 101; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%;

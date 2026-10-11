@@ -504,3 +504,5 @@ Latest user request supersedes the reserved rail and More button: tap/click an i
 Dependency order: core -> consumer adapters and pins -> verification -> core PR and Meat PR / Mushroom main -> hub Mushroom pointer. Do not deploy before user merges. Physical Telegram device acceptance remains user-owned.
 
 Latest HUD clarification: keep the compact status panel on the right, reorder its contents to coins -> wins -> lives, and place the drag sale target outside and immediately to its left. Do not stretch the panel across the topbar.
+
+Latest menu clarification: remove Cancel entirely. Use a compact single-column action list with consistent SVG line icons, subdued separators and a separate sale row. Outside pointerdown dismisses selection before board hit testing, preventing accidental placement; Escape also dismisses.

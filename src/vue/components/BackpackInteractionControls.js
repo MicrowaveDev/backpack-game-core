@@ -75,17 +75,15 @@ export const BackpackInteractionControls = {
         :style="position" data-testid="backpack-context-menu" :aria-label="nameForItem(selected)" @keydown="menuKey">
         <div class="backpack-context-heading">{{ nameForItem(selected) }}</div>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-move"
-          :disabled="interaction.isBusy()" @click="move"><span aria-hidden="true">✥</span><span class="backpack-context-label">{{ labels.move }}</span></button>
+          :disabled="interaction.isBusy()" @click="move"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l4-3 4 3M12 1v22M4 8l-3 4 3 4M1 12h22M16 20l-4 3-4-3M20 8l3 4-3 4" /></svg><span class="backpack-context-label">{{ labels.move }}</span></button>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-rotate"
-          :disabled="interaction.isBusy()" @click="action('rotate')"><span aria-hidden="true">↻</span><span class="backpack-context-label">{{ labels.rotate }}</span></button>
+          :disabled="interaction.isBusy()" @click="action('rotate')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6" /></svg><span class="backpack-context-label">{{ labels.rotate }}</span></button>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-storage"
-          :disabled="interaction.isBusy()" @click="action('unplace')"><span aria-hidden="true">▣</span><span class="backpack-context-label">{{ labels.storage }}</span></button>
+          :disabled="interaction.isBusy()" @click="action('unplace')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v14H4zM2 3h20v4H2zM9 11h6" /></svg><span class="backpack-context-label">{{ labels.storage }}</span></button>
         <button v-if="!state.selectedLocked" class="backpack-interaction-action" type="button" role="menuitem" data-testid="backpack-auto-place"
-          :disabled="interaction.isBusy()" @click="action('autoPlace')"><span aria-hidden="true">⌖</span><span class="backpack-context-label">{{ labels.autoPlace }}</span></button>
+          :disabled="interaction.isBusy()" @click="action('autoPlace')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 14h7v7h-7zM14 3h7v7h-7zM3 14h7v7H3z" /></svg><span class="backpack-context-label">{{ labels.autoPlace }}</span></button>
         <button v-if="interaction.canSell() && sellPrice != null" class="backpack-interaction-action backpack-context-sell" type="button" role="menuitem" data-testid="backpack-sell"
-          :disabled="interaction.isBusy()" @click="action('sell')"><span aria-hidden="true">◉</span><span class="backpack-context-label">{{ labels.sell }} · {{ sellPrice }}</span></button>
-        <button class="backpack-interaction-action backpack-context-cancel" type="button" role="menuitem" data-testid="backpack-cancel"
-          :disabled="interaction.isBusy()" @click="action('cancel')">{{ labels.cancel }}</button>
+          :disabled="interaction.isBusy()" @click="action('sell')"><svg class="backpack-context-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13l-7 7-10-10V3h7zM7 7h.01" /></svg><span class="backpack-context-label">{{ labels.sell }} · {{ sellPrice }}</span></button>
         <p v-if="reason" class="backpack-context-reason">{{ reason }}</p>
       </div>
       <p v-if="reason || bagContentsHint" class="backpack-interaction-reason" role="status" aria-live="polite" aria-atomic="true"
