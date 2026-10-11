@@ -12,7 +12,7 @@ export const BackpackInteractionControls = {
     menuOpen() { return this.selected && this.state.contextMenuOpen && !this.state.dragVisual; },
     sellPrice() { return this.interaction.getSellPrice?.() ?? null; },
     reason() {
-      const code = this.state.messageCode || (this.state.preview?.valid === false ? this.state.preview.reason : '');
+      const code = this.state.messageCode || (this.state.preview?.valid === false ? this.state.preview.reason : this.state.selectedLocked ? 'locked' : '');
       return this.labels.reasons?.[code] || '';
     },
     bagContentsHint() {
@@ -23,7 +23,10 @@ export const BackpackInteractionControls = {
     }
   },
   watch: {
-    menuOpen(value) { if (value) this.$nextTick(this.positionMenu); },
+    menuOpen(value) { if (value) this.$nextTick(() => {
+      this.positionMenu();
+      this.$refs.menu?.querySelector('button:not(:disabled)')?.focus({ preventScroll: true });
+    }); },
     'state.contextAnchor'() { this.$nextTick(this.positionMenu); }
   },
   mounted() {

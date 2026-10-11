@@ -10415,3 +10415,7 @@ select {
 @media (max-width: 640px) {
   .prep-screen .backpack-sale-action { min-height: 36px; padding: 4px 6px; font-size: .8rem; }
 }
+
+/* Keep coins and the drag sale destination reachable while the board scrolls. */
+.prep-topbar { position: sticky; top: calc(var(--app-safe-area-top, 0px) + 76px); z-index: 70; background: var(--bg, #f7f1e8); }
+@media (max-width: 640px) { .prep-topbar { top: calc(var(--app-safe-area-top, 0px) + 50px); } }
