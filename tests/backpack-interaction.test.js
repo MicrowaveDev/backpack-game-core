@@ -29,7 +29,7 @@ function surface() {
   };
 }
 
-function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false, isLockedBag } = {}) {
+function fixture(t, { initialRows = [bag, stored], save, origin = 100, canInteract, onSell, reactiveState = false, isLockedBag, getShopRows, onPurchase } = {}) {
   let rows = structuredClone(initialRows);
   const calls = [];
   const committed = [];
@@ -54,7 +54,7 @@ function fixture(t, { initialRows = [bag, stored], save, origin = 100, canIntera
       const result = save ? await save(next) : true;
       if (result !== false && result !== null) rows = next;
       return result;
-    }, onCommitted: (event) => committed.push(event), canInteract, onSell, isLockedBag, getSellPrice: () => 1, document: doc, win });
+    }, onCommitted: (event) => committed.push(event), canInteract, onSell, isLockedBag, getShopRows, onPurchase, getSellPrice: () => 1, document: doc, win });
   interaction.attach(root);
   t.after(() => interaction.detach());
   const target = (id, rect = { left: 20, top: 20, width: 40, height: 80 }) => {
@@ -597,5 +597,51 @@ for (const scenario of ['valid', 'unchanged', 'invalid', 'save-failed']) {
     f.root.emit('pointerdown', { target: label, ...f.point(1, 0) });
     f.root.emit('pointerup', f.point(1, 0));
     assert.equal(f.root.emit('click', { target: label }).stopped, false);
+  });
+}
+
+test('child capture transfer does not cancel the first drag; root capture loss does', (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  f.root.emit('lostpointercapture', { target: f.target(stored.id) });
+  assert.ok(f.interaction.state.dragVisual);
+  f.root.emit('pointermove', f.point(2, 1));
+  assert.ok(f.interaction.state.dragVisual);
+  f.root.emit('lostpointercapture', { target: f.root });
+  assert.equal(f.interaction.state.dragVisual, null);
+});
+test('outside release before threshold cannot swallow the next drag', async (t) => {
+  const f = fixture(t);
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.doc.emit('pointerup', { clientX: 800, clientY: 700 });
+  f.root.emit('pointerdown', { target: f.target(stored.id), clientX: 35, clientY: 30 });
+  f.root.emit('pointermove', f.point(1, 1));
+  assert.ok(f.interaction.state.dragVisual);
+  f.doc.emit('pointerup', f.point(1, 1));
+  await settle();
+  assert.equal(f.calls.length, 1);
+});
+for (const outcome of ['valid', 'invalid', 'cancel', 'failure']) {
+  test(`shop drag ${outcome} previews cost and purchases only on valid drop`, async (t) => {
+    const purchases = [];
+    const f = fixture(t, { getShopRows: () => [{ artifactId: 'blade', price: 2, canAfford: true }],
+      onPurchase: (offer, placement) => { purchases.push({ offer, placement }); return outcome !== 'failure'; } });
+    const source = { dataset: { backpackShopId: 'blade' }, getBoundingClientRect: () => ({ left: 0, top: 0, width: 40, height: 80 }) };
+    source.closest = selector => selector === '[data-backpack-shop-id]' ? source : null;
+    f.root.emit('pointerdown', { target: source, clientX: 10, clientY: 10 });
+    const destination = outcome === 'invalid' ? [3, 3] : [1, 1];
+    f.root.emit('pointermove', f.point(...destination));
+    assert.ok(f.interaction.state.dragVisual);
+    assert.equal(f.interaction.state.purchasePreview.price, 2);
+    assert.equal(f.interaction.canSell(), false);
+    if (outcome === 'cancel') f.doc.emit('keydown', { key: 'Escape' });
+    else f.root.emit('pointerup', f.point(...destination));
+    await settle();
+    assert.equal(purchases.length, ['valid', 'failure'].includes(outcome) ? 1 : 0);
+    assert.equal(f.calls.length, 0, 'purchase is a single injected operation, never a placement save');
+    assert.equal(f.interaction.state.purchasePreview, null);
+    assert.equal(f.interaction.state.selectedId, '');
+    assert.equal(f.root.emit('click', { target: source }).stopped, true);
   });
 }

@@ -103,7 +103,7 @@ async function insertLoadoutItem(client, params) {
   const height = params.height ?? artifact.height;
   const bagRow = isBag(artifact);
   const active = bagRow && params.active ? 1 : 0;
-  const rotated = bagRow ? normalizeRotation(params.rotated) : 0;
+  const rotated = normalizeRotation(params.rotated);
   const x = bagRow && !active ? -1 : (params.x ?? -1);
   const y = bagRow && !active ? -1 : (params.y ?? -1);
   await q(client,

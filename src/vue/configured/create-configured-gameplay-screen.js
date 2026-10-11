@@ -309,6 +309,8 @@ export function createConfiguredGameplayScreen(options = {}) {
     this.interaction = markRaw(createBackpackInteraction({
       state: this.interactionState,
       getRows: () => this.run?.loadoutItems || [],
+      getShopRows: () => this.shopRows,
+      onPurchase: (row, placement) => this.buy(row, placement),
       getArtifact: (id) => this.getArtifact(id),
       columns: gridColumns,
       getHeight: () => Math.max(gridRows, this.grid.totalRows || gridRows),
@@ -536,10 +538,10 @@ export function createConfiguredGameplayScreen(options = {}) {
       await this.controller.selectCharacter(characterId);
       this.activeRun = this.controller.state.bootstrap?.activeRun || null;
     },
-    buy(row) {
+    buy(row, placement = null) {
       if (!this.runIsActive || !row?.canAfford) return;
       return this.mutate(this.text.buy, () => (
-        this.clientServices.services.run.buy(this.run.id, row.artifactId)
+        this.clientServices.services.run.buy(this.run.id, row.artifactId, placement ? { placement, revision: this.run.revision } : {})
       )).then((result) => {
         const tutorial = getTutorialController(this.controller);
         const artifact = row.artifact || this.getArtifact(row.artifactId);

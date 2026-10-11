@@ -10421,3 +10421,12 @@ select {
 /* Keep coins and the drag sale destination reachable while the board scrolls. */
 .prep-topbar { position: sticky; top: calc(var(--app-safe-area-top, 0px) + 76px); z-index: 70; background: var(--bg, #f7f1e8); }
 @media (max-width: 640px) { .prep-topbar { top: calc(var(--app-safe-area-top, 0px) + 50px); } }
+
+.shop-item[data-artifact-draggable="true"] { touch-action: none; cursor: grab; }
+.backpack-purchase-cost {
+  position: fixed; z-index: 1200; pointer-events: none;
+  transform: translate(-100%, 2px); padding: 2px 5px;
+  border-radius: 5px; background: #f4e8c8; color: #6a4826;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.backpack-purchase-cost--invalid { background: #f5dfd8; color: #8b3d31; }

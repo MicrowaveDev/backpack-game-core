@@ -1,3 +1,5 @@
+import { createRunShopPlacementPlan } from '../../../../modules/shop/placement.js';
+import { getBackpackLoadoutRevision, getBackpackItemDimensions } from '../../../../modules/loadout/interaction-placement.js';
 import {
   createRunShopPurchasePlan,
   createRunShopRefreshPlan,
@@ -81,7 +83,7 @@ function generateShopOfferWithDeps(ctx, rng, count = ctx.shopOfferSize, roundsSi
   });
 }
 
-async function buyRunShopItemWithDeps(ctx, playerId, gameRunId, artifactId) {
+async function buyRunShopItemWithDeps(ctx, playerId, gameRunId, artifactId, input = {}) {
   return ctx.withRunLock(gameRunId, () => ctx.withTransaction(async (client) => {
     const runResult = await client.query(
       `SELECT current_round FROM game_runs WHERE id = $1 AND status = 'active'`,
@@ -128,6 +130,22 @@ async function buyRunShopItemWithDeps(ctx, playerId, gameRunId, artifactId) {
       throw new Error('Not enough coins');
     }
 
+    let placedItem = null;
+    if (input.placement !== undefined) {
+      const currentRows = await ctx.readCurrentRoundItems(client, gameRunId, playerId, currentRound);
+      if (input.expectedLoadoutRevision != null && input.expectedLoadoutRevision !== getBackpackLoadoutRevision(currentRows)) {
+        const error = new Error('Loadout changed; reload before buying'); error.status = 409; throw error;
+      }
+      const height = currentRows.reduce((max, row) => {
+        const entry = ctx.getArtifactById(row.artifactId);
+        return row.active && entry?.family === 'bag' ? Math.max(max, row.y + getBackpackItemDimensions(row, entry).height) : max;
+      }, ctx.bagRows);
+      const placementPlan = createRunShopPlacementPlan({ rows: currentRows,
+        item: { id: 'new-purchase', artifactId, x: -1, y: -1, rotated: 0 },
+        placement: input.placement, columns: ctx.bagColumns, height, getArtifact: ctx.getArtifactById });
+      if (!placementPlan.ok) throw new Error(placementPlan.reason);
+      placedItem = placementPlan.item;
+    }
     const newCoins = purchasePlan.coinsAfter;
     await client.query(
       `UPDATE game_run_players SET coins = $2 WHERE id = $1`,
@@ -148,16 +166,19 @@ async function buyRunShopItemWithDeps(ctx, playerId, gameRunId, artifactId) {
       playerId,
       roundNumber: currentRound,
       artifactId,
-      x: -1,
-      y: -1,
-      width: artifact.width,
-      height: artifact.height,
+      x: placedItem?.x ?? -1,
+      y: placedItem?.y ?? -1,
+      width: placedItem?.width ?? artifact.width,
+      height: placedItem?.height ?? artifact.height,
+      active: placedItem?.active || false,
+      rotated: placedItem?.rotated || 0,
       sortOrder,
       purchasedRound: currentRound,
       freshPurchase: true
     });
 
-    return { id: newRowId, ...ctx.runCurrencyFields(newCoins), artifactId, price, shopOffer: newOffer };
+    return { id: newRowId, ...ctx.runCurrencyFields(newCoins), artifactId, price, shopOffer: newOffer,
+      ...(placedItem ? { loadoutItems: await ctx.readCurrentRoundItems(client, gameRunId, playerId, currentRound) } : {}) };
   }));
 }
 
@@ -384,6 +405,8 @@ async function sellRunItemWithDeps(ctx, playerId, gameRunId, target) {
 
 export function createMushroomShopServicePort(options = {}) {
   const ctx = {
+    bagColumns: options.bagColumns ?? 6,
+    bagRows: options.bagRows ?? 6,
     withTransaction: requiredDependency('withTransaction', options.withTransaction),
     withRunLock: requiredDependency('withRunLock', options.withRunLock),
     bagBaseChance: requiredDependency('bagBaseChance', options.bagBaseChance),
@@ -419,8 +442,8 @@ export function createMushroomShopServicePort(options = {}) {
       lookupEligibleCharacterItemsWithDeps(ctx, client, playerId, mode, gameRunId),
     generateShopOffer: (rng, count = ctx.shopOfferSize, roundsSinceBag = 1, eligibleCharacterItems = []) =>
       generateShopOfferWithDeps(ctx, rng, count, roundsSinceBag, eligibleCharacterItems),
-    buyRunShopItem: (playerId, gameRunId, artifactId) =>
-      buyRunShopItemWithDeps(ctx, playerId, gameRunId, artifactId),
+    buyRunShopItem: (playerId, gameRunId, artifactId, input) =>
+      buyRunShopItemWithDeps(ctx, playerId, gameRunId, artifactId, input),
     refreshRunShop: (playerId, gameRunId) =>
       refreshRunShopWithDeps(ctx, playerId, gameRunId),
     forceRunShopForTest: (playerId, gameRunId, artifactIds) =>
