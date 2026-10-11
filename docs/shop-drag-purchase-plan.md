@@ -21,4 +21,4 @@ Implementation choices: shared pointer owner, transient shop draft without owned
 
 ## Evidence
 
-Initial analysis reproduced descendant lostpointercapture clearing an active draft; pending outside release can retain pointer and reject the next pointerdown. Browser confirmation pending. All workstreams pending implementation.
+Initial analysis reproduced descendant lostpointercapture clearing an active draft; pending outside release can retain pointer and reject the next pointerdown. Browser confirmation pending. Pointer lifecycle, shop draft/presentation and atomic adapters implemented. Core regression suite: 497 passed. Meat product API suite:120 passed. Browser multi-move touch bag release and immediate second drag passed. Mobile shop drag requires edge autoscroll: implemented in the shared owner, with stationary-finger preview updates and cleanup on release. Price badge is rendered above dragged art to retain readable cost. Final two-consumer gate and artifact review pending.
