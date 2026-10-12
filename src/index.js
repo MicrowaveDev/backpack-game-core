@@ -59,3 +59,4 @@ export * from './modules/gacha/engine.js';
 export * from './modules/tutorial/index.js';
 export * from './client/view-model.js';
 export * from './client/index.js';
+export { deriveCombatantStats } from './modules/battle/combatant-stats.js';
