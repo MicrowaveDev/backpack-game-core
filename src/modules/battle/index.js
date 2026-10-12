@@ -5,3 +5,4 @@ export {
   randomInt,
   shuffleWithRng
 } from '../../shared/rng.js';
+export * from './combatant-stats.js';

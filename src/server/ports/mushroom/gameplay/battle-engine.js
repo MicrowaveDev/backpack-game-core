@@ -2,6 +2,7 @@ import {
   randomInt,
   shuffleWithRng
 } from '../../../../shared/rng.js';
+import { deriveCombatantStats } from '../../../../modules/battle/combatant-stats.js';
 import { simulateBattle as simulateCoreBattle } from '../../../../modules/battle/simulation.js';
 
 export { randomInt, shuffleWithRng };
@@ -23,15 +24,13 @@ function deriveCombatant(snapshot, side, { getMushroomById, buildArtifactSummary
     styleTag: mushroom.styleTag,
     passive: mushroom.passive,
     active: mushroom.active,
-    maxHealth: base.health,
-    currentHealth: base.health,
+    ...deriveCombatantStats({
+      baseStats: { ...base, stunChance: 0 },
+      artifactTotals
+    }),
     baseAttack: base.attack,
     baseSpeed: base.speed,
     baseDefense: base.defense,
-    attack: base.attack + artifactTotals.damage,
-    speed: base.speed + artifactTotals.speed,
-    defense: base.defense + artifactTotals.armor,
-    stunChance: artifactTotals.stunChance,
     artifactTotals,
     loadout: snapshot.loadout,
     state: {
